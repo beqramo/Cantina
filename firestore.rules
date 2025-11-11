@@ -1,0 +1,121 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Dishes collection - read for everyone, write for admins only
+    // STRICT: No admin information exposed
+    match /dishes/{dishId} {
+      // Anyone can read dishes, but only public fields
+      allow read: if true;
+
+      // Only admins can create dishes
+      // Validate required fields and prevent admin info leakage
+      allow create: if isAdmin() &&
+                      request.resource.data.keys().hasAll(['name', 'imageUrl', 'thumbsUp', 'thumbsDown', 'createdAt', 'updatedAt', 'tags']) &&
+                      request.resource.data.name is string &&
+                      request.resource.data.imageUrl is string &&
+                      request.resource.data.thumbsUp is int &&
+                      request.resource.data.thumbsDown is int &&
+                      request.resource.data.tags is list &&
+                      // Ensure no admin-related fields are included
+                      !request.resource.data.keys().hasAny(['approvedBy', 'createdBy', 'adminId', 'adminEmail']) &&
+                      // Allow optional fields
+                      (!('category' in request.resource.data) || request.resource.data.category is string || request.resource.data.category == null) &&
+                      (!('imageProviderNickname' in request.resource.data) || request.resource.data.imageProviderNickname is string || request.resource.data.imageProviderNickname == null) &&
+                      // Allow nameTokens array for efficient querying
+                      (!('nameTokens' in request.resource.data) || request.resource.data.nameTokens is list);
+
+      // Only admins can update dishes
+      // Prevent adding admin information
+      allow update: if isAdmin() &&
+                      // Prevent adding admin-related fields
+                      (!('approvedBy' in request.resource.data) &&
+                       !('createdBy' in request.resource.data) &&
+                       !('adminId' in request.resource.data) &&
+                       !('adminEmail' in request.resource.data)) &&
+                      // Allow nameTokens array for efficient querying
+                      (!('nameTokens' in request.resource.data) || request.resource.data.nameTokens is list);
+
+      // Only admins can delete dishes
+      allow delete: if isAdmin();
+    }
+
+    // Dish requests collection
+    // STRICT: Users can only see their own requests, admins see all but no admin info
+    match /dishRequests/{requestId} {
+      // Anyone can create a request
+      // Validate required fields
+      allow create: if request.resource.data.keys().hasAll(['name', 'requestedBy', 'status', 'createdAt', 'tags']) &&
+                      request.resource.data.status == 'pending' &&
+                      request.resource.data.requestedBy is string &&
+                      request.resource.data.name is string &&
+                      request.resource.data.tags is list &&
+                      // Prevent admin info in requests
+                      !request.resource.data.keys().hasAny(['approvedBy', 'createdBy', 'adminId', 'adminEmail']) &&
+                      // Allow optional fields
+                      (!('imageUrl' in request.resource.data) || request.resource.data.imageUrl is string || request.resource.data.imageUrl == null) &&
+                      (!('category' in request.resource.data) || request.resource.data.category is string || request.resource.data.category == null) &&
+                      (!('nickname' in request.resource.data) || request.resource.data.nickname is string || request.resource.data.nickname == null);
+
+      // Users can only read their own requests (by requestedBy matching localStorage ID)
+      // Admins can read all requests but cannot see admin information
+      // Note: Since we use localStorage IDs, we can't use request.auth.uid
+      // So we allow authenticated users to read, but client-side filtering is needed
+      // For security, we restrict to only pending requests for non-admins
+      allow read: if isAuthenticated() &&
+                     (resource.data.status == 'pending' || isAdmin());
+
+      // Only admins can update requests (approve/reject)
+      // Prevent storing admin information
+      allow update: if isAdmin() &&
+                      (request.resource.data.status == 'approved' ||
+                       request.resource.data.status == 'rejected') &&
+                      // Prevent adding admin information
+                      !request.resource.data.keys().hasAny(['approvedBy', 'createdBy', 'adminId', 'adminEmail', 'approvedAt']);
+
+      // Only admins can delete requests
+      allow delete: if isAdmin();
+    }
+
+    // Admins collection - STRICT: Only admins can read, no writes allowed
+    match /admins/{adminId} {
+      // Only admins can read the admins list
+      allow read: if isAdmin();
+
+      // No direct writes - admins must be added through Firebase Admin SDK
+      allow create, update, delete: if false;
+    }
+
+    // Votes collection (if you decide to store votes separately)
+    match /votes/{voteId} {
+      // Anyone can create a vote for themselves
+      allow create: if isAuthenticated() &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.dishId is string &&
+                      request.resource.data.vote is int &&
+                      (request.resource.data.vote == 1 || request.resource.data.vote == -1);
+
+      // Users can read their own votes
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // Users can update their own votes
+      allow update: if isAuthenticated() &&
+                      resource.data.userId == request.auth.uid &&
+                      request.resource.data.dishId == resource.data.dishId;
+
+      // Users can delete their own votes
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

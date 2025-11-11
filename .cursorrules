@@ -1,0 +1,131 @@
+# Cursor Rules for Cantina Project
+
+## Project Overview
+
+This is a Next.js 16 application for the IPB university canteen website. It uses Firebase for backend services, shadcn/ui for UI components, and supports Portuguese and English languages.
+
+## Technology Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **UI Library**: shadcn/ui components
+- **Styling**: Tailwind CSS 4
+- **Backend**: Firebase (Firestore, Storage, Auth)
+- **Icons**: react-icons and lucide-react
+- **Image Compression**: browser-image-compression
+- **i18n**: Custom context-based solution
+- **State Management**: React Context + LocalStorage
+
+## Code Style Guidelines
+
+### TypeScript
+
+- Always use TypeScript with strict mode
+- Define types in `src/types/index.ts`
+- Use interfaces for object types
+- Prefer type inference where possible but be explicit for function return types
+
+### File Structure
+
+- Components: `src/components/`
+- Pages: `src/app/`
+- Utilities: `src/lib/`
+- Hooks: `src/hooks/`
+- Types: `src/types/`
+
+### Naming Conventions
+
+- Components: PascalCase (e.g., `DishCard.tsx`)
+- Utilities: camelCase (e.g., `firestore.ts`)
+- Hooks: camelCase with `use` prefix (e.g., `useDebounce.ts`)
+- Types: PascalCase (e.g., `Dish`, `DishRequest`)
+
+### Component Guidelines
+
+- Use "use client" directive for client components
+- Prefer functional components with hooks
+- Use shadcn/ui components for UI elements
+- Follow shadcn/ui patterns and styling
+
+### Firebase
+
+- Client-side Firebase operations in `src/lib/firestore.ts`
+- Image upload/compression in `src/lib/storage.ts`
+- Auth helpers in `src/lib/auth.ts`
+- Always handle errors gracefully
+- Use transactions for atomic operations
+
+### Internationalization
+
+- All user-facing text must use the `useI18n()` hook
+- Translation keys are in `src/lib/i18n.tsx`
+- Do not translate dish names or categories
+- Default to system language, store preference in localStorage
+
+### Styling
+
+- Use Tailwind CSS classes
+- Follow shadcn/ui design patterns
+- Support dark/light mode
+- Use responsive design (mobile-first)
+
+### Image Handling
+
+- Compress images before upload (max 1MB, 1200px width)
+- Use Next.js Image component for optimization
+- Store images in Firebase Storage
+- Handle loading and error states
+
+### Voting System
+
+- Prevent duplicate votes using localStorage
+- Use Firestore transactions for vote updates
+- Update local state optimistically
+
+### Admin Features
+
+- Protect admin routes with auth checks
+- Verify admin status via Firestore `admins` collection
+- Show appropriate error messages
+
+## Commands
+
+### Type Checking
+
+Always run type checking before committing:
+
+```bash
+npm run type-check
+```
+
+### Format Code
+
+Format code using:
+
+```bash
+npm run type-check:fix
+```
+
+## Testing Considerations
+
+- Test image compression with various sizes
+- Verify vote prevention via localStorage
+- Test search debouncing
+- Verify admin route protection
+- Test language switching and persistence
+- Test dark/light mode switching
+
+## Important Notes
+
+- Do not commit sensitive Firebase credentials
+- Keep environment variables in `.env.local`
+- Follow Next.js App Router conventions
+- Use server components when possible, client components when needed
+- Handle loading and error states appropriately
+- Maintain accessibility standards
+
+## Git Workflow
+
+- Create feature branches for new features
+- Write descriptive commit messages
+- Run type-check before committing
+- Test thoroughly before pushing

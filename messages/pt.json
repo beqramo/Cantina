@@ -1,0 +1,77 @@
+{
+  "Navigation": {
+    "home": "Início",
+    "topDishes": "Pratos Top",
+    "about": "Sobre",
+    "rules": "Regras",
+    "admin": "Admin",
+    "login": "Entrar",
+    "logout": "Sair",
+    "dashboard": "Painel",
+    "approvals": "Aprovações"
+  },
+  "Search": {
+    "searchPlaceholder": "Pesquisar um prato...",
+    "noResults": "Nenhum prato encontrado",
+    "requestDish": "Adicionar o prato",
+    "requestDishDescription": "Não encontra o que procura? Adiciona-o tu mesmo! Por favor, fornece todas as informações que puderes (nome, imagem, categoria, tags) e nós revemos e confirmamos. A tua participação ajuda a tornar o menu melhor para todos.",
+    "filterByTags": "Filtrar por tags"
+  },
+  "Dish": {
+    "category": "Categoria",
+    "thumbsUp": "Gostei",
+    "thumbsDown": "Não Gostei",
+    "votes": "Votos",
+    "imageProvidedBy": "Imagem fornecida por"
+  },
+  "TopDishes": {
+    "title": "Pratos Top",
+    "description": "Pratos mais populares baseados em votos",
+    "rank": "Posição"
+  },
+  "Admin": {
+    "addDish": "Adicionar Prato",
+    "editDish": "Editar Prato",
+    "deleteDish": "Eliminar Prato",
+    "dishName": "Nome do Prato",
+    "dishImage": "Imagem do Prato",
+    "selectCategory": "Selecionar Categoria",
+    "optional": "Opcional",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "pendingRequests": "Pedidos Pendentes",
+    "allDishes": "Todos os Pratos",
+    "tags": "Tags",
+    "category": "Categoria",
+    "nickname": "Alcunha",
+    "nicknamePlaceholder": "A tua alcunha (opcional)",
+    "nicknameDescription": "Isto será mostrado como \"Imagem fornecida por [alcunha]\" se carregares uma imagem",
+    "requestedBy": "Solicitado por"
+  },
+  "About": {
+    "title": "Sobre a Cantina",
+    "description": "Este é um projeto open source para a cantina do IPB.",
+    "githubLink": "Ver no GitHub",
+    "openSource": "Open Source",
+    "openSourceDescription": "Este projeto é open source. Todos podem enviar pull requests para melhorá-lo.",
+    "costNotice": "Aviso de Custos",
+    "costNoticeDescription": "Por favor, não abuse dos endpoints, pois não conseguirei manter o projeto se os custos forem altos."
+  },
+  "Rules": {
+    "title": "Regras da Cantina",
+    "rule1": "Num cartão, só podes pedir um prato.",
+    "rule2": "Para pedir comida, precisas fazer login em",
+    "rule3": "A sobremesa deve ser apenas uma para escolher.",
+    "rule4": "É altamente desejável ter um cartão de estudante contigo.",
+    "rule5": "Podes levar até 1 pão mas secretamente depois de receber o prato, depois podes levar mais também se quiseres.",
+    "rule6": "Podes pedir um refill para a comida."
+  },
+  "Common": {
+    "loading": "A carregar...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "password": "Palavra-passe"
+  }
+}

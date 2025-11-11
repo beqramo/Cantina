@@ -1,0 +1,77 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "topDishes": "Top Dishes",
+    "about": "About",
+    "rules": "Rules",
+    "admin": "Admin",
+    "login": "Login",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "approvals": "Approvals"
+  },
+  "Search": {
+    "searchPlaceholder": "Search for a dish...",
+    "noResults": "No dishes found",
+    "requestDish": "Add the dish",
+    "requestDishDescription": "Can't find what you're looking for? Add it yourself! Please provide all the information you can (name, image, category, tags) and we'll review and confirm it. Your participation helps make the menu better for everyone.",
+    "filterByTags": "Filter by tags"
+  },
+  "Dish": {
+    "category": "Category",
+    "thumbsUp": "Thumbs Up",
+    "thumbsDown": "Thumbs Down",
+    "votes": "Votes",
+    "imageProvidedBy": "Image provided by"
+  },
+  "TopDishes": {
+    "title": "Top Dishes",
+    "description": "Most popular dishes based on votes",
+    "rank": "Rank"
+  },
+  "Admin": {
+    "addDish": "Add Dish",
+    "editDish": "Edit Dish",
+    "deleteDish": "Delete Dish",
+    "dishName": "Dish Name",
+    "dishImage": "Dish Image",
+    "selectCategory": "Select Category",
+    "optional": "Optional",
+    "save": "Save",
+    "cancel": "Cancel",
+    "approve": "Approve",
+    "reject": "Reject",
+    "pendingRequests": "Pending Requests",
+    "allDishes": "All Dishes",
+    "tags": "Tags",
+    "category": "Category",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Your nickname (optional)",
+    "nicknameDescription": "This will be shown as \"Image provided by [nickname]\" if you upload an image",
+    "requestedBy": "Requested by"
+  },
+  "About": {
+    "title": "About Cantina",
+    "description": "This is an open source project for the IPB cantina.",
+    "githubLink": "View on GitHub",
+    "openSource": "Open Source",
+    "openSourceDescription": "This project is open source. Everyone can submit pull requests to improve it.",
+    "costNotice": "Cost Notice",
+    "costNoticeDescription": "Please do not abuse the endpoints as I will not be able to maintain the project if costs go high."
+  },
+  "Rules": {
+    "title": "Canteen Rules",
+    "rule1": "On one card, you can order one dish only.",
+    "rule2": "To order food, you need to login on",
+    "rule3": "The dessert must be only one to be picked.",
+    "rule4": "It is highly desired to have a student card with you.",
+    "rule5": "You can take up to 1 bread but secretly after getting the plate, later you can get more too if you want.",
+    "rule6": "You can ask for a refill for the food."
+  },
+  "Common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "password": "Password"
+  }
+}
