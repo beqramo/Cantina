@@ -2,44 +2,37 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Helper function to check if user is authenticated
+    // Helper function to check if user is authenticated (manager/admin)
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Helper function to check if user is admin
-    function isAdmin() {
-      return isAuthenticated() &&
-             firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)) != null;
-    }
-
-    // Dish images folder
+    // Dish images folder - public read, managers can write/delete
     match /dish-images/{imageId} {
       // Anyone can read dish images
       allow read: if true;
 
-      // Only authenticated users can upload (for requests)
-      // Only admins can upload directly
-      allow write: if isAuthenticated() &&
-                     (request.resource.size < 5 * 1024 * 1024 && // 5MB max
-                      request.resource.contentType.matches('image/.*'));
-
-      // Only admins can delete images
-      allow delete: if isAdmin();
-    }
-
-    // Request images folder (temporary until approved)
-    match /request-images/{imageId} {
-      // Only authenticated users can read their own request images
-      allow read: if isAuthenticated();
-
-      // Any authenticated user can upload request images
+      // Only authenticated managers can upload dish images
       allow write: if isAuthenticated() &&
                      request.resource.size < 5 * 1024 * 1024 && // 5MB max
                      request.resource.contentType.matches('image/.*');
 
-      // Only admins can delete request images
-      allow delete: if isAdmin();
+      // Only managers can delete images
+      allow delete: if isAuthenticated();
+    }
+
+    // Request images folder (temporary until approved)
+    match /request-images/{imageId} {
+      // Anyone can read request images (needed for public visitors to see their uploaded images)
+      allow read: if true;
+
+      // Any authenticated user can upload request images (managers)
+      // Public visitors can also upload (for dish requests)
+      allow write: if request.resource.size < 5 * 1024 * 1024 && // 5MB max
+                     request.resource.contentType.matches('image/.*');
+
+      // Only managers can delete request images
+      allow delete: if isAuthenticated();
     }
 
     // Deny all other paths
@@ -48,4 +41,3 @@ service firebase.storage {
     }
   }
 }
-

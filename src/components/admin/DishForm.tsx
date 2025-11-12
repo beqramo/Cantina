@@ -64,6 +64,43 @@ export function DishForm({ dish, onSuccess, onCancel }: DishFormProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type (including HEIC for iPhone support)
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+        'image/heic',
+        'image/heif',
+      ];
+      const fileName = file.name.toLowerCase();
+      const fileType = file.type.toLowerCase();
+
+      // Check MIME type or file extension (for HEIC files where MIME might not be set)
+      const isValidType =
+        allowedTypes.includes(fileType) ||
+        fileName.endsWith('.heic') ||
+        fileName.endsWith('.heif');
+
+      if (!isValidType) {
+        setError(
+          'Invalid image type. Please upload a JPEG, PNG, WebP, or HEIC image.',
+        );
+        e.target.value = ''; // Reset input
+        return;
+      }
+
+      // Validate file size (max 10MB before compression)
+      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+      if (file.size > MAX_SIZE) {
+        setError(
+          'Image file is too large. Please use an image smaller than 10MB.',
+        );
+        e.target.value = ''; // Reset input
+        return;
+      }
+
+      setError(null); // Clear any previous errors
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -134,10 +171,15 @@ export function DishForm({ dish, onSuccess, onCancel }: DishFormProps) {
         </label>
         <Input
           type='file'
-          accept='image/*'
+          accept='image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.heic,.heif'
           onChange={handleImageChange}
           className='cursor-pointer'
         />
+        <p className='text-xs text-muted-foreground mt-1'>
+          Images will be automatically compressed to reduce size (max 10MB
+          before compression). iPhone HEIC images are automatically converted to
+          JPEG.
+        </p>
         {imagePreview && (
           <div className='mt-2'>
             <img
