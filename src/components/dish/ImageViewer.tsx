@@ -40,9 +40,21 @@ export function ImageViewer({
     setPosition({ x: 0, y: 0 });
   };
 
-  // Handle keyboard shortcuts
+  // Prevent browser zoom when dialog is open
   useEffect(() => {
     if (!isOpen) return;
+
+    // Store original viewport meta content
+    const viewport = document.querySelector('meta[name="viewport"]');
+    const originalContent = viewport?.getAttribute('content') || '';
+
+    // Disable browser zoom
+    if (viewport) {
+      viewport.setAttribute(
+        'content',
+        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no',
+      );
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -59,8 +71,41 @@ export function ImageViewer({
       }
     };
 
+    // Prevent touch gestures that trigger browser zoom
+    let lastTouchTime = 0;
+
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    const preventDoubleTapZoom = (e: TouchEvent) => {
+      const now = Date.now();
+      const timeSinceLastTouch = now - lastTouchTime;
+      if (timeSinceLastTouch < 300 && timeSinceLastTouch > 0) {
+        e.preventDefault();
+      }
+      lastTouchTime = now;
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('touchstart', preventZoom, { passive: false });
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('touchend', preventDoubleTapZoom, {
+      passive: false,
+    });
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('touchstart', preventZoom);
+      document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('touchend', preventDoubleTapZoom);
+      // Restore original viewport settings
+      if (viewport && originalContent) {
+        viewport.setAttribute('content', originalContent);
+      }
+    };
   }, [isOpen, onClose]);
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -76,6 +121,11 @@ export function ImageViewer({
   } | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Prevent browser zoom when handling touch events
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+
     if (e.touches.length === 2) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -101,6 +151,11 @@ export function ImageViewer({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Prevent browser zoom when handling touch events
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+
     if (e.touches.length === 2 && touchStartRef.current) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -112,6 +167,7 @@ export function ImageViewer({
       const newScale = Math.max(0.5, Math.min(5, scale * scaleChange));
       setScale(newScale);
     } else if (e.touches.length === 1 && isDragging && scale > 1) {
+      e.preventDefault();
       setPosition({
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y,
@@ -174,6 +230,7 @@ export function ImageViewer({
       <DialogContent
         key={imageUrl}
         className='max-w-[95vw] max-h-[95vh] w-full h-full p-0 gap-0 overflow-hidden bg-black/95 [&>button]:hidden'
+        style={{ touchAction: 'none' }}
         onPointerDownOutside={(e) => {
           // Prevent closing when clicking on the image
           if (e.target === containerRef.current) {
@@ -214,6 +271,7 @@ export function ImageViewer({
         <div
           ref={containerRef}
           className='w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing'
+          style={{ touchAction: 'none' }}
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
