@@ -39,7 +39,7 @@ export function DishList() {
   const loadDishes = async () => {
     setLoading(true);
     try {
-      const allDishes = await getAllDishes(true); // Include pending dishes in admin view
+      const allDishes = await getAllDishes(); // Returns all dishes including pending
       setDishes(allDishes);
     } catch (error) {
       console.error('Error loading dishes:', error);
