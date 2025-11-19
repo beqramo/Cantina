@@ -65,6 +65,7 @@ firebase deploy --only firestore:rules,storage
 
 - **dishes**: Readable by everyone, writable only by admins
 - **dishRequests**: Anyone can create, authenticated users can read their own, admins can approve/reject
+- **menus**: Readable by everyone (for daily menu display), creatable/updatable/deletable only by authenticated admins
 - **admins**: Readable only by admins, no direct writes (use Admin SDK)
 - **votes**: Users can create/read/update/delete their own votes
 

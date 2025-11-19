@@ -1,0 +1,41 @@
+[
+  {
+    "date": "15/01/2024",
+    "lunch": {
+      "Sugestão do Chefe": "Bacalhau à Brás",
+      "Dieta Mediterrânica": "Salada Mediterrânica",
+      "Alternativa": "Frango Grelhado",
+      "Vegetariana": "Risotto de Vegetais"
+    },
+    "dinner": {
+      "Sugestão do Chefe": "Arroz de Pato",
+      "Dieta Mediterrânica": "Peixe Grelhado",
+      "Alternativa": "Bifes de Peru",
+      "Vegetariana": "Quinoa com Legumes"
+    }
+  },
+  {
+    "date": "16/01/2024",
+    "lunch": {
+      "Sugestão do Chefe": "Cozido à Portuguesa",
+      "Dieta Mediterrânica": "Salmão Grelhado",
+      "Alternativa": "Bifes de Vaca",
+      "Vegetariana": "Lasanha de Vegetais"
+    },
+    "dinner": {
+      "Sugestão do Chefe": "Francesinha",
+      "Dieta Mediterrânica": "Atum Grelhado",
+      "Alternativa": "Frango Assado",
+      "Vegetariana": "Hambúrguer Vegetariano"
+    }
+  },
+  {
+    "date": "20/01/2024",
+    "lunch": {
+      "Sugestão do Chefe": "Feijoada",
+      "Dieta Mediterrânica": "Peixe Assado",
+      "Alternativa": "Bifes de Frango",
+      "Vegetariana": "Ratatouille"
+    }
+  }
+]

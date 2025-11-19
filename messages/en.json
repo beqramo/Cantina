@@ -22,12 +22,22 @@
     "thumbsUp": "Thumbs Up",
     "thumbsDown": "Thumbs Down",
     "votes": "Votes",
-    "imageProvidedBy": "Image provided by"
+    "imageProvidedBy": "Image provided by",
+    "uploadImage": "Upload Image",
+    "uploadImageDescription": "Upload an image for this dish. The image will be reviewed before being approved.",
+    "nickname": "Nickname",
+    "optional": "Optional",
+    "nicknamePlaceholder": "Your nickname",
+    "nicknameDescription": "If provided, your nickname will be shown when the image is approved.",
+    "cancel": "Cancel",
+    "upload": "Upload"
   },
   "TopDishes": {
     "title": "Top Dishes",
     "description": "Most popular dishes based on votes",
-    "rank": "Rank"
+    "rank": "Rank",
+    "filterByCategory": "Filter by category",
+    "allCategories": "All Categories"
   },
   "Admin": {
     "addDish": "Add Dish",
@@ -73,5 +83,38 @@
     "error": "Error",
     "success": "Success",
     "password": "Password"
+  },
+  "Menu": {
+    "dailyMenu": "Daily Menu",
+    "lunchMenu": "Lunch Menu",
+    "dinnerMenu": "Dinner Menu",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "addImage": "Add Image",
+    "pendingApproval": "Pending Approval",
+    "uploadImage": "Upload Image",
+    "uploadImageDescription": "Upload an image for this menu item. The image will be reviewed before being approved.",
+    "selectImage": "Select Image",
+    "imageCompressionNotice": "Images will be automatically compressed to reduce size (max 10MB before compression).",
+    "invalidImageType": "Invalid image type. Please upload a JPEG, PNG, WebP, or HEIC image.",
+    "imageTooLarge": "Image file is too large. Please use an image smaller than 10MB.",
+    "pleaseSelectImage": "Please select an image",
+    "upload": "Upload",
+    "cancel": "Cancel",
+    "menuManagement": "Menu Management",
+    "uploadJson": "Upload JSON",
+    "manualEntry": "Manual Entry",
+    "uploadJsonMenu": "Upload JSON Menu",
+    "jsonFormat": "JSON Format (DD/MM/YYYY)",
+    "loadTemplate": "Load Template",
+    "uploadMenus": "Upload Menus",
+    "editMenu": "Edit Menu",
+    "createMenu": "Create Menu",
+    "date": "Date",
+    "dishName": "Dish name",
+    "updateMenu": "Update Menu",
+    "existingMenus": "Existing Menus",
+    "noMenus": "No menus found",
+    "pendingMenuImages": "Pending Menu Images"
   }
 }

@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/useDebounce';
-import { searchDishes, getDishesByTags } from '@/lib/firestore';
-import { Dish, DishTag } from '@/types';
+import { searchDishes } from '@/lib/firestore';
+import { Dish } from '@/types';
 import { DishCard } from './DishCard';
-import { TagFilter } from './TagFilter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslations } from 'next-intl';
@@ -24,7 +23,6 @@ import { DishRequestForm } from './DishRequestForm';
 
 export function DishSearch() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTags, setSelectedTags] = useState<DishTag[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
@@ -40,11 +38,13 @@ export function DishSearch() {
         if (debouncedSearch.trim()) {
           // Global search - ignore tags when searching
           results = await searchDishes(debouncedSearch);
-        } else if (selectedTags.length > 0) {
-          // Filter by tags only when not searching
-          results = await getDishesByTags(selectedTags);
         } else {
+          // Tag filtering disabled - not usable for users currently
+          // else if (selectedTags.length > 0) {
+          //   results = await getDishesByTags(selectedTags);
+          // } else {
           results = [];
+          // }
         }
 
         setDishes(results);
@@ -56,7 +56,7 @@ export function DishSearch() {
     };
 
     loadDishes();
-  }, [debouncedSearch, selectedTags]);
+  }, [debouncedSearch]); // selectedTags removed - filtering disabled
 
   return (
     <div className='space-y-6'>
@@ -71,7 +71,8 @@ export function DishSearch() {
         />
       </div>
 
-      {!debouncedSearch.trim() && (
+      {/* Tag filters hidden - not usable for users currently */}
+      {/* {!debouncedSearch.trim() && (
         <div>
           <h3 className='text-sm font-medium mb-2'>
             {t('filterByTags') || 'Filter by tags'}
@@ -81,7 +82,7 @@ export function DishSearch() {
             onTagsChange={setSelectedTags}
           />
         </div>
-      )}
+      )} */}
 
       {loading && (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
@@ -91,34 +92,32 @@ export function DishSearch() {
         </div>
       )}
 
-      {!loading &&
-        (debouncedSearch.trim() || selectedTags.length > 0) &&
-        dishes.length === 0 && (
-          <Alert>
-            <AlertDescription className='flex flex-col gap-4'>
-              <p>{t('noResults')}</p>
-              <Dialog
-                open={showRequestDialog}
-                onOpenChange={setShowRequestDialog}>
-                <DialogTrigger asChild>
-                  <Button variant='outline'>{t('requestDish')}</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t('requestDish')}</DialogTitle>
-                    <DialogDescription>
-                      {t('requestDishDescription')}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DishRequestForm
-                    initialName={debouncedSearch}
-                    onSuccess={() => setShowRequestDialog(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            </AlertDescription>
-          </Alert>
-        )}
+      {!loading && debouncedSearch.trim() && dishes.length === 0 && (
+        <Alert>
+          <AlertDescription className='flex flex-col gap-4'>
+            <p>{t('noResults')}</p>
+            <Dialog
+              open={showRequestDialog}
+              onOpenChange={setShowRequestDialog}>
+              <DialogTrigger asChild>
+                <Button variant='outline'>{t('requestDish')}</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('requestDish')}</DialogTitle>
+                  <DialogDescription>
+                    {t('requestDishDescription')}
+                  </DialogDescription>
+                </DialogHeader>
+                <DishRequestForm
+                  initialName={debouncedSearch}
+                  onSuccess={() => setShowRequestDialog(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {!loading && dishes.length > 0 && (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>

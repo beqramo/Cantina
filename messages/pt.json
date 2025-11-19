@@ -22,12 +22,22 @@
     "thumbsUp": "Gostei",
     "thumbsDown": "Não Gostei",
     "votes": "Votos",
-    "imageProvidedBy": "Imagem fornecida por"
+    "imageProvidedBy": "Imagem fornecida por",
+    "uploadImage": "Carregar Imagem",
+    "uploadImageDescription": "Carrega uma imagem para este prato. A imagem será revista antes de ser aprovada.",
+    "nickname": "Alcunha",
+    "optional": "Opcional",
+    "nicknamePlaceholder": "A tua alcunha",
+    "nicknameDescription": "Se fornecida, a tua alcunha será mostrada quando a imagem for aprovada.",
+    "cancel": "Cancelar",
+    "upload": "Carregar"
   },
   "TopDishes": {
     "title": "Pratos Top",
     "description": "Pratos mais populares baseados em votos",
-    "rank": "Posição"
+    "rank": "Posição",
+    "filterByCategory": "Filtrar por categoria",
+    "allCategories": "Todas as Categorias"
   },
   "Admin": {
     "addDish": "Adicionar Prato",
@@ -73,5 +83,38 @@
     "error": "Erro",
     "success": "Sucesso",
     "password": "Palavra-passe"
+  },
+  "Menu": {
+    "dailyMenu": "Menu Diário",
+    "lunchMenu": "Menu do Almoço",
+    "dinnerMenu": "Menu do Jantar",
+    "lunch": "Almoço",
+    "dinner": "Jantar",
+    "addImage": "Adicionar Imagem",
+    "pendingApproval": "Aguardando Aprovação",
+    "uploadImage": "Carregar Imagem",
+    "uploadImageDescription": "Carrega uma imagem para este item do menu. A imagem será revista antes de ser aprovada.",
+    "selectImage": "Selecionar Imagem",
+    "imageCompressionNotice": "As imagens serão automaticamente comprimidas para reduzir o tamanho (máx. 10MB antes da compressão).",
+    "invalidImageType": "Tipo de imagem inválido. Por favor, carrega uma imagem JPEG, PNG, WebP ou HEIC.",
+    "imageTooLarge": "O ficheiro de imagem é muito grande. Por favor, usa uma imagem menor que 10MB.",
+    "pleaseSelectImage": "Por favor, seleciona uma imagem",
+    "upload": "Carregar",
+    "cancel": "Cancelar",
+    "menuManagement": "Gestão de Menu",
+    "uploadJson": "Carregar JSON",
+    "manualEntry": "Entrada Manual",
+    "uploadJsonMenu": "Carregar Menu JSON",
+    "jsonFormat": "Formato JSON (DD/MM/YYYY)",
+    "loadTemplate": "Carregar Modelo",
+    "uploadMenus": "Carregar Menus",
+    "editMenu": "Editar Menu",
+    "createMenu": "Criar Menu",
+    "date": "Data",
+    "dishName": "Nome do prato",
+    "updateMenu": "Atualizar Menu",
+    "existingMenus": "Menus Existentes",
+    "noMenus": "Nenhum menu encontrado",
+    "pendingMenuImages": "Imagens de Menu Pendentes"
   }
 }

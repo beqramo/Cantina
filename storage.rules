@@ -7,14 +7,13 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    // Dish images folder - public read, managers can write/delete
+    // Dish images folder - public read, anyone can upload (for pending images)
     match /dish-images/{imageId} {
       // Anyone can read dish images
       allow read: if true;
 
-      // Only authenticated managers can upload dish images
-      allow write: if isAuthenticated() &&
-                     request.resource.size < 5 * 1024 * 1024 && // 5MB max
+      // Anyone can upload dish images (for pending approval)
+      allow write: if request.resource.size < 5 * 1024 * 1024 && // 5MB max
                      request.resource.contentType.matches('image/.*');
 
       // Only managers can delete images

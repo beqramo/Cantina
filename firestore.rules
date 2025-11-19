@@ -12,33 +12,72 @@ service cloud.firestore {
       // Anyone can read dishes (public information)
       allow read: if true;
 
-      // Only authenticated managers can create dishes
-      allow create: if isAuthenticated() &&
-                      request.resource.data.keys().hasAll(['name', 'imageUrl', 'thumbsUp', 'thumbsDown', 'createdAt', 'updatedAt', 'tags']) &&
-                      request.resource.data.name is string &&
-                      request.resource.data.imageUrl is string &&
-                      request.resource.data.thumbsUp is int &&
-                      request.resource.data.thumbsDown is int &&
-                      request.resource.data.tags is list &&
-                      // Allow optional fields
-                      (!('category' in request.resource.data) || request.resource.data.category is string || request.resource.data.category == null) &&
-                      (!('imageProviderNickname' in request.resource.data) || request.resource.data.imageProviderNickname is string || request.resource.data.imageProviderNickname == null) &&
-                      (!('nameTokens' in request.resource.data) || request.resource.data.nameTokens is list);
+      // Public visitors can create dishes with status='pending' (dish requests)
+      // Authenticated managers can create dishes with any status
+      allow create: if (
+                        // Public visitors can create pending dishes
+                        (!isAuthenticated() &&
+                         request.resource.data.keys().hasAll(['name', 'imageUrl', 'status', 'thumbsUp', 'thumbsDown', 'createdAt', 'updatedAt', 'tags', 'requestedBy']) &&
+                         request.resource.data.status == 'pending' &&
+                         request.resource.data.name is string &&
+                         request.resource.data.imageUrl is string &&
+                         request.resource.data.thumbsUp is int &&
+                         request.resource.data.thumbsDown is int &&
+                         request.resource.data.tags is list &&
+                         request.resource.data.requestedBy is string &&
+                         // Allow optional fields
+                         (!('category' in request.resource.data) || request.resource.data.category is string || request.resource.data.category == null) &&
+                         (!('nickname' in request.resource.data) || request.resource.data.nickname is string || request.resource.data.nickname == null) &&
+                         (!('images' in request.resource.data) || request.resource.data.images is list) &&
+                         (!('nameTokens' in request.resource.data) || request.resource.data.nameTokens is list) &&
+                         (!('pendingImages' in request.resource.data) || request.resource.data.pendingImages is list)) ||
+                        // Authenticated managers can create dishes with any status
+                        (isAuthenticated() &&
+                         request.resource.data.keys().hasAll(['name', 'imageUrl', 'status', 'thumbsUp', 'thumbsDown', 'createdAt', 'updatedAt', 'tags']) &&
+                         request.resource.data.name is string &&
+                         request.resource.data.imageUrl is string &&
+                         request.resource.data.status is string &&
+                         request.resource.data.status in ['pending', 'approved', 'rejected'] &&
+                         request.resource.data.thumbsUp is int &&
+                         request.resource.data.thumbsDown is int &&
+                         request.resource.data.tags is list &&
+                         // Allow optional fields
+                         (!('category' in request.resource.data) || request.resource.data.category is string || request.resource.data.category == null) &&
+                         (!('imageProviderNickname' in request.resource.data) || request.resource.data.imageProviderNickname is string || request.resource.data.imageProviderNickname == null) &&
+                         (!('requestedBy' in request.resource.data) || request.resource.data.requestedBy is string) &&
+                         (!('nickname' in request.resource.data) || request.resource.data.nickname is string || request.resource.data.nickname == null) &&
+                         (!('images' in request.resource.data) || request.resource.data.images is list) &&
+                         (!('nameTokens' in request.resource.data) || request.resource.data.nameTokens is list) &&
+                         (!('pendingImages' in request.resource.data) || request.resource.data.pendingImages is list));
 
-      // Public visitors can only update votes (thumbsUp/thumbsDown)
-      // Managers can update any field
+      // Public visitors can update votes (thumbsUp/thumbsDown) or add pending images
+      // Managers can update any field including status
       allow update: if (
-                        // Public visitors can only update vote counts
+                        // Public visitors can update vote counts
                         (!isAuthenticated() &&
                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['thumbsUp', 'thumbsDown']) &&
                          request.resource.data.thumbsUp is int &&
                          request.resource.data.thumbsDown is int &&
                          request.resource.data.thumbsUp >= 0 &&
-                         request.resource.data.thumbsDown >= 0) ||
-                        // Managers can update any field
+                         request.resource.data.thumbsDown >= 0 &&
+                         // Status must not change
+                         request.resource.data.status == resource.data.status) ||
+                        // Public visitors can add pending images (only pendingImages and updatedAt can change)
+                        (!isAuthenticated() &&
+                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pendingImages', 'updatedAt']) &&
+                         request.resource.data.pendingImages is list &&
+                         // Ensure other fields don't change
+                         request.resource.data.name == resource.data.name &&
+                         request.resource.data.imageUrl == resource.data.imageUrl &&
+                         request.resource.data.status == resource.data.status &&
+                         request.resource.data.thumbsUp == resource.data.thumbsUp &&
+                         request.resource.data.thumbsDown == resource.data.thumbsDown) ||
+                        // Managers can update any field including status
                         (isAuthenticated() &&
                          // Ensure nameTokens is a list if present
-                         (!('nameTokens' in request.resource.data) || request.resource.data.nameTokens is list))
+                         (!('nameTokens' in request.resource.data) || request.resource.data.nameTokens is list) &&
+                         // Ensure status is valid if present
+                         (!('status' in request.resource.data) || request.resource.data.status in ['pending', 'approved', 'rejected']))
                       );
 
       // Only managers can delete dishes
@@ -67,6 +106,61 @@ service cloud.firestore {
                        request.resource.data.status == 'rejected');
 
       // Only managers can delete requests
+      allow delete: if isAuthenticated();
+    }
+
+    // Menus collection
+    match /menus/{menuId} {
+      // Anyone can read menus (public information for daily menu display)
+      allow read: if true;
+
+      // Only authenticated admins can create menus
+      // Dinner is optional (Saturday has no dinner menu)
+      allow create: if isAuthenticated() &&
+                      request.resource.data.keys().hasAll(['date', 'lunch', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.date is timestamp &&
+                      request.resource.data.lunch is map &&
+                      request.resource.data.lunch.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
+                      // Dinner is optional, but if present must have all categories
+                      (!('dinner' in request.resource.data) ||
+                       (request.resource.data.dinner is map &&
+                        request.resource.data.dinner.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana'])));
+
+      // Public users can update menu items to add images (imageUrl and imagePendingApproval)
+      // Admins can update any field
+      allow update: if (
+                        // Public users can only update imageUrl and imagePendingApproval in menu items
+                        (!isAuthenticated() &&
+                         // Date must not change
+                         request.resource.data.date == resource.data.date &&
+                         // Structure must be maintained
+                         request.resource.data.lunch is map &&
+                         request.resource.data.dinner is map &&
+                         request.resource.data.lunch.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
+                         request.resource.data.dinner.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
+                         // dishName must not change (validate for all categories)
+                         request.resource.data.lunch['Sugestão do Chefe'].dishName == resource.data.lunch['Sugestão do Chefe'].dishName &&
+                         request.resource.data.lunch['Dieta Mediterrânica'].dishName == resource.data.lunch['Dieta Mediterrânica'].dishName &&
+                         request.resource.data.lunch['Alternativa'].dishName == resource.data.lunch['Alternativa'].dishName &&
+                         request.resource.data.lunch['Vegetariana'].dishName == resource.data.lunch['Vegetariana'].dishName &&
+                         request.resource.data.dinner['Sugestão do Chefe'].dishName == resource.data.dinner['Sugestão do Chefe'].dishName &&
+                         request.resource.data.dinner['Dieta Mediterrânica'].dishName == resource.data.dinner['Dieta Mediterrânica'].dishName &&
+                         request.resource.data.dinner['Alternativa'].dishName == resource.data.dinner['Alternativa'].dishName &&
+                         request.resource.data.dinner['Vegetariana'].dishName == resource.data.dinner['Vegetariana'].dishName) ||
+                        // Admins can update any field
+                        (isAuthenticated() &&
+                         request.resource.data.keys().hasAll(['date', 'lunch', 'updatedAt']) &&
+                         request.resource.data.date is timestamp &&
+                         request.resource.data.lunch is map &&
+                         request.resource.data.lunch.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
+                         // Dinner is optional, but if present must have all categories
+                         (!('dinner' in request.resource.data) ||
+                          request.resource.data.dinner == null ||
+                          (request.resource.data.dinner is map &&
+                           request.resource.data.dinner.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']))))
+                      );
+
+      // Only authenticated admins can delete menus
       allow delete: if isAuthenticated();
     }
 

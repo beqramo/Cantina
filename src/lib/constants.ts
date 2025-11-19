@@ -32,4 +32,6 @@ export const STORAGE_KEYS = {
   VOTE_PREFIX: 'cantina_vote_',
   USER_ID: 'cantina_user_id',
   NICKNAME: 'cantina_nickname',
+  DEVICE_ID: 'cantina_device_id',
+  DISH_IMAGE_PREFIX: 'cantina_dish_image_',
 } as const;

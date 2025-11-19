@@ -1,9 +1,22 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  startTransition,
+} from 'react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { X, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import {
+  X,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ImageViewerProps {
@@ -11,6 +24,9 @@ interface ImageViewerProps {
   alt: string;
   isOpen: boolean;
   onClose: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  showNavigation?: boolean;
 }
 
 export function ImageViewer({
@@ -18,6 +34,9 @@ export function ImageViewer({
   alt,
   isOpen,
   onClose,
+  onPrevious,
+  onNext,
+  showNavigation = false,
 }: ImageViewerProps) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -39,6 +58,12 @@ export function ImageViewer({
     setScale(1);
     setPosition({ x: 0, y: 0 });
   };
+
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setScale((prev) => Math.max(0.5, Math.min(5, prev + delta)));
+  }, []);
 
   // Prevent browser zoom when dialog is open
   useEffect(() => {
@@ -68,6 +93,12 @@ export function ImageViewer({
       } else if (e.key === '0') {
         e.preventDefault();
         resetZoom();
+      } else if (showNavigation && onPrevious && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        onPrevious();
+      } else if (showNavigation && onNext && e.key === 'ArrowRight') {
+        e.preventDefault();
+        onNext();
       }
     };
 
@@ -96,23 +127,26 @@ export function ImageViewer({
       passive: false,
     });
 
+    // Add wheel event listener with passive: false to allow preventDefault
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+    }
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('touchstart', preventZoom);
       document.removeEventListener('touchmove', preventZoom);
       document.removeEventListener('touchend', preventDoubleTapZoom);
+      if (container) {
+        container.removeEventListener('wheel', handleWheel);
+      }
       // Restore original viewport settings
       if (viewport && originalContent) {
         viewport.setAttribute('content', originalContent);
       }
     };
-  }, [isOpen, onClose]);
-
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setScale((prev) => Math.max(0.5, Math.min(5, prev + delta)));
-  };
+  }, [isOpen, onClose, showNavigation, onPrevious, onNext, handleWheel]);
 
   // Touch/pinch zoom handlers
   const touchStartRef = useRef<{
@@ -225,6 +259,17 @@ export function ImageViewer({
     }
   };
 
+  // Reset zoom when image changes
+  useEffect(() => {
+    if (isOpen) {
+      startTransition(() => {
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
+        setImageLoaded(false);
+      });
+    }
+  }, [imageUrl, isOpen]);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
@@ -238,6 +283,25 @@ export function ImageViewer({
           }
         }}>
         <DialogTitle className='sr-only'>{alt}</DialogTitle>
+
+        {/* Navigation Buttons */}
+        {showNavigation && onPrevious && onNext && (
+          <>
+            <button
+              onClick={onPrevious}
+              className='absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
+              aria-label='Previous image'>
+              <ChevronLeft className='h-6 w-6' />
+            </button>
+            <button
+              onClick={onNext}
+              className='absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
+              aria-label='Next image'>
+              <ChevronRight className='h-6 w-6' />
+            </button>
+          </>
+        )}
+
         <div className='absolute top-4 right-4 z-50 flex gap-2'>
           <button
             onClick={handleZoomOut}
@@ -272,7 +336,6 @@ export function ImageViewer({
           ref={containerRef}
           className='w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing'
           style={{ touchAction: 'none' }}
-          onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}

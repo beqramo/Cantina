@@ -39,7 +39,7 @@ export function DishList() {
   const loadDishes = async () => {
     setLoading(true);
     try {
-      const allDishes = await getAllDishes();
+      const allDishes = await getAllDishes(true); // Include pending dishes in admin view
       setDishes(allDishes);
     } catch (error) {
       console.error('Error loading dishes:', error);
@@ -102,33 +102,51 @@ export function DishList() {
         {dishes.map((dish) => (
           <Card key={dish.id} className='overflow-hidden'>
             <div
-              className='relative aspect-video w-full cursor-pointer group'
-              onClick={() =>
-                setViewingImage({ url: dish.imageUrl, alt: dish.name })
-              }
-              role='button'
-              tabIndex={0}
+              className={`relative aspect-video w-full ${
+                dish.imageUrl ? 'cursor-pointer group' : ''
+              }`}
+              onClick={() => {
+                if (dish.imageUrl) {
+                  setViewingImage({ url: dish.imageUrl, alt: dish.name });
+                }
+              }}
+              role={dish.imageUrl ? 'button' : undefined}
+              tabIndex={dish.imageUrl ? 0 : undefined}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (dish.imageUrl && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
                   setViewingImage({ url: dish.imageUrl, alt: dish.name });
                 }
               }}
-              aria-label={`View full size image of ${dish.name}`}>
-              <Image
-                src={dish.imageUrl}
-                alt={dish.name}
-                fill
-                className='object-cover transition-opacity group-hover:opacity-90'
-                sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
-              />
-              <div className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors'>
-                <div className='opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
-                  <div className='bg-black/60 backdrop-blur-sm rounded-full p-2'>
-                    <Maximize2 className='h-6 w-6 md:h-8 md:w-8 text-white' />
+              aria-label={
+                dish.imageUrl
+                  ? `View full size image of ${dish.name}`
+                  : undefined
+              }>
+              {dish.imageUrl ? (
+                <>
+                  <Image
+                    src={dish.imageUrl}
+                    alt={dish.name}
+                    fill
+                    className='object-cover transition-opacity group-hover:opacity-90'
+                    sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+                  />
+                  <div className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors'>
+                    <div className='opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
+                      <div className='bg-black/60 backdrop-blur-sm rounded-full p-2'>
+                        <Maximize2 className='h-6 w-6 md:h-8 md:w-8 text-white' />
+                      </div>
+                    </div>
                   </div>
+                </>
+              ) : (
+                <div className='absolute inset-0 bg-muted flex items-center justify-center'>
+                  <p className='text-muted-foreground text-sm'>
+                    {t('noImage') || 'No image'}
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
             <CardContent className='p-4'>
               <div className='flex items-start justify-between gap-2 mb-2'>
