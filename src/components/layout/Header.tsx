@@ -1,32 +1,19 @@
 'use client';
 
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname } from '@/lib/navigation';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { locales } from '@/i18n';
 
 export function Header() {
   const t = useTranslations('Navigation');
   const { user } = useAuth();
   const pathname = usePathname();
 
-  // Remove locale prefix from pathname for comparison
-  let pathWithoutLocale = pathname || '/';
-  for (const loc of locales) {
-    if (pathname?.startsWith(`/${loc}/`)) {
-      pathWithoutLocale = pathname.replace(`/${loc}`, '');
-      break;
-    } else if (pathname === `/${loc}`) {
-      pathWithoutLocale = '/';
-      break;
-    }
-  }
-
-  const isAdminRoute = pathWithoutLocale?.startsWith('/admin');
+  // pathname from next-intl navigation is already without locale prefix
+  const isAdminRoute = pathname?.startsWith('/admin');
 
   const navLinks = !isAdminRoute
     ? [
@@ -55,7 +42,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathWithoutLocale === link.href
+                  pathname === link.href
                     ? 'text-primary'
                     : 'text-muted-foreground'
                 }`}>
@@ -88,7 +75,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={`whitespace-nowrap text-xs font-medium transition-colors px-2 py-1 rounded-md ${
-                  pathWithoutLocale === link.href
+                  pathname === link.href
                     ? 'text-primary bg-primary/10'
                     : 'text-muted-foreground hover:text-primary hover:bg-accent'
                 }`}>

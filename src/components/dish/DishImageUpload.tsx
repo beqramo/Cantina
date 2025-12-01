@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,6 +19,7 @@ import { Dish } from '@/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslations } from 'next-intl';
 import { STORAGE_KEYS } from '@/lib/constants';
+import { Turnstile } from '@/components/ui/Turnstile';
 
 interface DishImageUploadProps {
   dish: Dish;
@@ -41,6 +42,17 @@ export function DishImageUpload({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nickname, setNickname] = useState<string>('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  // Turnstile callbacks
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
+  const handleTurnstileError = useCallback(() => {
+    setTurnstileToken(null);
+    setError('Security verification failed. Please try again.');
+  }, []);
 
   // Note: Users can upload multiple images even if they have pending ones
 
@@ -114,8 +126,11 @@ export function DishImageUpload({
     setError(null);
 
     try {
-      // Upload image
-      const imageUrl = await uploadImage(imageFile);
+      // Upload image with Turnstile token
+      const imageUrl = await uploadImage(imageFile, {
+        isRequest: false,
+        turnstileToken: turnstileToken || undefined,
+      });
 
       // Add pending image to dish
       await addPendingDishImage(
@@ -213,6 +228,14 @@ export function DishImageUpload({
               />
             </div>
           )}
+
+          {/* Turnstile CAPTCHA - only shown when configured */}
+          <Turnstile
+            onVerify={handleTurnstileVerify}
+            onError={handleTurnstileError}
+            onExpire={handleTurnstileError}
+            theme='auto'
+          />
 
           <div className='flex gap-2 justify-end'>
             <Button

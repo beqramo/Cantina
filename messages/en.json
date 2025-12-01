@@ -15,7 +15,11 @@
     "noResults": "No dishes found",
     "requestDish": "Add the dish",
     "requestDishDescription": "Can't find what you're looking for? Add it yourself! Please provide all the information you can (name, image, category, tags) and we'll review and confirm it. Your participation helps make the menu better for everyone.",
-    "filterByTags": "Filter by tags"
+    "filterByTags": "Filter by tags",
+    "dishSubmittedTitle": "Dish Submitted!",
+    "dishSubmittedDescription": "Thank you for your contribution! Your dish has been submitted for review. Once approved by our team, it will appear in the dish list.",
+    "close": "Close",
+    "yourPendingDishes": "Your pending submissions"
   },
   "Dish": {
     "category": "Category",
@@ -58,16 +62,49 @@
     "nickname": "Nickname",
     "nicknamePlaceholder": "Your nickname (optional)",
     "nicknameDescription": "This will be shown as \"Image provided by [nickname]\" if you upload an image",
-    "requestedBy": "Requested by"
+    "requestedBy": "Requested by",
+    "uploadedBy": "Uploaded by",
+    "imagesPending": "images pending",
+    "noImage": "No image"
   },
   "About": {
-    "title": "About Cantina",
-    "description": "This is an open source project for the IPB cantina.",
-    "githubLink": "View on GitHub",
+    "title": "About Cantina IPB",
+    "subtitle": "A community-driven guide to IPB canteen dishes",
+    "description": "Cantina IPB is a passion project created to help IPB students discover, rate, and share information about the dishes served at the university canteen. Our goal is to build a comprehensive resource that helps students make informed choices about their meals.",
+    "disclaimer": "Important Disclaimer",
+    "disclaimerDescription": "This website is NOT officially connected to, affiliated with, or endorsed by the IPB canteen or Instituto Politécnico de Bragança. It is an independent, voluntary project created by a student for students. All opinions, ratings, and content are contributed by the community and do not represent official views of IPB or its canteen services.",
+    "mission": "Our Mission",
+    "missionDescription": "To create a helpful resource where IPB students can discover what dishes are served at the canteen, see real photos of meals, and share their experiences. We believe that good information helps everyone make better food choices.",
+    "acknowledgments": "Acknowledgments",
+    "acknowledgmentsDescription": "The initial batch of dish images was sourced from the <instagramLink></instagramLink> Instagram page. Although permission was requested, the account owner appears to be inactive. We are deeply grateful for their work in documenting canteen dishes, which helped us get this project started. Thank you to whoever ran that account – your photos are helping fellow students!",
+    "instagramAccount": "@comidasdoipb",
+    "communityDriven": "Community Driven",
+    "communityDrivenDescription": "Initially, you may notice that some dishes don't have images or there isn't much data available. That's because this project has just started! The success of Cantina IPB depends 100% on students like you who are willing to upload pictures and add new dishes. Every contribution helps build a valuable resource for current students and future generations.",
+    "volunteer": "Voluntary & Non-Profit",
+    "volunteerDescription": "This project is created and maintained entirely on a volunteer basis. There is absolutely no financial interest involved – no ads, no sponsorships, no data selling. It's purely a gift to the IPB student community. I maintain this project in my free time because I believe it can genuinely help students.",
     "openSource": "Open Source",
-    "openSourceDescription": "This project is open source. Everyone can submit pull requests to improve it.",
-    "costNotice": "Cost Notice",
-    "costNoticeDescription": "Please do not abuse the endpoints as I will not be able to maintain the project if costs go high."
+    "openSourceDescription": "This project is completely open source and available on GitHub. Everyone is welcome to contribute! Whether you want to fix a bug, add a feature, improve translations, or suggest ideas – all pull requests are welcome. I personally review every PR and appreciate all contributions from the community.",
+    "contributingTitle": "How to Contribute",
+    "contributingDescription": "Fork the repository, make your changes, and submit a pull request. I'll review it as soon as I can!",
+    "githubLink": "View on GitHub",
+    "costNotice": "A Note on Costs",
+    "costNoticeDescription": "Running this service has real costs (hosting, database, storage). Please use the platform responsibly and avoid abusing the upload features. If costs become unsustainable, it may affect the project's ability to continue. Thank you for your understanding!",
+    "contact": "Contact",
+    "contactDescription": "Have questions, feedback, or found a bug? Feel free to reach out!",
+    "thankYou": "Thank You",
+    "thankYouDescription": "Thank you for being part of this community. Together, we can build something valuable that will help IPB students for years to come. Every dish you add, every image you upload, and every vote you cast makes a difference!"
+  },
+  "Welcome": {
+    "title": "Welcome to Cantina IPB! 🍽️",
+    "subtitle": "Your community guide to IPB canteen dishes",
+    "description": "We're a student-made platform to help you discover and rate the dishes served at IPB's canteen. Browse meals, see real photos, and share your experiences!",
+    "workInProgress": "We're Just Getting Started",
+    "workInProgressDescription": "You might notice we don't have many dish photos yet – that's because we've just launched! This platform grows with YOUR contributions.",
+    "callToAction": "Help Us Grow!",
+    "callToActionDescription": "With your help, we can build an amazing resource filled with dish photos and reviews. When you eat at the canteen, snap a photo and upload it! Your contributions will help current students and future generations discover great meals.",
+    "notOfficial": "Note: This is an independent student project, not affiliated with IPB officially.",
+    "getStarted": "Let's Explore!",
+    "dontShowAgain": "Don't show this again"
   },
   "Rules": {
     "title": "Canteen Rules",
@@ -90,8 +127,11 @@
     "dinnerMenu": "Dinner Menu",
     "lunch": "Lunch",
     "dinner": "Dinner",
+    "noMenuAvailable": "No menu available for today",
+    "noMenuDescription": "The daily menu hasn't been added yet. Try searching for the dish you're looking for!",
     "addImage": "Add Image",
     "pendingApproval": "Pending Approval",
+    "imagePendingReview": "Image pending review",
     "uploadImage": "Upload Image",
     "uploadImageDescription": "Upload an image for this menu item. The image will be reviewed before being approved.",
     "selectImage": "Select Image",
@@ -115,6 +155,27 @@
     "updateMenu": "Update Menu",
     "existingMenus": "Existing Menus",
     "noMenus": "No menus found",
-    "pendingMenuImages": "Pending Menu Images"
+    "pendingMenuImages": "Pending Menu Images",
+    "pendingDishImages": "Pending Dish Images"
+  },
+  "Categories": {
+    "Sugestão do Chefe": "Chef's Suggestion",
+    "Dieta Mediterrânica": "Mediterranean Diet",
+    "Alternativa": "Alternative",
+    "Vegetariana": "Vegetarian"
+  },
+  "Tags": {
+    "#porco": "#pork",
+    "#beef": "#beef",
+    "#frango": "#chicken",
+    "#peixe": "#fish",
+    "#salada": "#salad",
+    "#sopa": "#soup",
+    "#sobremesa": "#dessert",
+    "#vegetariano": "#vegetarian",
+    "#vegano": "#vegan",
+    "#picante": "#spicy",
+    "#gluten-free": "#gluten-free",
+    "#lactose-free": "#lactose-free"
   }
 }

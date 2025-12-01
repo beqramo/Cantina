@@ -77,6 +77,7 @@ function normalizeSearchTerm(term: string): string {
 
 // Helper function to generate comprehensive search tokens
 // Creates multiple variations for flexible Portuguese search
+// Prioritizes dishes with images by adding more searchable tokens
 function generateSearchTokens(name: string): string[] {
   const tokens = new Set<string>();
 
@@ -91,24 +92,91 @@ function generateSearchTokens(name: string): string[] {
   // Split into words and add each word
   const words = normalized.split(/\s+/).filter((word) => word.length > 0);
 
-  words.forEach((word) => {
+  words.forEach((word, wordIndex) => {
     if (word.length > 0) {
       tokens.add(word);
 
       // Add word prefixes (for partial matching)
-      // For words longer than 3 characters, add prefixes starting from 3 chars
+      // Start from 2 characters for shorter words, 3 for longer
+      const minPrefix = word.length <= 4 ? 2 : 3;
+      for (let i = minPrefix; i <= word.length; i++) {
+        tokens.add(word.substring(0, i));
+      }
+
+      // Add word suffixes (for matching end of words)
+      // E.g., "frango" -> "rango", "ango", "ngo"
       if (word.length > 3) {
-        for (let i = 3; i <= word.length; i++) {
-          const prefix = word.substring(0, i);
-          if (prefix.length >= 3) {
-            tokens.add(prefix);
-          }
+        for (let i = 1; i <= Math.min(3, word.length - 2); i++) {
+          tokens.add(word.substring(i));
         }
       }
     }
   });
 
-  // Also add original words (before normalization) in lowercase for exact matches
+  // Add bigrams (pairs of consecutive words)
+  // E.g., "arroz de frango" -> "arroz de", "de frango"
+  for (let i = 0; i < words.length - 1; i++) {
+    const bigram = `${words[i]} ${words[i + 1]}`;
+    tokens.add(bigram);
+    // Add bigram prefixes
+    for (let j = 3; j <= bigram.length; j++) {
+      tokens.add(bigram.substring(0, j));
+    }
+  }
+
+  // Add trigrams (three consecutive words) if available
+  // E.g., "arroz de frango" -> "arroz de frango"
+  for (let i = 0; i < words.length - 2; i++) {
+    const trigram = `${words[i]} ${words[i + 1]} ${words[i + 2]}`;
+    tokens.add(trigram);
+  }
+
+  // Add combined word prefixes (first letters of each word)
+  // E.g., "arroz de frango" -> "adf", "ad", "af"
+  if (words.length >= 2) {
+    const initials = words.map((w) => w[0]).join('');
+    if (initials.length >= 2) {
+      tokens.add(initials);
+    }
+  }
+
+  // Add word combinations without common connectors (de, com, e, ao, à, a)
+  const connectors = new Set([
+    'de',
+    'com',
+    'e',
+    'ao',
+    'a',
+    'à',
+    'do',
+    'da',
+    'dos',
+    'das',
+    'em',
+    'no',
+    'na',
+  ]);
+  const significantWords = words.filter(
+    (w) => !connectors.has(w) && w.length > 1,
+  );
+
+  // Add each significant word prefix
+  significantWords.forEach((word) => {
+    for (let i = 2; i <= word.length; i++) {
+      tokens.add(word.substring(0, i));
+    }
+  });
+
+  // Add combinations of significant words
+  if (significantWords.length >= 2) {
+    for (let i = 0; i < significantWords.length; i++) {
+      for (let j = i + 1; j < significantWords.length; j++) {
+        tokens.add(`${significantWords[i]} ${significantWords[j]}`);
+      }
+    }
+  }
+
+  // Add original words (before normalization) in lowercase for exact matches with accents
   const originalWords = name
     .toLowerCase()
     .split(/\s+/)
@@ -116,8 +184,18 @@ function generateSearchTokens(name: string): string[] {
   originalWords.forEach((word) => {
     if (word.length > 0) {
       tokens.add(word);
+      // Add prefixes for original words too
+      for (let i = 2; i <= word.length; i++) {
+        tokens.add(word.substring(0, i));
+      }
     }
   });
+
+  // Add the original name lowercase
+  const originalLower = name.toLowerCase().trim();
+  if (originalLower.length > 0 && originalLower !== normalized) {
+    tokens.add(originalLower);
+  }
 
   return Array.from(tokens);
 }
@@ -223,21 +301,35 @@ export async function searchDishes(
       }
     }
 
-    // Sort results: exact matches first, then prefix matches, then contains matches
+    // Sort results: prioritize dishes with images, then exact matches, prefix matches, contains matches
     dishes.sort((a, b) => {
       const aName = normalizeSearchTerm(a.name);
       const bName = normalizeSearchTerm(b.name);
       const search = normalizedSearchTerm;
 
-      // Exact match gets highest priority
+      // First priority: dishes with images come first
+      const aHasImage = !!(a.imageUrl && a.imageUrl.length > 0);
+      const bHasImage = !!(b.imageUrl && b.imageUrl.length > 0);
+      if (aHasImage && !bHasImage) return -1;
+      if (bHasImage && !aHasImage) return 1;
+
+      // Second priority: exact match
       if (aName === search && bName !== search) return -1;
       if (bName === search && aName !== search) return 1;
 
-      // Prefix match gets second priority
+      // Third priority: prefix match
       const aStartsWith = aName.startsWith(search);
       const bStartsWith = bName.startsWith(search);
       if (aStartsWith && !bStartsWith) return -1;
       if (bStartsWith && !aStartsWith) return 1;
+
+      // Fourth priority: word starts with search term
+      const aWords = aName.split(/\s+/);
+      const bWords = bName.split(/\s+/);
+      const aWordStarts = aWords.some((w) => w.startsWith(search));
+      const bWordStarts = bWords.some((w) => w.startsWith(search));
+      if (aWordStarts && !bWordStarts) return -1;
+      if (bWordStarts && !aWordStarts) return 1;
 
       // Then sort alphabetically
       return aName.localeCompare(bName);
@@ -296,12 +388,23 @@ export async function getDishesByTags(tags: DishTag[]): Promise<Dish[]> {
   }
 }
 
-export async function getAllDishes(): Promise<Dish[]> {
+export async function getAllDishes(
+  includeAllStatuses = false,
+): Promise<Dish[]> {
   if (!db) return [];
 
   try {
     const dishesRef = collection(db, 'dishes');
-    const q = query(dishesRef, orderBy('createdAt', 'desc'));
+
+    // By default, only return approved dishes
+    // If includeAllStatuses is true, return all dishes (for admin purposes)
+    const q = includeAllStatuses
+      ? query(dishesRef, orderBy('createdAt', 'desc'))
+      : query(
+          dishesRef,
+          where('status', '==', 'approved'),
+          orderBy('createdAt', 'desc'),
+        );
 
     const querySnapshot = await getDocs(q);
     const dishes: Dish[] = [];
@@ -542,16 +645,13 @@ export async function approveDishRequest(dishId: string): Promise<void> {
   }
 }
 
-// Reject a pending dish (replaces rejectDishRequest)
+// Reject a pending dish - deletes it from the database
 export async function rejectDishRequest(dishId: string): Promise<void> {
   if (!db) throw new Error('Firebase not initialized');
 
   try {
     const dishRef = doc(db, 'dishes', dishId);
-    await updateDoc(dishRef, {
-      status: 'rejected',
-      updatedAt: Timestamp.now(),
-    });
+    await deleteDoc(dishRef);
   } catch (error) {
     console.error('Error rejecting dish:', error);
     throw error;
@@ -876,9 +976,12 @@ export async function rejectMenuItemImage(
 
     const data = menuDoc.data();
     const mealItems = { ...data[mealType] };
+
+    // Remove the imageUrl by keeping only the dishName and setting imagePendingApproval to false
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { imageUrl: _imageUrl, ...restOfMenuItem } = mealItems[category];
     mealItems[category] = {
-      ...mealItems[category],
-      imageUrl: undefined,
+      ...restOfMenuItem,
       imagePendingApproval: false,
     };
 

@@ -22,7 +22,7 @@ export const DISH_TAGS: DishTag[] = [
   '#lactose-free',
 ];
 
-export const MAX_IMAGE_SIZE = 1024 * 1024; // 1MB
+export const MAX_IMAGE_SIZE = 500 * 1024; // 500KB
 export const MAX_IMAGE_WIDTH = 1200;
 export const SEARCH_DEBOUNCE_MS = 300;
 export const DISHES_PER_PAGE = 10;
@@ -34,4 +34,5 @@ export const STORAGE_KEYS = {
   NICKNAME: 'cantina_nickname',
   DEVICE_ID: 'cantina_device_id',
   DISH_IMAGE_PREFIX: 'cantina_dish_image_',
+  PENDING_DISHES: 'cantina_pending_dishes',
 } as const;

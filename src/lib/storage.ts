@@ -121,11 +121,10 @@ function validateImageType(file: File): void {
 }
 
 /**
- * Compresses an image file to reduce its size before upload
- * Uses aggressive compression settings to minimize file size while maintaining acceptable quality
- * Automatically converts HEIC/HEIF (iPhone images) to JPEG first
+ * Client-side image compression using browser-image-compression
+ * Used as a pre-processing step before server-side compression
  */
-export async function compressImage(file: File): Promise<File> {
+async function compressImageClientSide(file: File): Promise<File> {
   // Validate image type
   validateImageType(file);
 
@@ -149,17 +148,17 @@ export async function compressImage(file: File): Promise<File> {
   }
 
   const options: Options = {
-    maxSizeMB: MAX_IMAGE_SIZE / (1024 * 1024), // Convert to MB (1MB)
+    maxSizeMB: MAX_IMAGE_SIZE / (1024 * 1024), // Convert to MB (0.5MB / 500KB)
     maxWidthOrHeight: MAX_IMAGE_WIDTH, // 1200px
     useWebWorker: true, // Use web worker for better performance
     fileType: processedFile.type, // Use converted file type
-    initialQuality: 0.8, // Start with 80% quality for better compression
+    initialQuality: 0.7, // Start with 70% quality for better compression
     alwaysKeepResolution: false, // Allow resizing if needed
     // For JPEG/WebP, use better compression
     ...(processedFile.type === 'image/jpeg' ||
     processedFile.type === 'image/jpg'
       ? {
-          initialQuality: 0.75, // Slightly lower quality for JPEG
+          initialQuality: 0.65, // Lower quality for JPEG
         }
       : {}),
   };
@@ -173,31 +172,60 @@ export async function compressImage(file: File): Promise<File> {
       100
     ).toFixed(1);
     console.log(
-      `Image compressed: ${(processedFile.size / 1024).toFixed(1)}KB → ${(
-        compressedFile.size / 1024
-      ).toFixed(1)}KB (${compressionRatio}% reduction)`,
+      `[Client] Image compressed: ${(processedFile.size / 1024).toFixed(
+        1,
+      )}KB → ${(compressedFile.size / 1024).toFixed(
+        1,
+      )}KB (${compressionRatio}% reduction)`,
     );
 
     return compressedFile;
   } catch (error) {
     console.error('Error compressing image:', error);
-    throw new Error(
-      error instanceof Error
-        ? `Failed to compress image: ${error.message}`
-        : 'Failed to compress image. Please try a different image.',
-    );
+    // Return original file if compression fails - server will handle it
+    return processedFile;
   }
 }
 
 /**
- * Uploads an image to Firebase Storage after compression
- * Automatically compresses images to reduce upload size
+ * Legacy compress function for backward compatibility
+ * @deprecated Use uploadImage instead which handles compression automatically
+ */
+export async function compressImage(file: File): Promise<File> {
+  return compressImageClientSide(file);
+}
+
+interface UploadImageOptions {
+  /** If true, uploads to request-images folder instead of dish-images */
+  isRequest?: boolean;
+  /** Turnstile verification token (required if Turnstile is configured on server) */
+  turnstileToken?: string;
+  /** Internal API key for server-side/script uploads (bypasses Turnstile) */
+  internalApiKey?: string;
+}
+
+/**
+ * Uploads an image via server-side API for optimal compression
+ * Uses sharp on the server for reliable compression to under 500KB
+ *
+ * @param file - The image file to upload
+ * @param optionsOrIsRequest - Options object or boolean for backward compatibility
+ * @param turnstileToken - Optional Turnstile verification token (deprecated, use options)
  */
 export async function uploadImage(
   file: File,
-  isRequest: boolean = false,
+  optionsOrIsRequest: boolean | UploadImageOptions = false,
+  turnstileToken?: string,
 ): Promise<string> {
-  // Validate file size before compression (max 10MB before compression)
+  // Handle both old and new API signatures
+  const options: UploadImageOptions =
+    typeof optionsOrIsRequest === 'boolean'
+      ? { isRequest: optionsOrIsRequest, turnstileToken }
+      : optionsOrIsRequest;
+
+  const { isRequest = false, turnstileToken: token, internalApiKey } = options;
+
+  // Validate file size before processing (max 10MB before compression)
   const MAX_INPUT_SIZE = 10 * 1024 * 1024; // 10MB
   if (file.size > MAX_INPUT_SIZE) {
     throw new Error(
@@ -205,6 +233,84 @@ export async function uploadImage(
     );
   }
 
+  // Validate image type
+  validateImageType(file);
+
+  try {
+    // Pre-process: Convert HEIC to JPEG and do initial client-side compression
+    // This reduces the payload sent to the server
+    let processedFile = file;
+
+    // Convert HEIC first (server sharp can't handle HEIC directly)
+    if (isHeicFile(file)) {
+      processedFile = await convertHeicToJpeg(file);
+    }
+
+    // Do client-side compression to reduce upload size
+    // Server will do final optimization
+    if (processedFile.size > 2 * 1024 * 1024) {
+      // If larger than 2MB
+      processedFile = await compressImageClientSide(processedFile);
+    }
+
+    // Upload via server API
+    const folder = isRequest ? 'request-images' : 'dish-images';
+    const formData = new FormData();
+    formData.append('image', processedFile);
+    formData.append('folder', folder);
+
+    // Include Turnstile token if provided (for CAPTCHA verification)
+    if (token) {
+      formData.append('turnstile-token', token);
+    }
+
+    // Include internal API key if provided (for script/server-side uploads)
+    if (internalApiKey) {
+      formData.append('internal-api-key', internalApiKey);
+    }
+
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error || `Upload failed with status ${response.status}`,
+      );
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !result.url) {
+      throw new Error(result.error || 'Failed to upload image');
+    }
+
+    console.log(
+      `[Upload] Success: ${(result.originalSize / 1024).toFixed(1)}KB → ${(
+        result.compressedSize / 1024
+      ).toFixed(1)}KB`,
+    );
+
+    return result.url;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+
+    // Fallback to direct Firebase upload if API fails
+    console.log('Attempting fallback to direct Firebase upload...');
+    return uploadImageDirect(file, isRequest);
+  }
+}
+
+/**
+ * Direct Firebase upload with client-side compression only
+ * Used as fallback if server API is unavailable
+ */
+async function uploadImageDirect(
+  file: File,
+  isRequest: boolean = false,
+): Promise<string> {
   const { storage } = await import('@/lib/firebase-client');
 
   if (!storage) {
@@ -215,7 +321,7 @@ export async function uploadImage(
 
   try {
     // Compress image before upload
-    const compressedFile = await compressImage(file);
+    const compressedFile = await compressImageClientSide(file);
 
     // Generate unique filename
     const timestamp = Date.now();
@@ -224,14 +330,17 @@ export async function uploadImage(
     const filename = `${folder}/${timestamp}_${randomId}_${compressedFile.name}`;
     const storageRef = ref(storage, filename);
 
-    // Upload compressed file
-    await uploadBytes(storageRef, compressedFile);
+    // Upload compressed file with explicit content type metadata
+    const metadata = {
+      contentType: compressedFile.type || 'image/jpeg',
+    };
+    await uploadBytes(storageRef, compressedFile, metadata);
 
     // Get download URL
     const downloadURL = await getDownloadURL(storageRef);
     return downloadURL;
   } catch (error) {
-    console.error('Error uploading image:', error);
+    console.error('Error in direct upload:', error);
     throw new Error(
       error instanceof Error
         ? `Failed to upload image: ${error.message}`

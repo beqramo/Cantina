@@ -21,6 +21,7 @@ import { VoteButtons } from './VoteButtons';
 import { ImageViewer } from './ImageViewer';
 import { useTranslations } from 'next-intl';
 import { getDishById } from '@/lib/firestore';
+import { useTranslateData } from '@/hooks/useTranslateData';
 
 interface DishCardBaseProps {
   // Image props
@@ -60,6 +61,7 @@ export function DishCardBase({
 }: DishCardBaseProps) {
   const t = useTranslations('Dish');
   const tMenu = useTranslations('Menu');
+  const { translateCategory, translateTag } = useTranslateData();
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [dish, setDish] = useState<Dish | null>(providedDish || null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -111,7 +113,7 @@ export function DishCardBase({
     );
   };
 
-  // Category styling configuration
+  // Category styling configuration - muted, professional colors
   const getCategoryConfig = (cat?: DishCategory | string) => {
     if (!cat) return null;
 
@@ -119,39 +121,24 @@ export function DishCardBase({
       string,
       {
         icon: React.ComponentType<{ className?: string }>;
-        color: string;
-        bgColor: string;
-        borderColor: string;
-        textColor: string;
+        iconColor: string;
       }
     > = {
       'Sugestão do Chefe': {
         icon: ChefHat,
-        color: 'bg-gradient-to-r from-amber-500 to-orange-500',
-        bgColor: 'bg-amber-100 dark:bg-amber-900/60',
-        borderColor: 'border-amber-300 dark:border-amber-700',
-        textColor: 'text-amber-900 dark:text-amber-50',
+        iconColor: 'text-amber-500',
       },
       'Dieta Mediterrânica': {
         icon: Leaf,
-        color: 'bg-gradient-to-r from-emerald-500 to-teal-500',
-        bgColor: 'bg-emerald-100 dark:bg-emerald-900/60',
-        borderColor: 'border-emerald-300 dark:border-emerald-700',
-        textColor: 'text-emerald-900 dark:text-emerald-50',
+        iconColor: 'text-emerald-500',
       },
       Alternativa: {
         icon: UtensilsCrossed,
-        color: 'bg-gradient-to-r from-blue-500 to-indigo-500',
-        bgColor: 'bg-blue-100 dark:bg-blue-900/60',
-        borderColor: 'border-blue-300 dark:border-blue-700',
-        textColor: 'text-blue-900 dark:text-blue-50',
+        iconColor: 'text-blue-500',
       },
       Vegetariana: {
         icon: Sparkles,
-        color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-        bgColor: 'bg-purple-100 dark:bg-purple-900/60',
-        borderColor: 'border-purple-300 dark:border-purple-700',
-        textColor: 'text-purple-900 dark:text-purple-50',
+        iconColor: 'text-purple-500',
       },
     };
 
@@ -163,28 +150,10 @@ export function DishCardBase({
 
   return (
     <>
-      <Card className='overflow-hidden flex flex-col h-full transition-shadow hover:shadow-md'>
-        {/* Category Header */}
-        {category && categoryConfig && (
-          <div
-            className={`${categoryConfig.bgColor} ${categoryConfig.textColor} border-b ${categoryConfig.borderColor} px-3 py-1.5`}>
-            <div className='flex items-center gap-1.5'>
-              {CategoryIcon && (
-                <div
-                  className={`${categoryConfig.color} p-1 rounded shadow-sm`}>
-                  <CategoryIcon className='h-3 w-3 text-white' />
-                </div>
-              )}
-              <span
-                className={`text-xs font-semibold ${categoryConfig.textColor} truncate`}>
-                {category}
-              </span>
-            </div>
-          </div>
-        )}
-
+      <Card className='overflow-hidden flex flex-col h-full transition-all hover:shadow-lg hover:border-border/80'>
+        {/* Image Section */}
         <div
-          className='relative aspect-[3/2] w-full cursor-pointer group'
+          className='relative aspect-[4/3] w-full cursor-pointer group bg-muted'
           onClick={handleImageClick}
           role='button'
           tabIndex={0}
@@ -209,13 +178,14 @@ export function DishCardBase({
                   dishImages.length
                 }`}
                 fill
-                className='object-cover transition-opacity group-hover:opacity-90'
+                className='object-cover transition-transform duration-300 group-hover:scale-[1.02]'
                 sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
               />
-              <div className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors'>
-                <div className='opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
-                  <div className='bg-black/60 backdrop-blur-sm rounded-full p-1.5'>
-                    <Maximize2 className='h-4 w-4 md:h-5 md:w-5 text-white' />
+              {/* Overlay on hover */}
+              <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center'>
+                <div className='opacity-0 group-hover:opacity-100 transition-opacity'>
+                  <div className='bg-black/60 backdrop-blur-sm rounded-full p-2'>
+                    <Maximize2 className='h-5 w-5 text-white' />
                   </div>
                 </div>
               </div>
@@ -228,7 +198,7 @@ export function DishCardBase({
                       e.stopPropagation();
                       navigateCarousel('prev');
                     }}
-                    className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10 opacity-60 md:opacity-0 md:group-hover:opacity-100'>
+                    className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-1.5 transition-all z-10 opacity-70 hover:opacity-100'>
                     <ChevronLeft className='h-4 w-4 text-white' />
                   </button>
                   <button
@@ -236,12 +206,12 @@ export function DishCardBase({
                       e.stopPropagation();
                       navigateCarousel('next');
                     }}
-                    className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10 opacity-60 md:opacity-0 md:group-hover:opacity-100'>
+                    className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-1.5 transition-all z-10 opacity-70 hover:opacity-100'>
                     <ChevronRight className='h-4 w-4 text-white' />
                   </button>
 
                   {/* Image Indicators */}
-                  <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
+                  <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10'>
                     {dishImages.map((_, idx) => (
                       <button
                         key={idx}
@@ -260,37 +230,33 @@ export function DishCardBase({
                   </div>
 
                   {/* Image Counter */}
-                  <div className='absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded px-1.5 py-0.5 text-xs text-white z-10 opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
-                    {safeImageIndex + 1} / {dishImages.length}
+                  <div className='absolute top-2 left-2 bg-black/50 backdrop-blur-sm rounded-md px-2 py-0.5 text-xs text-white z-10'>
+                    {safeImageIndex + 1}/{dishImages.length}
                   </div>
                 </>
               )}
 
               {isPendingApproval && (
-                <div className='absolute top-1.5 right-1.5 z-10'>
-                  <Badge
-                    variant='secondary'
-                    className='bg-yellow-500 text-white text-xs px-1.5 py-0.5'>
-                    <Clock className='h-2.5 w-2.5 mr-1' />
-                    {tMenu('pendingApproval') || 'Pending Approval'}
+                <div className='absolute top-2 right-2 z-10'>
+                  <Badge className='bg-amber-500 text-white text-xs'>
+                    <Clock className='h-3 w-3 mr-1' />
+                    {tMenu('pendingApproval') || 'Pending'}
                   </Badge>
                 </div>
               )}
             </>
           ) : (
-            <div className='absolute inset-0 bg-muted flex items-center justify-center group-hover:bg-muted/80 transition-colors'>
-              <div className='text-center p-3 relative w-full h-full flex flex-col items-center justify-center'>
+            <div className='absolute inset-0 flex items-center justify-center group-hover:bg-muted/80 transition-colors'>
+              <div className='text-center p-4 relative w-full h-full flex flex-col items-center justify-center'>
                 {isPendingApproval && (
-                  <div className='absolute top-1.5 right-1.5 z-10'>
-                    <Badge
-                      variant='secondary'
-                      className='bg-yellow-500 text-white text-xs px-1.5 py-0.5'>
-                      <Clock className='h-2.5 w-2.5 mr-1' />
-                      {tMenu('pendingApproval') || 'Pending Approval'}
+                  <div className='absolute top-2 right-2 z-10'>
+                    <Badge className='bg-amber-500 text-white text-xs'>
+                      <Clock className='h-3 w-3 mr-1' />
+                      {tMenu('pendingApproval') || 'Pending'}
                     </Badge>
                   </div>
                 )}
-                <Camera className='h-12 w-12 text-muted-foreground mx-auto mb-2 opacity-60 group-hover:opacity-100 transition-opacity' />
+                <Camera className='h-10 w-10 text-muted-foreground/50 mb-2 group-hover:text-muted-foreground transition-colors' />
                 {(onAddImageClick || showDishUpload) && !isPendingApproval && (
                   <Button
                     onClick={(e) => {
@@ -299,39 +265,58 @@ export function DishCardBase({
                     }}
                     variant='outline'
                     size='sm'
-                    className='mt-1 text-xs'>
+                    className='text-xs h-7'>
                     {tMenu('addImage') || 'Add Image'}
                   </Button>
                 )}
                 {isPendingApproval && (
-                  <p className='text-xs text-muted-foreground mt-1'>
-                    {tMenu('imagePendingReview') || 'Image pending review'}
+                  <p className='text-xs text-muted-foreground'>
+                    {tMenu('imagePendingReview')}
                   </p>
                 )}
               </div>
             </div>
           )}
         </div>
+
+        {/* Content Section */}
         <CardContent className='p-3 flex flex-col flex-1'>
           <div className='flex-1 space-y-2'>
-            <h3 className='font-semibold text-base leading-tight line-clamp-2'>
+            {/* Category Badge */}
+            {category && categoryConfig && CategoryIcon && (
+              <div className='flex items-center gap-1.5'>
+                <CategoryIcon
+                  className={`h-3.5 w-3.5 ${categoryConfig.iconColor}`}
+                />
+                <span className='text-xs text-muted-foreground font-medium'>
+                  {translateCategory(category)}
+                </span>
+              </div>
+            )}
+
+            {/* Dish Name */}
+            <h3 className='font-semibold text-sm leading-snug line-clamp-2'>
               {name}
             </h3>
+
+            {/* Tags */}
             {displayDish?.tags && displayDish.tags.length > 0 && (
               <div className='flex flex-wrap gap-1'>
                 {displayDish.tags.map((tag) => (
                   <Badge
                     key={tag}
-                    variant='outline'
-                    className='text-xs py-0 px-1.5'>
-                    {tag}
+                    variant='secondary'
+                    className='text-[10px] py-0 px-1.5 font-normal'>
+                    {translateTag(tag)}
                   </Badge>
                 ))}
               </div>
             )}
+
+            {/* Image Provider */}
             {displayDish?.imageProviderNickname && (
-              <p className='text-xs text-muted-foreground'>
-                {t('imageProvidedBy') || 'Image provided by'}{' '}
+              <p className='text-[11px] text-muted-foreground'>
+                {t('imageProvidedBy') || 'Image by'}{' '}
                 <span className='font-medium'>
                   {displayDish.imageProviderNickname}
                 </span>
@@ -339,13 +324,15 @@ export function DishCardBase({
             )}
             {children}
           </div>
+
+          {/* Vote Buttons */}
           <div className='mt-3 pt-2 border-t'>
             {displayDish ? (
               <VoteButtons dish={displayDish} />
             ) : (
-              <div className='flex items-center gap-3'>
-                <div className='h-8 w-16 bg-muted rounded border border-border animate-pulse' />
-                <div className='h-8 w-16 bg-muted rounded border border-border animate-pulse' />
+              <div className='flex items-center gap-2'>
+                <div className='h-7 w-14 bg-muted rounded animate-pulse' />
+                <div className='h-7 w-14 bg-muted rounded animate-pulse' />
               </div>
             )}
           </div>

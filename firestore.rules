@@ -48,7 +48,14 @@ service cloud.firestore {
                          (!('nickname' in request.resource.data) || request.resource.data.nickname is string || request.resource.data.nickname == null) &&
                          (!('images' in request.resource.data) || request.resource.data.images is list) &&
                          (!('nameTokens' in request.resource.data) || request.resource.data.nameTokens is list) &&
-                         (!('pendingImages' in request.resource.data) || request.resource.data.pendingImages is list));
+                         (!('pendingImages' in request.resource.data) || request.resource.data.pendingImages is list) &&
+                         // Allow import/source metadata fields (for bulk imports)
+                         (!('sourcePostId' in request.resource.data) || request.resource.data.sourcePostId is string) &&
+                         (!('sourceUrl' in request.resource.data) || request.resource.data.sourceUrl is string) &&
+                         (!('sourceNickname' in request.resource.data) || request.resource.data.sourceNickname is string) &&
+                         (!('sourceComments' in request.resource.data) || request.resource.data.sourceComments is list) &&
+                         (!('sourceUploadDate' in request.resource.data) || request.resource.data.sourceUploadDate is timestamp) &&
+                         (!('importedAt' in request.resource.data) || request.resource.data.importedAt is timestamp)));
 
       // Public visitors can update votes (thumbsUp/thumbsDown) or add pending images
       // Managers can update any field including status
@@ -68,7 +75,10 @@ service cloud.firestore {
                          request.resource.data.pendingImages is list &&
                          // Ensure other fields don't change
                          request.resource.data.name == resource.data.name &&
-                         request.resource.data.imageUrl == resource.data.imageUrl &&
+                         // Handle imageUrl comparison - may be empty string, null, or missing
+                         (request.resource.data.imageUrl == resource.data.imageUrl ||
+                          ((!('imageUrl' in resource.data) || resource.data.imageUrl == '' || resource.data.imageUrl == null) &&
+                           (!('imageUrl' in request.resource.data) || request.resource.data.imageUrl == '' || request.resource.data.imageUrl == null))) &&
                          request.resource.data.status == resource.data.status &&
                          request.resource.data.thumbsUp == resource.data.thumbsUp &&
                          request.resource.data.thumbsDown == resource.data.thumbsDown) ||
@@ -133,20 +143,23 @@ service cloud.firestore {
                         (!isAuthenticated() &&
                          // Date must not change
                          request.resource.data.date == resource.data.date &&
-                         // Structure must be maintained
+                         // Lunch structure must be maintained
                          request.resource.data.lunch is map &&
-                         request.resource.data.dinner is map &&
                          request.resource.data.lunch.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
-                         request.resource.data.dinner.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
-                         // dishName must not change (validate for all categories)
+                         // dishName must not change for lunch categories
                          request.resource.data.lunch['Sugestão do Chefe'].dishName == resource.data.lunch['Sugestão do Chefe'].dishName &&
                          request.resource.data.lunch['Dieta Mediterrânica'].dishName == resource.data.lunch['Dieta Mediterrânica'].dishName &&
                          request.resource.data.lunch['Alternativa'].dishName == resource.data.lunch['Alternativa'].dishName &&
                          request.resource.data.lunch['Vegetariana'].dishName == resource.data.lunch['Vegetariana'].dishName &&
-                         request.resource.data.dinner['Sugestão do Chefe'].dishName == resource.data.dinner['Sugestão do Chefe'].dishName &&
-                         request.resource.data.dinner['Dieta Mediterrânica'].dishName == resource.data.dinner['Dieta Mediterrânica'].dishName &&
-                         request.resource.data.dinner['Alternativa'].dishName == resource.data.dinner['Alternativa'].dishName &&
-                         request.resource.data.dinner['Vegetariana'].dishName == resource.data.dinner['Vegetariana'].dishName) ||
+                         // Dinner is optional - if it exists in both, validate it
+                         (!('dinner' in resource.data) || !('dinner' in request.resource.data) ||
+                          resource.data.dinner == null || request.resource.data.dinner == null ||
+                          (request.resource.data.dinner is map &&
+                           request.resource.data.dinner.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
+                           request.resource.data.dinner['Sugestão do Chefe'].dishName == resource.data.dinner['Sugestão do Chefe'].dishName &&
+                           request.resource.data.dinner['Dieta Mediterrânica'].dishName == resource.data.dinner['Dieta Mediterrânica'].dishName &&
+                           request.resource.data.dinner['Alternativa'].dishName == resource.data.dinner['Alternativa'].dishName &&
+                           request.resource.data.dinner['Vegetariana'].dishName == resource.data.dinner['Vegetariana'].dishName))) ||
                         // Admins can update any field
                         (isAuthenticated() &&
                          request.resource.data.keys().hasAll(['date', 'lunch', 'updatedAt']) &&

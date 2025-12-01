@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { DishTag } from '@/types';
 import { DISH_TAGS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from 'next-intl';
+import { useTranslateData } from '@/hooks/useTranslateData';
 
 interface TagFilterProps {
   selectedTags: DishTag[];
@@ -12,6 +11,8 @@ interface TagFilterProps {
 }
 
 export function TagFilter({ selectedTags, onTagsChange }: TagFilterProps) {
+  const { translateTag } = useTranslateData();
+
   const toggleTag = (tag: DishTag) => {
     if (selectedTags.includes(tag)) {
       onTagsChange(selectedTags.filter((t) => t !== tag));
@@ -27,6 +28,7 @@ export function TagFilter({ selectedTags, onTagsChange }: TagFilterProps) {
         return (
           <Button
             key={tag}
+            type='button'
             variant={isSelected ? 'default' : 'outline'}
             size='sm'
             onClick={() => toggleTag(tag)}
@@ -35,7 +37,7 @@ export function TagFilter({ selectedTags, onTagsChange }: TagFilterProps) {
                 ? 'bg-primary text-primary-foreground shadow-sm font-medium border border-primary'
                 : 'bg-transparent border-0 text-muted-foreground hover:bg-accent/50'
             }`}>
-            {tag}
+            {translateTag(tag)}
           </Button>
         );
       })}

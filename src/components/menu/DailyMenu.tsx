@@ -8,6 +8,7 @@ import { MenuDishCard } from './MenuDishCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslations } from 'next-intl';
 import { DISH_CATEGORIES } from '@/lib/constants';
+import { FiSearch } from 'react-icons/fi';
 
 export function DailyMenu() {
   const t = useTranslations('Menu');
@@ -74,7 +75,22 @@ export function DailyMenu() {
   }
 
   if (!mealType || !menu) {
-    return null; // Don't show if no menu or meal type
+    return (
+      <div className='space-y-4'>
+        <h2 className='text-2xl font-bold'>{t('dailyMenu')}</h2>
+        <div className='flex flex-col items-center justify-center py-12 px-4 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20'>
+          <div className='w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4'>
+            <FiSearch className='w-8 h-8 text-muted-foreground' />
+          </div>
+          <h3 className='text-lg font-semibold text-center mb-2'>
+            {t('noMenuAvailable')}
+          </h3>
+          <p className='text-muted-foreground text-center text-sm max-w-md'>
+            {t('noMenuDescription')}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // Check if dinner menu exists (Saturday has no dinner)
@@ -82,7 +98,22 @@ export function DailyMenu() {
   if (mealType === 'dinner' && !menu.dinner) {
     // Fall back to lunch menu
     if (!menu.lunch) {
-      return null; // No menu at all
+      return (
+        <div className='space-y-4'>
+          <h2 className='text-2xl font-bold'>{t('dailyMenu')}</h2>
+          <div className='flex flex-col items-center justify-center py-12 px-4 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20'>
+            <div className='w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4'>
+              <FiSearch className='w-8 h-8 text-muted-foreground' />
+            </div>
+            <h3 className='text-lg font-semibold text-center mb-2'>
+              {t('noMenuAvailable')}
+            </h3>
+            <p className='text-muted-foreground text-center text-sm max-w-md'>
+              {t('noMenuDescription')}
+            </p>
+          </div>
+        </div>
+      );
     }
     // Show lunch menu instead
     const displayMealType = 'lunch' as MealType;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,6 +15,7 @@ import { updateMenuItemImage } from '@/lib/firestore';
 import { Menu, MealType, DishCategory } from '@/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslations } from 'next-intl';
+import { Turnstile } from '@/components/ui/Turnstile';
 
 interface MenuImageUploadProps {
   menu: Menu;
@@ -39,6 +40,17 @@ export function MenuImageUpload({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  // Turnstile callbacks
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
+  const handleTurnstileError = useCallback(() => {
+    setTurnstileToken(null);
+    setError('Security verification failed. Please try again.');
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,8 +112,11 @@ export function MenuImageUpload({
     setError(null);
 
     try {
-      // Upload image
-      const imageUrl = await uploadImage(imageFile);
+      // Upload image with Turnstile token
+      const imageUrl = await uploadImage(imageFile, {
+        isRequest: false,
+        turnstileToken: turnstileToken || undefined,
+      });
 
       // Update menu item
       await updateMenuItemImage(menu.id, mealType, category, imageUrl);
@@ -173,6 +188,14 @@ export function MenuImageUpload({
               />
             </div>
           )}
+
+          {/* Turnstile CAPTCHA - only shown when configured */}
+          <Turnstile
+            onVerify={handleTurnstileVerify}
+            onError={handleTurnstileError}
+            onExpire={handleTurnstileError}
+            theme='auto'
+          />
 
           <div className='flex gap-2 justify-end'>
             <Button

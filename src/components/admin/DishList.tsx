@@ -143,7 +143,7 @@ export function DishList() {
               ) : (
                 <div className='absolute inset-0 bg-muted flex items-center justify-center'>
                   <p className='text-muted-foreground text-sm'>
-                    {t('noImage') || 'No image'}
+                    {t('noImage')}
                   </p>
                 </div>
               )}

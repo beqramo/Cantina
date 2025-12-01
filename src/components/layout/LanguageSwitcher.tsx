@@ -1,52 +1,35 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from '@/lib/navigation';
 import { Button } from '@/components/ui/button';
-import { locales } from '@/i18n';
+import { useTransition } from 'react';
+
+// Helper to set cookie
+function setLocaleCookie(locale: string) {
+  // Set cookie with 1 year expiry
+  const maxAge = 60 * 60 * 24 * 365; // 1 year in seconds
+  document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
 
 export function LanguageSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const switchLocale = (newLocale: string) => {
+  const switchLocale = (newLocale: 'en' | 'pt') => {
     // Don't switch if already on this locale
     if (locale === newLocale) {
-      console.log('Already on locale:', newLocale);
       return;
     }
 
-    console.log('Switching locale from', locale, 'to', newLocale);
-    console.log('Current pathname:', pathname);
+    // Save user's preference to cookie so it persists
+    setLocaleCookie(newLocale);
 
-    // Remove current locale from pathname if present
-    let pathWithoutLocale = pathname || '/';
-    for (const loc of locales) {
-      if (pathname?.startsWith(`/${loc}/`)) {
-        pathWithoutLocale = pathname.replace(`/${loc}`, '');
-        break;
-      } else if (pathname === `/${loc}`) {
-        pathWithoutLocale = '/';
-        break;
-      }
-    }
-
-    // Ensure path starts with /
-    if (!pathWithoutLocale.startsWith('/')) {
-      pathWithoutLocale = '/' + pathWithoutLocale;
-    }
-
-    // Build new path with locale prefix
-    // With localePrefix: 'as-needed', 'en' doesn't need a prefix
-    const newPath =
-      newLocale === 'en'
-        ? pathWithoutLocale
-        : `/${newLocale}${pathWithoutLocale}`;
-
-    console.log('Navigating to:', newPath);
-
-    // Use window.location for full page navigation to ensure middleware processes the locale change
-    window.location.href = newPath;
+    startTransition(() => {
+      router.replace(pathname, { locale: newLocale });
+    });
   };
 
   return (
@@ -60,7 +43,7 @@ export function LanguageSwitcher() {
           e.stopPropagation();
           switchLocale('pt');
         }}
-        disabled={locale === 'pt'}
+        disabled={locale === 'pt' || isPending}
         className='cursor-pointer h-8 px-2 md:h-9 md:px-3 text-xs md:text-sm'>
         PT
       </Button>
@@ -73,7 +56,7 @@ export function LanguageSwitcher() {
           e.stopPropagation();
           switchLocale('en');
         }}
-        disabled={locale === 'en'}
+        disabled={locale === 'en' || isPending}
         className='cursor-pointer h-8 px-2 md:h-9 md:px-3 text-xs md:text-sm'>
         EN
       </Button>

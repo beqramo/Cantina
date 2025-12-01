@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,8 @@ import { DISH_CATEGORIES } from '@/lib/constants';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TagFilter } from './TagFilter';
+import { Turnstile } from '@/components/ui/Turnstile';
+import { FiCheckCircle } from 'react-icons/fi';
 
 const requestSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -33,20 +35,34 @@ type RequestFormData = z.infer<typeof requestSchema>;
 interface DishRequestFormProps {
   initialName?: string;
   onSuccess?: () => void;
+  onFormSubmitted?: () => void;
 }
 
 export function DishRequestForm({
   initialName = '',
   onSuccess,
+  onFormSubmitted,
 }: DishRequestFormProps) {
   const t = useTranslations('Admin');
   const tCommon = useTranslations('Common');
+  const tSearch = useTranslations('Search');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<DishTag[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  // Turnstile callbacks
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
+  const handleTurnstileError = useCallback(() => {
+    setTurnstileToken(null);
+    setError('Security verification failed. Please try again.');
+  }, []);
 
   // Load nickname from localStorage on mount
   useEffect(() => {
@@ -145,11 +161,15 @@ export function DishRequestForm({
       // Upload image if provided
       let imageUrl: string | null = null;
       if (imageFile) {
-        imageUrl = await uploadImage(imageFile, true);
+        imageUrl = await uploadImage(
+          imageFile,
+          true,
+          turnstileToken || undefined,
+        );
       }
 
       // Create request
-      await createDishRequest(
+      const dishId = await createDishRequest(
         data.name,
         imageUrl,
         (category as DishCategory) || null,
@@ -158,10 +178,35 @@ export function DishRequestForm({
         data.nickname?.trim() || undefined,
       );
 
+      // Save pending dish to localStorage so user can see it in search results
+      const pendingDishesJson = localStorage.getItem(
+        STORAGE_KEYS.PENDING_DISHES,
+      );
+      const pendingDishes: Array<{
+        id: string;
+        name: string;
+        createdAt: number;
+      }> = pendingDishesJson ? JSON.parse(pendingDishesJson) : [];
+
+      // Add the new pending dish
+      pendingDishes.push({
+        id: dishId,
+        name: data.name,
+        createdAt: Date.now(),
+      });
+
+      // Keep only dishes from the last 30 days
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const recentPendingDishes = pendingDishes.filter(
+        (d) => d.createdAt > thirtyDaysAgo,
+      );
+      localStorage.setItem(
+        STORAGE_KEYS.PENDING_DISHES,
+        JSON.stringify(recentPendingDishes),
+      );
+
       setSuccess(true);
-      setTimeout(() => {
-        onSuccess?.();
-      }, 2000);
+      onFormSubmitted?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -171,9 +216,22 @@ export function DishRequestForm({
 
   if (success) {
     return (
-      <Alert>
-        <AlertDescription>{tCommon('success')}</AlertDescription>
-      </Alert>
+      <div className='flex flex-col items-center justify-center py-6 px-4 text-center space-y-4'>
+        <div className='w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center'>
+          <FiCheckCircle className='w-8 h-8 text-green-600 dark:text-green-400' />
+        </div>
+        <div className='space-y-2'>
+          <h3 className='text-lg font-semibold'>
+            {tSearch('dishSubmittedTitle')}
+          </h3>
+          <p className='text-muted-foreground text-sm max-w-sm'>
+            {tSearch('dishSubmittedDescription')}
+          </p>
+        </div>
+        <Button onClick={() => onSuccess?.()} className='mt-4'>
+          {tSearch('close')}
+        </Button>
+      </div>
     );
   }
 
@@ -261,6 +319,14 @@ export function DishRequestForm({
         </label>
         <TagFilter selectedTags={selectedTags} onTagsChange={setSelectedTags} />
       </div>
+
+      {/* Turnstile CAPTCHA - only shown when configured */}
+      <Turnstile
+        onVerify={handleTurnstileVerify}
+        onError={handleTurnstileError}
+        onExpire={handleTurnstileError}
+        theme='auto'
+      />
 
       <div className='flex gap-2 justify-end'>
         <Button type='submit' disabled={loading}>

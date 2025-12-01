@@ -2,6 +2,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
+import { WelcomePopup } from '@/components/WelcomePopup';
 import { locales } from '@/i18n';
 
 export function generateStaticParams() {
@@ -37,6 +38,7 @@ export default async function LocaleLayout({
         disableTransitionOnChange>
         <Header />
         {children}
+        <WelcomePopup />
       </ThemeProvider>
     </NextIntlClientProvider>
   );

@@ -13,7 +13,7 @@ import {
   X,
   ZoomIn,
   ZoomOut,
-  Maximize2,
+  RotateCcw,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -47,11 +47,11 @@ export function ImageViewer({
   const imageRef = useRef<HTMLDivElement>(null);
 
   const handleZoomIn = () => {
-    setScale((prev) => Math.min(prev + 0.25, 5));
+    setScale((prev) => Math.min(prev + 0.5, 5));
   };
 
   const handleZoomOut = () => {
-    setScale((prev) => Math.max(prev - 0.25, 0.5));
+    setScale((prev) => Math.max(prev - 0.5, 0.5));
   };
 
   const resetZoom = () => {
@@ -61,7 +61,7 @@ export function ImageViewer({
 
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
     setScale((prev) => Math.max(0.5, Math.min(5, prev + delta)));
   }, []);
 
@@ -274,7 +274,7 @@ export function ImageViewer({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
         key={imageUrl}
-        className='max-w-[95vw] max-h-[95vh] w-full h-full p-0 gap-0 overflow-hidden bg-black/95 [&>button]:hidden'
+        className='fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] sm:w-[calc(100vw-4rem)] sm:h-[calc(100vh-4rem)] max-w-none p-0 gap-0 overflow-hidden bg-black/95 border-0 rounded-lg [&>button]:hidden'
         style={{ touchAction: 'none' }}
         onPointerDownOutside={(e) => {
           // Prevent closing when clicking on the image
@@ -284,57 +284,67 @@ export function ImageViewer({
         }}>
         <DialogTitle className='sr-only'>{alt}</DialogTitle>
 
+        {/* Top Controls Bar */}
+        <div className='absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-3 bg-gradient-to-b from-black/60 to-transparent'>
+          {/* Zoom indicator */}
+          <div className='text-white/80 text-sm font-medium bg-black/40 px-3 py-1 rounded-full'>
+            {Math.round(scale * 100)}%
+          </div>
+
+          {/* Control buttons */}
+          <div className='flex gap-1.5'>
+            <button
+              onClick={handleZoomOut}
+              disabled={scale <= 0.5}
+              className='p-2 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'
+              aria-label='Zoom out'>
+              <ZoomOut className='h-4 w-4' />
+            </button>
+            <button
+              onClick={handleZoomIn}
+              disabled={scale >= 5}
+              className='p-2 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'
+              aria-label='Zoom in'>
+              <ZoomIn className='h-4 w-4' />
+            </button>
+            <button
+              onClick={resetZoom}
+              disabled={scale === 1 && position.x === 0 && position.y === 0}
+              className='p-2 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'
+              aria-label='Reset zoom'>
+              <RotateCcw className='h-4 w-4' />
+            </button>
+            <button
+              onClick={onClose}
+              className='p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors ml-2'
+              aria-label='Close'>
+              <X className='h-4 w-4' />
+            </button>
+          </div>
+        </div>
+
         {/* Navigation Buttons */}
         {showNavigation && onPrevious && onNext && (
           <>
             <button
               onClick={onPrevious}
-              className='absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
+              className='absolute left-3 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors'
               aria-label='Previous image'>
-              <ChevronLeft className='h-6 w-6' />
+              <ChevronLeft className='h-5 w-5' />
             </button>
             <button
               onClick={onNext}
-              className='absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
+              className='absolute right-3 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors'
               aria-label='Next image'>
-              <ChevronRight className='h-6 w-6' />
+              <ChevronRight className='h-5 w-5' />
             </button>
           </>
         )}
 
-        <div className='absolute top-4 right-4 z-50 flex gap-2'>
-          <button
-            onClick={handleZoomOut}
-            disabled={scale <= 0.5}
-            className='p-2 rounded-full bg-black/50 text-white hover:bg-black/70 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-            aria-label='Zoom out'>
-            <ZoomOut className='h-5 w-5' />
-          </button>
-          <button
-            onClick={handleZoomIn}
-            disabled={scale >= 5}
-            className='p-2 rounded-full bg-black/50 text-white hover:bg-black/70 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-            aria-label='Zoom in'>
-            <ZoomIn className='h-5 w-5' />
-          </button>
-          <button
-            onClick={resetZoom}
-            disabled={scale === 1}
-            className='p-2 rounded-full bg-black/50 text-white hover:bg-black/70 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-            aria-label='Reset zoom'>
-            <Maximize2 className='h-5 w-5' />
-          </button>
-          <button
-            onClick={onClose}
-            className='p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
-            aria-label='Close'>
-            <X className='h-5 w-5' />
-          </button>
-        </div>
-
+        {/* Image Container */}
         <div
           ref={containerRef}
-          className='w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing'
+          className='w-full h-full flex items-center justify-center overflow-hidden'
           style={{ touchAction: 'none' }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -347,33 +357,48 @@ export function ImageViewer({
           <div
             ref={imageRef}
             className={cn(
-              'relative transition-transform duration-200 ease-out',
-              scale > 1 && 'cursor-grab active:cursor-grabbing',
+              'relative transition-transform duration-150 ease-out will-change-transform',
+              scale > 1
+                ? 'cursor-grab active:cursor-grabbing'
+                : 'cursor-zoom-in',
+              isDragging && 'transition-none',
             )}
             style={{
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transformOrigin: 'center center',
             }}>
+            {/* Loading spinner */}
             {!imageLoaded && (
-              <div className='absolute inset-0 flex items-center justify-center'>
-                <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white'></div>
+              <div className='absolute inset-0 flex items-center justify-center min-w-[200px] min-h-[200px]'>
+                <div className='animate-spin rounded-full h-8 w-8 border-2 border-white/20 border-t-white'></div>
               </div>
             )}
             <Image
               src={imageUrl}
               alt={alt}
               width={1200}
-              height={800}
-              className='max-w-[90vw] max-h-[90vh] object-contain'
+              height={900}
+              className={cn(
+                'max-w-[85vw] max-h-[80vh] w-auto h-auto object-contain select-none',
+                !imageLoaded && 'opacity-0',
+                imageLoaded && 'opacity-100',
+              )}
+              style={{
+                transition: 'opacity 0.2s ease-in-out',
+              }}
               onLoad={() => setImageLoaded(true)}
               priority
               unoptimized={imageUrl.startsWith('blob:')}
+              draggable={false}
             />
           </div>
         </div>
 
-        <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/70 text-sm bg-black/50 px-3 py-1 rounded-full'>
-          {Math.round(scale * 100)}% • Double-click to zoom • Scroll to zoom
+        {/* Bottom hint */}
+        <div className='absolute bottom-0 left-0 right-0 z-50 flex justify-center p-3 bg-gradient-to-t from-black/60 to-transparent'>
+          <div className='text-white/60 text-xs'>
+            Double-click to zoom • Scroll to adjust
+          </div>
         </div>
       </DialogContent>
     </Dialog>

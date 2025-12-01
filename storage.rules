@@ -7,14 +7,24 @@ service firebase.storage {
       return request.auth != null;
     }
 
+    // Helper function to check if file is a valid image
+    function isValidImage() {
+      return request.resource.size < 1024 * 1024 && // 1MB max
+             request.resource.contentType != null &&
+             request.resource.contentType.matches('image/.*');
+    }
+
     // Dish images folder - public read, anyone can upload (for pending images)
     match /dish-images/{imageId} {
       // Anyone can read dish images
       allow read: if true;
 
-      // Anyone can upload dish images (for pending approval)
-      allow write: if request.resource.size < 5 * 1024 * 1024 && // 5MB max
-                     request.resource.contentType.matches('image/.*');
+      // Anyone can create new dish images (for pending approval)
+      // Size must be under 5MB and must be an image type
+      allow create: if isValidImage();
+
+      // Anyone can update (overwrite) dish images
+      allow update: if isValidImage();
 
       // Only managers can delete images
       allow delete: if isAuthenticated();
@@ -25,10 +35,11 @@ service firebase.storage {
       // Anyone can read request images (needed for public visitors to see their uploaded images)
       allow read: if true;
 
-      // Any authenticated user can upload request images (managers)
-      // Public visitors can also upload (for dish requests)
-      allow write: if request.resource.size < 5 * 1024 * 1024 && // 5MB max
-                     request.resource.contentType.matches('image/.*');
+      // Anyone can create request images (for dish requests)
+      allow create: if isValidImage();
+
+      // Anyone can update request images
+      allow update: if isValidImage();
 
       // Only managers can delete request images
       allow delete: if isAuthenticated();

@@ -15,7 +15,11 @@
     "noResults": "Nenhum prato encontrado",
     "requestDish": "Adicionar o prato",
     "requestDishDescription": "Não encontra o que procura? Adiciona-o tu mesmo! Por favor, fornece todas as informações que puderes (nome, imagem, categoria, tags) e nós revemos e confirmamos. A tua participação ajuda a tornar o menu melhor para todos.",
-    "filterByTags": "Filtrar por tags"
+    "filterByTags": "Filtrar por tags",
+    "dishSubmittedTitle": "Prato Submetido!",
+    "dishSubmittedDescription": "Obrigado pela tua contribuição! O teu prato foi submetido para revisão. Assim que for aprovado pela nossa equipa, aparecerá na lista de pratos.",
+    "close": "Fechar",
+    "yourPendingDishes": "As tuas submissões pendentes"
   },
   "Dish": {
     "category": "Categoria",
@@ -58,16 +62,49 @@
     "nickname": "Alcunha",
     "nicknamePlaceholder": "A tua alcunha (opcional)",
     "nicknameDescription": "Isto será mostrado como \"Imagem fornecida por [alcunha]\" se carregares uma imagem",
-    "requestedBy": "Solicitado por"
+    "requestedBy": "Solicitado por",
+    "uploadedBy": "Carregado por",
+    "imagesPending": "imagens pendentes",
+    "noImage": "Sem imagem"
   },
   "About": {
-    "title": "Sobre a Cantina",
-    "description": "Este é um projeto open source para a cantina do IPB.",
-    "githubLink": "Ver no GitHub",
+    "title": "Sobre Cantina IPB",
+    "subtitle": "Um guia comunitário para os pratos da cantina do IPB",
+    "description": "Cantina IPB é um projeto de paixão criado para ajudar os estudantes do IPB a descobrir, avaliar e partilhar informações sobre os pratos servidos na cantina da universidade. O nosso objetivo é construir um recurso abrangente que ajude os estudantes a fazer escolhas informadas sobre as suas refeições.",
+    "disclaimer": "Aviso Importante",
+    "disclaimerDescription": "Este website NÃO está oficialmente conectado, afiliado ou endossado pela cantina do IPB ou pelo Instituto Politécnico de Bragança. É um projeto independente e voluntário criado por um estudante para estudantes. Todas as opiniões, avaliações e conteúdos são contribuídos pela comunidade e não representam as opiniões oficiais do IPB ou dos seus serviços de cantina.",
+    "mission": "A Nossa Missão",
+    "missionDescription": "Criar um recurso útil onde os estudantes do IPB possam descobrir que pratos são servidos na cantina, ver fotos reais das refeições e partilhar as suas experiências. Acreditamos que boa informação ajuda todos a fazer melhores escolhas alimentares.",
+    "acknowledgments": "Agradecimentos",
+    "acknowledgmentsDescription": "O lote inicial de imagens de pratos foi obtido da página do Instagram <instagramLink></instagramLink>. Embora tenha sido solicitada permissão, o proprietário da conta parece estar inativo. Estamos profundamente gratos pelo seu trabalho em documentar os pratos da cantina, que nos ajudou a iniciar este projeto. Obrigado a quem geriu essa conta – as suas fotos estão a ajudar os colegas estudantes!",
+    "instagramAccount": "@comidasdoipb",
+    "communityDriven": "Impulsionado pela Comunidade",
+    "communityDrivenDescription": "Inicialmente, podes notar que alguns pratos não têm imagens ou não há muitos dados disponíveis. Isso é porque este projeto acabou de começar! O sucesso da Cantina IPB depende 100% de estudantes como tu que estão dispostos a carregar fotos e adicionar novos pratos. Cada contribuição ajuda a construir um recurso valioso para os estudantes atuais e gerações futuras.",
+    "volunteer": "Voluntário & Sem Fins Lucrativos",
+    "volunteerDescription": "Este projeto é criado e mantido inteiramente numa base voluntária. Não há absolutamente nenhum interesse financeiro envolvido – sem anúncios, sem patrocínios, sem venda de dados. É puramente um presente para a comunidade estudantil do IPB. Mantenho este projeto no meu tempo livre porque acredito que pode genuinamente ajudar os estudantes.",
     "openSource": "Open Source",
-    "openSourceDescription": "Este projeto é open source. Todos podem enviar pull requests para melhorá-lo.",
-    "costNotice": "Aviso de Custos",
-    "costNoticeDescription": "Por favor, não abuse dos endpoints, pois não conseguirei manter o projeto se os custos forem altos."
+    "openSourceDescription": "Este projeto é completamente open source e está disponível no GitHub. Todos são bem-vindos a contribuir! Quer queiras corrigir um bug, adicionar uma funcionalidade, melhorar traduções ou sugerir ideias – todos os pull requests são bem-vindos. Eu revejo pessoalmente cada PR e agradeço todas as contribuições da comunidade.",
+    "contributingTitle": "Como Contribuir",
+    "contributingDescription": "Faz fork do repositório, faz as tuas alterações e envia um pull request. Vou revê-lo assim que puder!",
+    "githubLink": "Ver no GitHub",
+    "costNotice": "Uma Nota sobre Custos",
+    "costNoticeDescription": "Executar este serviço tem custos reais (alojamento, base de dados, armazenamento). Por favor, usa a plataforma de forma responsável e evita abusar das funcionalidades de upload. Se os custos se tornarem insustentáveis, pode afetar a capacidade do projeto continuar. Obrigado pela tua compreensão!",
+    "contact": "Contacto",
+    "contactDescription": "Tens perguntas, feedback ou encontraste um bug? Não hesites em entrar em contacto!",
+    "thankYou": "Obrigado",
+    "thankYouDescription": "Obrigado por fazeres parte desta comunidade. Juntos, podemos construir algo valioso que ajudará os estudantes do IPB por muitos anos. Cada prato que adicionas, cada imagem que carregas e cada voto que dás faz a diferença!"
+  },
+  "Welcome": {
+    "title": "Bem-vindo à Cantina IPB! 🍽️",
+    "subtitle": "O teu guia comunitário para os pratos da cantina do IPB",
+    "description": "Somos uma plataforma feita por estudantes para te ajudar a descobrir e avaliar os pratos servidos na cantina do IPB. Explora refeições, vê fotos reais e partilha as tuas experiências!",
+    "workInProgress": "Estamos Apenas a Começar",
+    "workInProgressDescription": "Podes notar que ainda não temos muitas fotos de pratos – isso é porque acabámos de lançar! Esta plataforma cresce com AS TUAS contribuições.",
+    "callToAction": "Ajuda-nos a Crescer!",
+    "callToActionDescription": "Com a tua ajuda, podemos construir um recurso incrível cheio de fotos e avaliações de pratos. Quando comeres na cantina, tira uma foto e carrega-a! As tuas contribuições vão ajudar os estudantes atuais e as gerações futuras a descobrir ótimas refeições.",
+    "notOfficial": "Nota: Este é um projeto estudantil independente, não afiliado oficialmente ao IPB.",
+    "getStarted": "Vamos Explorar!",
+    "dontShowAgain": "Não mostrar novamente"
   },
   "Rules": {
     "title": "Regras da Cantina",
@@ -90,8 +127,11 @@
     "dinnerMenu": "Menu do Jantar",
     "lunch": "Almoço",
     "dinner": "Jantar",
+    "noMenuAvailable": "Nenhum menu disponível para hoje",
+    "noMenuDescription": "O menu diário ainda não foi adicionado. Tenta pesquisar o prato que procuras!",
     "addImage": "Adicionar Imagem",
     "pendingApproval": "Aguardando Aprovação",
+    "imagePendingReview": "Imagem aguardando revisão",
     "uploadImage": "Carregar Imagem",
     "uploadImageDescription": "Carrega uma imagem para este item do menu. A imagem será revista antes de ser aprovada.",
     "selectImage": "Selecionar Imagem",
@@ -106,7 +146,7 @@
     "manualEntry": "Entrada Manual",
     "uploadJsonMenu": "Carregar Menu JSON",
     "jsonFormat": "Formato JSON (DD/MM/YYYY)",
-    "loadTemplate": "Carregar Modelo",
+    "loadTemplate": "Load Template",
     "uploadMenus": "Carregar Menus",
     "editMenu": "Editar Menu",
     "createMenu": "Criar Menu",
@@ -115,6 +155,27 @@
     "updateMenu": "Atualizar Menu",
     "existingMenus": "Menus Existentes",
     "noMenus": "Nenhum menu encontrado",
-    "pendingMenuImages": "Imagens de Menu Pendentes"
+    "pendingMenuImages": "Imagens de Menu Pendentes",
+    "pendingDishImages": "Imagens de Pratos Pendentes"
+  },
+  "Categories": {
+    "Sugestão do Chefe": "Sugestão do Chefe",
+    "Dieta Mediterrânica": "Dieta Mediterrânica",
+    "Alternativa": "Alternativa",
+    "Vegetariana": "Vegetariana"
+  },
+  "Tags": {
+    "#porco": "#porco",
+    "#beef": "#carne",
+    "#frango": "#frango",
+    "#peixe": "#peixe",
+    "#salada": "#salada",
+    "#sopa": "#sopa",
+    "#sobremesa": "#sobremesa",
+    "#vegetariano": "#vegetariano",
+    "#vegano": "#vegano",
+    "#picante": "#picante",
+    "#gluten-free": "#sem-glúten",
+    "#lactose-free": "#sem-lactose"
   }
 }

@@ -174,7 +174,20 @@ function DishImageApprovalCard({
   const t = useTranslations('Admin');
   const tMenu = useTranslations('Menu');
   const hasMultipleImages = item.pendingImages.length > 1;
+
+  // Reset index when images array changes (after approve/reject)
+  useEffect(() => {
+    if (currentImageIndex >= item.pendingImages.length) {
+      setCurrentImageIndex(Math.max(0, item.pendingImages.length - 1));
+    }
+  }, [item.pendingImages.length, currentImageIndex]);
+
   const currentImage = item.pendingImages[currentImageIndex];
+
+  // If no current image (all approved/rejected), don't render
+  if (!currentImage) {
+    return null;
+  }
 
   return (
     <Card>
@@ -184,13 +197,12 @@ function DishImageApprovalCard({
             <CardTitle>{item.dish.name}</CardTitle>
             {hasMultipleImages && (
               <Badge variant='secondary' className='mt-2'>
-                {item.pendingImages.length}{' '}
-                {t('imagesPending') || 'images pending'}
+                {item.pendingImages.length} {t('imagesPending')}
               </Badge>
             )}
             {currentImage.nickname && (
               <p className='text-sm text-muted-foreground mt-1'>
-                {t('uploadedBy') || 'Uploaded by'}: {currentImage.nickname}
+                {t('uploadedBy')}: {currentImage.nickname}
               </p>
             )}
             <Badge variant='outline' className='mt-2'>
@@ -637,7 +649,7 @@ export function ApprovalList() {
       {hasDishImages && (
         <div>
           <h2 className='text-2xl font-bold mb-4'>
-            {tMenu('pendingDishImages') || 'Pending Dish Images'}
+            {tMenu('pendingDishImages')}
           </h2>
           <div className='space-y-4'>
             {dishImages.map((item, dishIndex) => (
