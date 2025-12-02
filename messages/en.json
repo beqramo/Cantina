@@ -10,6 +10,9 @@
     "dashboard": "Dashboard",
     "approvals": "Approvals"
   },
+  "Home": {
+    "subtitle": "Discover and rate dishes from the IPB university canteen"
+  },
   "Search": {
     "searchPlaceholder": "Search for a dish...",
     "noResults": "No dishes found",

@@ -10,6 +10,9 @@
     "dashboard": "Painel",
     "approvals": "Aprovações"
   },
+  "Home": {
+    "subtitle": "Descobre e avalia pratos da cantina da universidade IPB"
+  },
   "Search": {
     "searchPlaceholder": "Pesquisar um prato...",
     "noResults": "Nenhum prato encontrado",

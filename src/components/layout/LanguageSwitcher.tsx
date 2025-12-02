@@ -4,7 +4,6 @@ import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from '@/lib/navigation';
 import { Button } from '@/components/ui/button';
 import { useTransition } from 'react';
-import { Check } from 'lucide-react';
 
 // Helper to set cookie
 function setLocaleCookie(locale: string) {
@@ -20,11 +19,6 @@ export function LanguageSwitcher() {
   const [isPending, startTransition] = useTransition();
 
   const switchLocale = (newLocale: 'en' | 'pt') => {
-    // Don't switch if already on this locale
-    if (locale === newLocale) {
-      return;
-    }
-
     // Save user's preference to cookie so it persists
     setLocaleCookie(newLocale);
 
@@ -33,42 +27,26 @@ export function LanguageSwitcher() {
     });
   };
 
-  const isPTActive = locale === 'pt';
-  const isENActive = locale === 'en';
+  // Show only the button for the language we can switch TO
+  const targetLocale = locale === 'pt' ? 'en' : 'pt';
+  const targetLabel = targetLocale === 'pt' ? 'PT' : 'EN';
+  const ariaLabel = `Switch to ${targetLocale === 'pt' ? 'Portuguese' : 'English'}`;
 
   return (
-    <div className='flex gap-1 md:gap-2 relative z-10'>
+    <div className='relative z-10'>
       <Button
         type='button'
-        variant={isPTActive ? 'secondary' : 'ghost'}
+        variant='outline'
         size='sm'
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          switchLocale('pt');
+          switchLocale(targetLocale);
         }}
-        disabled={isPTActive || isPending}
-        aria-label='Switch to Portuguese'
-        aria-pressed={isPTActive}
+        disabled={isPending}
+        aria-label={ariaLabel}
         className='cursor-pointer h-8 px-2 md:h-9 md:px-3 text-xs md:text-sm'>
-        {isPTActive && <Check className='h-3 w-3 md:h-3.5 md:w-3.5' />}
-        PT
-      </Button>
-      <Button
-        type='button'
-        variant={isENActive ? 'secondary' : 'ghost'}
-        size='sm'
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          switchLocale('en');
-        }}
-        disabled={isENActive || isPending}
-        aria-label='Switch to English'
-        aria-pressed={isENActive}
-        className='cursor-pointer h-8 px-2 md:h-9 md:px-3 text-xs md:text-sm'>
-        {isENActive && <Check className='h-3 w-3 md:h-3.5 md:w-3.5' />}
-        EN
+        {targetLabel}
       </Button>
     </div>
   );
