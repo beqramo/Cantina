@@ -12,6 +12,8 @@ import {
   getDoc,
   Timestamp,
   QueryConstraint,
+  startAfter,
+  QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase-client';
 import {
@@ -421,15 +423,14 @@ export async function getAllDishes(
 }
 
 export async function getTopDishes(
-  page: number = 1,
   pageSize: number = 10,
   tags?: DishTag[],
   category?: DishCategory,
-): Promise<{ dishes: Dish[]; hasMore: boolean }> {
-  if (!db) return { dishes: [], hasMore: false };
+  lastDoc?: QueryDocumentSnapshot,
+): Promise<{ dishes: Dish[]; hasMore: boolean; lastDoc: QueryDocumentSnapshot | null }> {
+  if (!db) return { dishes: [], hasMore: false, lastDoc: null };
 
   try {
-    const MAX_DISHES = 30; // Maximum total dishes to fetch
     const dishesRef = collection(db, 'dishes');
 
     // Build query conditions
@@ -442,8 +443,19 @@ export async function getTopDishes(
       conditions.push(where('category', '==', category));
     }
 
+    // Order by thumbsUp descending for consistent cursor pagination
     conditions.push(orderBy('thumbsUp', 'desc'));
-    conditions.push(limit(MAX_DISHES)); // Always fetch maximum 30 dishes
+
+    // Use cursor if provided
+    if (lastDoc) {
+      conditions.push(startAfter(lastDoc));
+    }
+
+    // Fetch more than pageSize to account for client-side sorting by net votes
+    // This helps ensure we don't skip dishes when sorting changes the order
+    // Fetch 2x pageSize + 1 to have enough dishes after sorting
+    const fetchSize = pageSize * 2 + 1;
+    conditions.push(limit(fetchSize));
 
     const q = query(dishesRef, ...conditions);
     const querySnapshot = await getDocs(q);
@@ -469,15 +481,29 @@ export async function getTopDishes(
       return netB - netA;
     });
 
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedDishes = dishes.slice(startIndex, endIndex);
-    const hasMore = dishes.length > endIndex;
+    // Check if we have more pages by checking if we got the full fetchSize
+    // This means there might be more dishes available in Firestore
+    const hasMore = querySnapshot.docs.length >= fetchSize;
 
-    return { dishes: paginatedDishes, hasMore };
+    // Return only pageSize dishes
+    const paginatedDishes = dishes.slice(0, pageSize);
+
+    // Get the last document snapshot for cursor
+    // Since we sorted client-side by net votes, we need to find the last dish shown
+    // and use its document from the original Firestore query as the cursor
+    let lastDocument: QueryDocumentSnapshot | null = null;
+    if (hasMore && paginatedDishes.length > 0) {
+      // Find the last dish in the paginated results (after sorting)
+      const lastDish = paginatedDishes[paginatedDishes.length - 1];
+      // Find its corresponding document in the original querySnapshot (ordered by thumbsUp)
+      const lastDocSnapshot = querySnapshot.docs.find((doc) => doc.id === lastDish.id);
+      lastDocument = lastDocSnapshot || null;
+    }
+
+    return { dishes: paginatedDishes, hasMore, lastDoc: lastDocument };
   } catch (error) {
     console.error('Error getting top dishes:', error);
-    return { dishes: [], hasMore: false };
+    return { dishes: [], hasMore: false, lastDoc: null };
   }
 }
 

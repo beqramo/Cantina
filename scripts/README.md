@@ -110,3 +110,4 @@ Before running this script, you need to upload the images to Firebase Storage. Y
 
 - The script automatically pauses every 50 dishes
 - For very large imports, you may need to run in batches
+
