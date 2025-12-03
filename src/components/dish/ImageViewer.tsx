@@ -41,6 +41,7 @@ export function ImageViewer({
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -152,6 +153,8 @@ export function ImageViewer({
   const touchStartRef = useRef<{
     distance: number;
     center: { x: number; y: number };
+    initialScale: number;
+    initialPosition: { x: number; y: number };
   } | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -161,6 +164,7 @@ export function ImageViewer({
     }
 
     if (e.touches.length === 2) {
+      setIsPinching(true);
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const distance = Math.hypot(
@@ -174,6 +178,8 @@ export function ImageViewer({
       touchStartRef.current = {
         distance,
         center,
+        initialScale: scale,
+        initialPosition: { ...position },
       };
     } else if (e.touches.length === 1 && scale > 1) {
       setIsDragging(true);
@@ -197,21 +203,53 @@ export function ImageViewer({
         touch2.clientX - touch1.clientX,
         touch2.clientY - touch1.clientY,
       );
+      const currentCenter = {
+        x: (touch1.clientX + touch2.clientX) / 2,
+        y: (touch1.clientY + touch2.clientY) / 2,
+      };
       const scaleChange = distance / touchStartRef.current.distance;
-      const newScale = Math.max(0.5, Math.min(5, scale * scaleChange));
+      const newScale = Math.max(0.5, Math.min(5, touchStartRef.current.initialScale * scaleChange));
+
+      // Calculate center movement for panning
+      const centerDelta = {
+        x: currentCenter.x - touchStartRef.current.center.x,
+        y: currentCenter.y - touchStartRef.current.center.y,
+      };
+
+      // Update position based on center movement
+      const newPosition = {
+        x: touchStartRef.current.initialPosition.x + centerDelta.x,
+        y: touchStartRef.current.initialPosition.y + centerDelta.y,
+      };
+
       setScale(newScale);
-    } else if (e.touches.length === 1 && isDragging && scale > 1) {
-      e.preventDefault();
-      setPosition({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y,
-      });
+      setPosition(newPosition);
+    } else if (e.touches.length === 1) {
+      // Transition from pinch to drag
+      if (isPinching && scale > 1) {
+        setIsPinching(false);
+        setIsDragging(true);
+        setDragStart({
+          x: e.touches[0].clientX - position.x,
+          y: e.touches[0].clientY - position.y,
+        });
+      } else if (isDragging && scale > 1) {
+        e.preventDefault();
+        setPosition({
+          x: e.touches[0].clientX - dragStart.x,
+          y: e.touches[0].clientY - dragStart.y,
+        });
+      }
     }
   };
 
   const handleTouchEnd = () => {
     touchStartRef.current = null;
     setIsDragging(false);
+    setIsPinching(false);
+    // Reset to original size and position when user lets go
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
   };
 
   // Mouse drag handlers
@@ -344,7 +382,7 @@ export function ImageViewer({
         {/* Image Container */}
         <div
           ref={containerRef}
-          className='w-full h-full flex items-center justify-center overflow-hidden'
+          className='w-full h-full flex items-center justify-center overflow-hidden relative'
           style={{ touchAction: 'none' }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -354,6 +392,12 @@ export function ImageViewer({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onDoubleClick={handleDoubleClick}>
+          {/* Loading spinner - positioned relative to container, not transformed image */}
+          {!imageLoaded && (
+            <div className='absolute inset-0 flex items-center justify-center z-10'>
+              <div className='animate-spin rounded-full h-8 w-8 border-2 border-white/20 border-t-white'></div>
+            </div>
+          )}
           <div
             ref={imageRef}
             className={cn(
@@ -361,18 +405,12 @@ export function ImageViewer({
               scale > 1
                 ? 'cursor-grab active:cursor-grabbing'
                 : 'cursor-zoom-in',
-              isDragging && 'transition-none',
+              (isDragging || isPinching) && 'transition-none',
             )}
             style={{
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transformOrigin: 'center center',
             }}>
-            {/* Loading spinner */}
-            {!imageLoaded && (
-              <div className='absolute inset-0 flex items-center justify-center min-w-[200px] min-h-[200px]'>
-                <div className='animate-spin rounded-full h-8 w-8 border-2 border-white/20 border-t-white'></div>
-              </div>
-            )}
             <Image
               src={imageUrl}
               alt={alt}

@@ -78,7 +78,7 @@ async function processMealItems(mealItems: {
   'Dieta Mediterrânica': string;
   Alternativa: string;
   Vegetariana: string;
-  soup?: string; // Optional soup name
+  Sopa?: string; // Optional soup name
 }): Promise<MenuItems> {
   const processedItems: MenuItems = {
     'Sugestão do Chefe': { dishName: '' },
@@ -113,9 +113,9 @@ async function processMealItems(mealItems: {
   }
 
   // Process soup (optional, not a dish category)
-  if (mealItems.soup && mealItems.soup.trim()) {
-    processedItems.soup = {
-      dishName: mealItems.soup.trim(),
+  if (mealItems.Sopa && mealItems.Sopa.trim()) {
+    processedItems.Sopa = {
+      dishName: mealItems.Sopa.trim(),
       // No dishId for soup as it's not linked to a dish
     };
   }
@@ -154,23 +154,33 @@ export async function processMenuUpload(
     const date = parseMenuDate(menuDay.date);
 
     // Process lunch items (always required)
+    // Handle both "soup" and "Sopa" field names for backward compatibility
+    const lunchSoup =
+      (menuDay.lunch as Record<string, unknown>).Sopa ||
+      (menuDay.lunch as Record<string, unknown>).soup ||
+      undefined;
     const lunchItems = await processMealItems({
       'Sugestão do Chefe': menuDay.lunch['Sugestão do Chefe'],
       'Dieta Mediterrânica': menuDay.lunch['Dieta Mediterrânica'],
       Alternativa: menuDay.lunch.Alternativa,
       Vegetariana: menuDay.lunch.Vegetariana,
-      soup: menuDay.lunch.soup,
+      Sopa: typeof lunchSoup === 'string' ? lunchSoup : undefined,
     });
 
     // Process dinner items (optional on any day)
     let dinnerItems: MenuItems | undefined;
     if (menuDay.dinner) {
+      // Handle both "soup" and "Sopa" field names for backward compatibility
+      const dinnerSoup =
+        (menuDay.dinner as Record<string, unknown>).Sopa ||
+        (menuDay.dinner as Record<string, unknown>).soup ||
+        undefined;
       dinnerItems = await processMealItems({
         'Sugestão do Chefe': menuDay.dinner['Sugestão do Chefe'],
         'Dieta Mediterrânica': menuDay.dinner['Dieta Mediterrânica'],
         Alternativa: menuDay.dinner.Alternativa,
         Vegetariana: menuDay.dinner.Vegetariana,
-        soup: menuDay.dinner.soup,
+        Sopa: typeof dinnerSoup === 'string' ? dinnerSoup : undefined,
       });
     }
 

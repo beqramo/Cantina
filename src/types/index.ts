@@ -83,7 +83,7 @@ export interface MenuItems {
   'Dieta Mediterrânica': MenuItem;
   Alternativa: MenuItem;
   Vegetariana: MenuItem;
-  soup?: MenuItem; // Optional soup per meal
+  Sopa?: MenuItem; // Optional soup per meal
 }
 
 export interface Menu {
@@ -102,14 +102,14 @@ export interface MenuDayJSON {
     'Dieta Mediterrânica': string;
     Alternativa: string;
     Vegetariana: string;
-    soup?: string; // Optional soup name
+    Sopa?: string; // Optional soup name
   };
   dinner?: {
     'Sugestão do Chefe': string;
     'Dieta Mediterrânica': string;
     Alternativa: string;
     Vegetariana: string;
-    soup?: string; // Optional soup name
+    Sopa?: string; // Optional soup name
   }; // Optional on any day
 }
 

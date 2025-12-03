@@ -152,7 +152,7 @@ export function DailyMenu() {
         </div>
 
         {/* Soup Section */}
-        {mealItems.soup && mealItems.soup.dishName && (
+        {mealItems.Sopa && mealItems.Sopa.dishName && (
           <div className='mt-6 pt-6 border-t'>
             <h3 className='text-lg font-semibold mb-3 flex items-center gap-2'>
               <Soup className='h-5 w-5 text-orange-500' />
@@ -161,7 +161,7 @@ export function DailyMenu() {
             <Card className='bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/30'>
               <CardContent className='p-4'>
                 <p className='font-medium text-base'>
-                  {mealItems.soup.dishName}
+                  {mealItems.Sopa.dishName}
                 </p>
               </CardContent>
             </Card>
@@ -206,7 +206,7 @@ export function DailyMenu() {
       </div>
 
       {/* Soup Section */}
-      {mealItems.soup && mealItems.soup.dishName && (
+      {mealItems.Sopa && mealItems.Sopa.dishName && (
         <div className='mt-6 pt-6 border-t'>
           <h3 className='text-lg font-semibold mb-3 flex items-center gap-2'>
             <Soup className='h-5 w-5 text-orange-500' />
@@ -214,7 +214,7 @@ export function DailyMenu() {
           </h3>
           <Card className='bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/30'>
             <CardContent className='p-4'>
-              <p className='font-medium text-base'>{mealItems.soup.dishName}</p>
+              <p className='font-medium text-base'>{mealItems.Sopa.dishName}</p>
             </CardContent>
           </Card>
         </div>

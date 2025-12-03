@@ -39,8 +39,8 @@ export default function AdminMenuPage() {
   // Form state for manual menu entry
   const [formData, setFormData] = useState<{
     date: string;
-    lunch: { [key in DishCategory]: string } & { soup?: string };
-    dinner: { [key in DishCategory]: string } & { soup?: string };
+    lunch: { [key in DishCategory]: string } & { Sopa?: string };
+    dinner: { [key in DishCategory]: string } & { Sopa?: string };
   }>({
     date: '',
     lunch: {
@@ -48,14 +48,14 @@ export default function AdminMenuPage() {
       'Dieta Mediterrânica': '',
       Alternativa: '',
       Vegetariana: '',
-      soup: '',
+      Sopa: '',
     },
     dinner: {
       'Sugestão do Chefe': '',
       'Dieta Mediterrânica': '',
       Alternativa: '',
       Vegetariana: '',
-      soup: '',
+      Sopa: '',
     },
   });
 
@@ -169,8 +169,8 @@ export default function AdminMenuPage() {
           'Dieta Mediterrânica': formData.lunch['Dieta Mediterrânica'],
           Alternativa: formData.lunch.Alternativa,
           Vegetariana: formData.lunch.Vegetariana,
-          ...(formData.lunch.soup?.trim() && {
-            soup: formData.lunch.soup.trim(),
+          ...(formData.lunch.Sopa?.trim() && {
+            Sopa: formData.lunch.Sopa.trim(),
           }),
         },
       };
@@ -178,15 +178,15 @@ export default function AdminMenuPage() {
       // Only include dinner if at least one field is filled
       const hasDinnerData =
         DISH_CATEGORIES.some((category) => formData.dinner[category]?.trim()) ||
-        formData.dinner.soup?.trim();
+        formData.dinner.Sopa?.trim();
       if (hasDinnerData) {
         menuDay.dinner = {
           'Sugestão do Chefe': formData.dinner['Sugestão do Chefe'],
           'Dieta Mediterrânica': formData.dinner['Dieta Mediterrânica'],
           Alternativa: formData.dinner.Alternativa,
           Vegetariana: formData.dinner.Vegetariana,
-          ...(formData.dinner.soup?.trim() && {
-            soup: formData.dinner.soup.trim(),
+          ...(formData.dinner.Sopa?.trim() && {
+            Sopa: formData.dinner.Sopa.trim(),
           }),
         };
       }
@@ -227,14 +227,14 @@ export default function AdminMenuPage() {
           'Dieta Mediterrânica': '',
           Alternativa: '',
           Vegetariana: '',
-          soup: '',
+          Sopa: '',
         },
         dinner: {
           'Sugestão do Chefe': '',
           'Dieta Mediterrânica': '',
           Alternativa: '',
           Vegetariana: '',
-          soup: '',
+          Sopa: '',
         },
       });
       setEditingMenu(null);
@@ -259,7 +259,7 @@ export default function AdminMenuPage() {
         'Dieta Mediterrânica': menu.lunch['Dieta Mediterrânica'].dishName,
         Alternativa: menu.lunch['Alternativa'].dishName,
         Vegetariana: menu.lunch['Vegetariana'].dishName,
-        soup: menu.lunch.soup?.dishName || '',
+        Sopa: menu.lunch.Sopa?.dishName || '',
       },
       dinner: menu.dinner
         ? {
@@ -267,14 +267,14 @@ export default function AdminMenuPage() {
             'Dieta Mediterrânica': menu.dinner['Dieta Mediterrânica'].dishName,
             Alternativa: menu.dinner['Alternativa'].dishName,
             Vegetariana: menu.dinner['Vegetariana'].dishName,
-            soup: menu.dinner.soup?.dishName || '',
+            Sopa: menu.dinner.Sopa?.dishName || '',
           }
         : {
             'Sugestão do Chefe': '',
             'Dieta Mediterrânica': '',
             Alternativa: '',
             Vegetariana: '',
-            soup: '',
+            Sopa: '',
           },
     });
     setShowJsonEditor(false);
@@ -295,6 +295,7 @@ export default function AdminMenuPage() {
 
   const getJsonTemplate = (): string => {
     // Return array format template (can upload single day or multiple days)
+    // Note: soup field can be "soup" or "Sopa" - both are supported
     return JSON.stringify(
       [
         {
@@ -304,14 +305,14 @@ export default function AdminMenuPage() {
             'Dieta Mediterrânica': '',
             Alternativa: '',
             Vegetariana: '',
-            soup: '', // Optional soup name
+            Sopa: '', // Optional soup name (can also use "soup")
           },
           dinner: {
             'Sugestão do Chefe': '',
             'Dieta Mediterrânica': '',
             Alternativa: '',
             Vegetariana: '',
-            soup: '', // Optional soup name
+            Sopa: '', // Optional soup name (can also use "soup")
           },
         },
         {
@@ -321,7 +322,7 @@ export default function AdminMenuPage() {
             'Dieta Mediterrânica': '',
             Alternativa: '',
             Vegetariana: '',
-            soup: '', // Optional soup name
+            Sopa: '', // Optional soup name (can also use "soup")
           },
           // Dinner is optional on any day
         },
@@ -384,14 +385,14 @@ export default function AdminMenuPage() {
                   'Dieta Mediterrânica': '',
                   Alternativa: '',
                   Vegetariana: '',
-                  soup: '',
+                  Sopa: '',
                 },
                 dinner: {
                   'Sugestão do Chefe': '',
                   'Dieta Mediterrânica': '',
                   Alternativa: '',
                   Vegetariana: '',
-                  soup: '',
+                  Sopa: '',
                 },
               });
               // Update URL to remove upload-variant parameter
@@ -499,13 +500,13 @@ export default function AdminMenuPage() {
                     </label>
                     <Input
                       type='text'
-                      value={formData.lunch.soup || ''}
+                      value={formData.lunch.Sopa || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           lunch: {
                             ...formData.lunch,
-                            soup: e.target.value,
+                            Sopa: e.target.value,
                           },
                         })
                       }
@@ -552,13 +553,13 @@ export default function AdminMenuPage() {
                     </label>
                     <Input
                       type='text'
-                      value={formData.dinner.soup || ''}
+                      value={formData.dinner.Sopa || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           dinner: {
                             ...formData.dinner,
-                            soup: e.target.value,
+                            Sopa: e.target.value,
                           },
                         })
                       }
@@ -585,14 +586,14 @@ export default function AdminMenuPage() {
                           'Dieta Mediterrânica': '',
                           Alternativa: '',
                           Vegetariana: '',
-                          soup: '',
+                          Sopa: '',
                         },
                         dinner: {
                           'Sugestão do Chefe': '',
                           'Dieta Mediterrânica': '',
                           Alternativa: '',
                           Vegetariana: '',
-                          soup: '',
+                          Sopa: '',
                         },
                       });
                     }}>
@@ -640,10 +641,10 @@ export default function AdminMenuPage() {
                               {menu.lunch[cat]?.dishName || '-'}
                             </li>
                           ))}
-                          {menu.lunch.soup?.dishName && (
+                          {menu.lunch.Sopa?.dishName && (
                             <li className='font-medium text-orange-600 dark:text-orange-400'>
                               {tMenu('soup') || 'Soup'}:{' '}
-                              {menu.lunch.soup.dishName}
+                              {menu.lunch.Sopa.dishName}
                             </li>
                           )}
                         </ul>
@@ -657,10 +658,10 @@ export default function AdminMenuPage() {
                                 {menu.dinner![cat]?.dishName || '-'}
                               </li>
                             ))}
-                            {menu.dinner.soup?.dishName && (
+                            {menu.dinner.Sopa?.dishName && (
                               <li className='font-medium text-orange-600 dark:text-orange-400'>
                                 {tMenu('soup') || 'Soup'}:{' '}
-                                {menu.dinner.soup.dishName}
+                                {menu.dinner.Sopa.dishName}
                               </li>
                             )}
                           </ul>

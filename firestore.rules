@@ -133,17 +133,17 @@ service cloud.firestore {
                       request.resource.data.lunch is map &&
                       request.resource.data.lunch.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
                       // Soup is optional in lunch
-                      (!('soup' in request.resource.data.lunch) ||
-                       (request.resource.data.lunch.soup is map &&
-                        request.resource.data.lunch.soup.dishName is string)) &&
+                      (!('Sopa' in request.resource.data.lunch) ||
+                       (request.resource.data.lunch.Sopa is map &&
+                        request.resource.data.lunch.Sopa.dishName is string)) &&
                       // Dinner is optional, but if present must have all categories
                       (!('dinner' in request.resource.data) ||
                        (request.resource.data.dinner is map &&
                         request.resource.data.dinner.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
                         // Soup is optional in dinner
-                        (!('soup' in request.resource.data.dinner) ||
-                         (request.resource.data.dinner.soup is map &&
-                          request.resource.data.dinner.soup.dishName is string))));
+                        (!('Sopa' in request.resource.data.dinner) ||
+                         (request.resource.data.dinner.Sopa is map &&
+                          request.resource.data.dinner.Sopa.dishName is string))));
 
       // Public users can update menu items to add images (imageUrl and imagePendingApproval)
       // Admins can update any field
@@ -161,9 +161,9 @@ service cloud.firestore {
                          request.resource.data.lunch['Alternativa'].dishName == resource.data.lunch['Alternativa'].dishName &&
                          request.resource.data.lunch['Vegetariana'].dishName == resource.data.lunch['Vegetariana'].dishName &&
                          // Soup must not change (public users cannot modify soup)
-                         ((!('soup' in resource.data.lunch) && !('soup' in request.resource.data.lunch)) ||
-                          ('soup' in resource.data.lunch && 'soup' in request.resource.data.lunch &&
-                           request.resource.data.lunch.soup.dishName == resource.data.lunch.soup.dishName)) &&
+                         ((!('Sopa' in resource.data.lunch) && !('Sopa' in request.resource.data.lunch)) ||
+                          ('Sopa' in resource.data.lunch && 'Sopa' in request.resource.data.lunch &&
+                           request.resource.data.lunch.Sopa.dishName == resource.data.lunch.Sopa.dishName)) &&
                          // Dinner is optional - if it exists in both, validate it
                          (!('dinner' in resource.data) || !('dinner' in request.resource.data) ||
                           resource.data.dinner == null || request.resource.data.dinner == null ||
@@ -174,9 +174,9 @@ service cloud.firestore {
                            request.resource.data.dinner['Alternativa'].dishName == resource.data.dinner['Alternativa'].dishName &&
                            request.resource.data.dinner['Vegetariana'].dishName == resource.data.dinner['Vegetariana'].dishName &&
                            // Soup must not change in dinner (public users cannot modify soup)
-                           ((!('soup' in resource.data.dinner) && !('soup' in request.resource.data.dinner)) ||
-                            ('soup' in resource.data.dinner && 'soup' in request.resource.data.dinner &&
-                             request.resource.data.dinner.soup.dishName == resource.data.dinner.soup.dishName))))) ||
+                           ((!('Sopa' in resource.data.dinner) && !('Sopa' in request.resource.data.dinner)) ||
+                            ('Sopa' in resource.data.dinner && 'Sopa' in request.resource.data.dinner &&
+                             request.resource.data.dinner.Sopa.dishName == resource.data.dinner.Sopa.dishName))))) ||
                         // Admins can update any field
                         (isAuthenticated() &&
                          request.resource.data.keys().hasAll(['date', 'lunch', 'updatedAt']) &&
@@ -184,18 +184,18 @@ service cloud.firestore {
                          request.resource.data.lunch is map &&
                          request.resource.data.lunch.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
                          // Soup is optional in lunch
-                         (!('soup' in request.resource.data.lunch) ||
-                          (request.resource.data.lunch.soup is map &&
-                           request.resource.data.lunch.soup.dishName is string)) &&
+                         (!('Sopa' in request.resource.data.lunch) ||
+                          (request.resource.data.lunch.Sopa is map &&
+                           request.resource.data.lunch.Sopa.dishName is string)) &&
                          // Dinner is optional, but if present must have all categories
                          (!('dinner' in request.resource.data) ||
                           request.resource.data.dinner == null ||
                           (request.resource.data.dinner is map &&
                            request.resource.data.dinner.keys().hasAll(['Sugestão do Chefe', 'Dieta Mediterrânica', 'Alternativa', 'Vegetariana']) &&
                            // Soup is optional in dinner
-                           (!('soup' in request.resource.data.dinner) ||
-                            (request.resource.data.dinner.soup is map &&
-                             request.resource.data.dinner.soup.dishName is string)))))
+                           (!('Sopa' in request.resource.data.dinner) ||
+                            (request.resource.data.dinner.Sopa is map &&
+                             request.resource.data.dinner.Sopa.dishName is string)))))
                       );
 
       // Only authenticated admins can delete menus
