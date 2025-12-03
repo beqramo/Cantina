@@ -715,7 +715,7 @@ export async function createMenu(
       updatedAt: now,
     };
 
-    // Only add dinner if provided (Saturday has no dinner)
+    // Only add dinner if provided (dinner is optional on any day)
     if (dinner) {
       menuData.dinner = dinner;
     }
@@ -733,7 +733,7 @@ export async function updateMenu(
   id: string,
   updates: {
     lunch?: MenuItems;
-    dinner?: MenuItems | null; // null to remove dinner (e.g., for Saturday)
+    dinner?: MenuItems | null; // null to remove dinner
   },
 ): Promise<void> {
   if (!db) throw new Error('Firebase not initialized');
@@ -1115,7 +1115,7 @@ export async function getMenusWithPendingImages(): Promise<
         }
       });
 
-      // Check dinner items (if exists - Saturday has no dinner)
+      // Check dinner items (if exists - dinner is optional on any day)
       if (menu.dinner) {
         const dinnerItems = menu.dinner;
         (

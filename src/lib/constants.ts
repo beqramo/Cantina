@@ -7,6 +7,14 @@ export const DISH_CATEGORIES: DishCategory[] = [
   'Vegetariana',
 ];
 
+// Menu categories for display purposes (soup is handled separately as it's not a dish category)
+export const MENU_CATEGORIES: DishCategory[] = [
+  'Sugestão do Chefe',
+  'Dieta Mediterrânica',
+  'Alternativa',
+  'Vegetariana',
+];
+
 export const DISH_TAGS: DishTag[] = [
   '#porco',
   '#beef',

@@ -6,7 +6,7 @@
 import { adminDb } from './firebase-admin';
 import { MenuJSON, MenuDayJSON, MenuItems, DishCategory } from '@/types';
 import { DISH_CATEGORIES } from '@/lib/constants';
-import { parseMenuDate, isSaturday } from '@/lib/time';
+import { parseMenuDate } from '@/lib/time';
 import * as admin from 'firebase-admin';
 
 // Helper function to normalize strings for search (same as in firestore.ts)
@@ -135,18 +135,23 @@ function generateSearchTokens(name: string): string[] {
 }
 
 // Cache for dishes to avoid repeated queries
-let dishesCache: Map<string, { id: string; name: string; normalized: string }> | null = null;
+let dishesCache: Map<
+  string,
+  { id: string; name: string; normalized: string }
+> | null = null;
 let dishesCacheTimestamp: number = 0;
 const CACHE_TTL = 60000; // 1 minute cache
 
 /**
  * Get all dishes with caching to improve performance
  */
-async function getAllDishesCached(): Promise<Map<string, { id: string; name: string; normalized: string }>> {
+async function getAllDishesCached(): Promise<
+  Map<string, { id: string; name: string; normalized: string }>
+> {
   const now = Date.now();
 
   // Return cached dishes if still valid
-  if (dishesCache && (now - dishesCacheTimestamp) < CACHE_TTL) {
+  if (dishesCache && now - dishesCacheTimestamp < CACHE_TTL) {
     return dishesCache;
   }
 
@@ -194,7 +199,10 @@ export async function matchDishByNameServer(
 
   // If no exact match, try partial match (contains)
   for (const dish of dishesMap.values()) {
-    if (dish.normalized.includes(normalizedInput) || normalizedInput.includes(dish.normalized)) {
+    if (
+      dish.normalized.includes(normalizedInput) ||
+      normalizedInput.includes(dish.normalized)
+    ) {
       return { id: dish.id, name: dish.name };
     }
   }
@@ -246,6 +254,7 @@ async function processMealItemsServer(mealItems: {
   'Dieta Mediterrânica': string;
   Alternativa: string;
   Vegetariana: string;
+  soup?: string; // Optional soup name
 }): Promise<MenuItems> {
   const processedItems: MenuItems = {
     'Sugestão do Chefe': { dishName: '' },
@@ -279,13 +288,21 @@ async function processMealItemsServer(mealItems: {
     }
   }
 
+  // Process soup (optional, not a dish category)
+  if (mealItems.soup && mealItems.soup.trim()) {
+    processedItems.soup = {
+      dishName: mealItems.soup.trim(),
+      // No dishId for soup as it's not linked to a dish
+    };
+  }
+
   return processedItems;
 }
 
 /**
  * Process menu JSON upload server-side using Admin SDK
  * Supports both single day object and array of days
- * Handles Saturday (no dinner menu)
+ * Dinner is optional on any day
  */
 export async function processMenuUploadServer(
   menuData: MenuJSON,
@@ -312,20 +329,40 @@ export async function processMenuUploadServer(
     // Convert date string to Date object
     const date = parseMenuDate(menuDay.date);
 
-    // Check if it's Saturday
-    const isSat = isSaturday(date);
-
     // Process lunch items (always required)
-    const lunchItems = await processMealItemsServer(menuDay.lunch);
+    const lunchItems = await processMealItemsServer({
+      'Sugestão do Chefe': menuDay.lunch['Sugestão do Chefe'],
+      'Dieta Mediterrânica': menuDay.lunch['Dieta Mediterrânica'],
+      Alternativa: menuDay.lunch.Alternativa,
+      Vegetariana: menuDay.lunch.Vegetariana,
+      soup: menuDay.lunch.soup,
+    });
 
-    // Process dinner items (optional, not available on Saturday)
+    // Process dinner items (optional on any day)
+    // Only process dinner if at least one field has content
     let dinnerItems: MenuItems | undefined;
-    if (!isSat && menuDay.dinner) {
-      dinnerItems = await processMealItemsServer(menuDay.dinner);
-    } else if (isSat && menuDay.dinner) {
-      console.warn(
-        `Warning: Saturday menu for ${menuDay.date} includes dinner, but Saturday only has lunch. Dinner will be ignored.`,
-      );
+    if (menuDay.dinner) {
+      const hasDinnerData =
+        DISH_CATEGORIES.some((category) => menuDay.dinner![category]?.trim()) ||
+        (menuDay.dinner.soup && menuDay.dinner.soup.trim());
+      if (hasDinnerData) {
+        dinnerItems = await processMealItemsServer({
+          'Sugestão do Chefe': menuDay.dinner['Sugestão do Chefe'],
+          'Dieta Mediterrânica': menuDay.dinner['Dieta Mediterrânica'],
+          Alternativa: menuDay.dinner.Alternativa,
+          Vegetariana: menuDay.dinner.Vegetariana,
+          soup: menuDay.dinner.soup,
+        });
+        // Verify that processed dinner has at least one dish
+        const hasProcessedDishes =
+          DISH_CATEGORIES.some((category) =>
+            dinnerItems![category]?.dishName?.trim(),
+          ) ||
+          (dinnerItems.soup && dinnerItems.soup.dishName?.trim());
+        if (!hasProcessedDishes) {
+          dinnerItems = undefined; // Don't include empty dinner
+        }
+      }
     }
 
     processedMenus.push({
@@ -366,7 +403,7 @@ export async function createMenuServer(
     updatedAt: now,
   };
 
-  // Only add dinner if provided (Saturday has no dinner)
+  // Only add dinner if provided (dinner is optional on any day)
   if (dinner) {
     menuData.dinner = dinner;
   }
@@ -382,7 +419,7 @@ export async function updateMenuServer(
   menuId: string,
   updates: {
     lunch?: MenuItems;
-    dinner?: MenuItems | null; // null to remove dinner (e.g., for Saturday)
+    dinner?: MenuItems | null; // null to remove dinner
   },
 ): Promise<void> {
   const updateData: {
@@ -405,9 +442,12 @@ export async function updateMenuServer(
 /**
  * Get menu by date using Admin SDK
  */
-export async function getMenuByDateServer(
-  date: Date,
-): Promise<{ id: string; date: Date; lunch: MenuItems; dinner?: MenuItems } | null> {
+export async function getMenuByDateServer(date: Date): Promise<{
+  id: string;
+  date: Date;
+  lunch: MenuItems;
+  dinner?: MenuItems;
+} | null> {
   // Normalize date to start of day (00:00:00) in UTC
   const startOfDay = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
@@ -434,7 +474,8 @@ export async function getMenuByDateServer(
 
   const doc = snapshot.docs[0];
   const data = doc.data();
-  const menuDate = (data.date as admin.firestore.Timestamp)?.toDate() || new Date();
+  const menuDate =
+    (data.date as admin.firestore.Timestamp)?.toDate() || new Date();
 
   return {
     id: doc.id,
@@ -443,4 +484,3 @@ export async function getMenuByDateServer(
     dinner: data.dinner as MenuItems | undefined,
   };
 }
-

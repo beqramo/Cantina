@@ -9,6 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslations } from 'next-intl';
 import { DISH_CATEGORIES } from '@/lib/constants';
 import { FiSearch } from 'react-icons/fi';
+import { Soup } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 export function DailyMenu() {
   const t = useTranslations('Menu');
@@ -27,7 +29,7 @@ export function DailyMenu() {
       const currentMenu = await getCurrentMenu();
 
       if (currentMenu && currentMeal) {
-        // Check if dinner menu exists (Saturday has no dinner)
+        // Check if dinner menu exists (dinner is optional on any day)
         if (currentMeal === 'dinner' && !currentMenu.dinner) {
           // If it's dinner time but no dinner menu, show lunch instead
           setMealType('lunch');
@@ -148,6 +150,23 @@ export function DailyMenu() {
             );
           })}
         </div>
+
+        {/* Soup Section */}
+        {mealItems.soup && mealItems.soup.dishName && (
+          <div className='mt-6 pt-6 border-t'>
+            <h3 className='text-lg font-semibold mb-3 flex items-center gap-2'>
+              <Soup className='h-5 w-5 text-orange-500' />
+              {t('soupHeader') || t('soup') || 'Soup'}
+            </h3>
+            <Card className='bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/30'>
+              <CardContent className='p-4'>
+                <p className='font-medium text-base'>
+                  {mealItems.soup.dishName}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     );
   }
@@ -185,6 +204,21 @@ export function DailyMenu() {
           );
         })}
       </div>
+
+      {/* Soup Section */}
+      {mealItems.soup && mealItems.soup.dishName && (
+        <div className='mt-6 pt-6 border-t'>
+          <h3 className='text-lg font-semibold mb-3 flex items-center gap-2'>
+            <Soup className='h-5 w-5 text-orange-500' />
+            {t('soupHeader') || t('soup') || 'Soup'}
+          </h3>
+          <Card className='bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/30'>
+            <CardContent className='p-4'>
+              <p className='font-medium text-base'>{mealItems.soup.dishName}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

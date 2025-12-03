@@ -83,13 +83,14 @@ export interface MenuItems {
   'Dieta Mediterrânica': MenuItem;
   Alternativa: MenuItem;
   Vegetariana: MenuItem;
+  soup?: MenuItem; // Optional soup per meal
 }
 
 export interface Menu {
   id: string;
   date: Date; // Firebase Timestamp converted to Date
   lunch: MenuItems;
-  dinner?: MenuItems; // Optional - Saturday has no dinner
+  dinner?: MenuItems; // Optional on any day
   createdAt: Date;
   updatedAt: Date;
 }
@@ -101,13 +102,15 @@ export interface MenuDayJSON {
     'Dieta Mediterrânica': string;
     Alternativa: string;
     Vegetariana: string;
+    soup?: string; // Optional soup name
   };
   dinner?: {
     'Sugestão do Chefe': string;
     'Dieta Mediterrânica': string;
     Alternativa: string;
     Vegetariana: string;
-  }; // Optional - Saturday has no dinner
+    soup?: string; // Optional soup name
+  }; // Optional on any day
 }
 
 // Support both single day object and array of days

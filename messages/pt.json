@@ -131,6 +131,12 @@
     "dinnerMenu": "Menu do Jantar",
     "lunch": "Almoço",
     "dinner": "Jantar",
+    "soup": "Sopa",
+    "soupName": "Nome da sopa",
+    "soupNamePlaceholder": "Nome da sopa",
+    "soupHeader": "Sopa",
+    "noSoup": "Sem sopa",
+    "optional": "Opcional",
     "noMenuAvailable": "Nenhum menu disponível para hoje",
     "noMenuDescription": "O menu diário ainda não foi adicionado. Tenta pesquisar o prato que procuras!",
     "addImage": "Adicionar Imagem",
@@ -166,7 +172,8 @@
     "Sugestão do Chefe": "Sugestão do Chefe",
     "Dieta Mediterrânica": "Dieta Mediterrânica",
     "Alternativa": "Alternativa",
-    "Vegetariana": "Vegetariana"
+    "Vegetariana": "Vegetariana",
+    "Sopa": "Sopa"
   },
   "Tags": {
     "#porco": "#porco",

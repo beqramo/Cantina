@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,30 +12,35 @@ import { logoutAdmin } from '@/lib/auth';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { DISH_CATEGORIES } from '@/lib/constants';
-import { formatMenuDate, parseMenuDate, isSaturday } from '@/lib/time';
+import { formatMenuDate } from '@/lib/time';
 import { MenuDayJSON } from '@/types';
 import { Calendar, Upload, Trash2, Save } from 'lucide-react';
+import { Pagination } from '@/components/pagination/Pagination';
 
 export default function AdminMenuPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations('Admin');
   const tMenu = useTranslations('Menu');
   const tNav = useTranslations('Navigation');
   const tCommon = useTranslations('Common');
   const locale = useLocale();
   const [menus, setMenus] = useState<Menu[]>([]);
+  const [allMenus, setAllMenus] = useState<Menu[]>([]); // Store all menus for pagination
   const [loading, setLoading] = useState(true);
   const [jsonInput, setJsonInput] = useState('');
   const [showJsonEditor, setShowJsonEditor] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 9;
 
   // Form state for manual menu entry
   const [formData, setFormData] = useState<{
     date: string;
-    lunch: { [key in DishCategory]: string };
-    dinner: { [key in DishCategory]: string };
+    lunch: { [key in DishCategory]: string } & { soup?: string };
+    dinner: { [key in DishCategory]: string } & { soup?: string };
   }>({
     date: '',
     lunch: {
@@ -43,18 +48,35 @@ export default function AdminMenuPage() {
       'Dieta Mediterrânica': '',
       Alternativa: '',
       Vegetariana: '',
+      soup: '',
     },
     dinner: {
       'Sugestão do Chefe': '',
       'Dieta Mediterrânica': '',
       Alternativa: '',
       Vegetariana: '',
+      soup: '',
     },
   });
 
   useEffect(() => {
     loadMenus();
   }, []);
+
+  // Handle URL parameter for JSON tab
+  useEffect(() => {
+    const uploadVariant = searchParams.get('upload-variant');
+    if (uploadVariant === 'json') {
+      setShowJsonEditor(true);
+    }
+  }, [searchParams]);
+
+  // Pagination effect
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    setMenus(allMenus.slice(startIndex, endIndex));
+  }, [allMenus, currentPage]);
 
   const getAdminPath = (path: string) => {
     return locale === 'en' ? path : `/${locale}${path}`;
@@ -70,7 +92,9 @@ export default function AdminMenuPage() {
       endDate.setDate(today.getDate() + 30);
       endDate.setHours(23, 59, 59, 999); // End of day
       const loadedMenus = await getMenusByDateRange(today, endDate);
-      setMenus(loadedMenus);
+      setAllMenus(loadedMenus);
+      // Set initial page
+      setCurrentPage(1);
     } catch (error) {
       console.error('Error loading menus:', error);
       setError('Failed to load menus');
@@ -137,19 +161,34 @@ export default function AdminMenuPage() {
     setSuccess(null);
 
     try {
-      // Check if it's Saturday
-      const date = parseMenuDate(formData.date);
-      const isSat = isSaturday(date);
-
       // Process form data - use MenuDayJSON format
       const menuDay: MenuDayJSON = {
         date: formData.date,
-        lunch: formData.lunch as MenuDayJSON['lunch'],
+        lunch: {
+          'Sugestão do Chefe': formData.lunch['Sugestão do Chefe'],
+          'Dieta Mediterrânica': formData.lunch['Dieta Mediterrânica'],
+          Alternativa: formData.lunch.Alternativa,
+          Vegetariana: formData.lunch.Vegetariana,
+          ...(formData.lunch.soup?.trim() && {
+            soup: formData.lunch.soup.trim(),
+          }),
+        },
       };
 
-      // Only add dinner if not Saturday
-      if (!isSat) {
-        menuDay.dinner = formData.dinner as MenuDayJSON['dinner'];
+      // Only include dinner if at least one field is filled
+      const hasDinnerData =
+        DISH_CATEGORIES.some((category) => formData.dinner[category]?.trim()) ||
+        formData.dinner.soup?.trim();
+      if (hasDinnerData) {
+        menuDay.dinner = {
+          'Sugestão do Chefe': formData.dinner['Sugestão do Chefe'],
+          'Dieta Mediterrânica': formData.dinner['Dieta Mediterrânica'],
+          Alternativa: formData.dinner.Alternativa,
+          Vegetariana: formData.dinner.Vegetariana,
+          ...(formData.dinner.soup?.trim() && {
+            soup: formData.dinner.soup.trim(),
+          }),
+        };
       }
 
       // Call API endpoint instead of client-side Firestore
@@ -188,12 +227,14 @@ export default function AdminMenuPage() {
           'Dieta Mediterrânica': '',
           Alternativa: '',
           Vegetariana: '',
+          soup: '',
         },
         dinner: {
           'Sugestão do Chefe': '',
           'Dieta Mediterrânica': '',
           Alternativa: '',
           Vegetariana: '',
+          soup: '',
         },
       });
       setEditingMenu(null);
@@ -218,6 +259,7 @@ export default function AdminMenuPage() {
         'Dieta Mediterrânica': menu.lunch['Dieta Mediterrânica'].dishName,
         Alternativa: menu.lunch['Alternativa'].dishName,
         Vegetariana: menu.lunch['Vegetariana'].dishName,
+        soup: menu.lunch.soup?.dishName || '',
       },
       dinner: menu.dinner
         ? {
@@ -225,12 +267,14 @@ export default function AdminMenuPage() {
             'Dieta Mediterrânica': menu.dinner['Dieta Mediterrânica'].dishName,
             Alternativa: menu.dinner['Alternativa'].dishName,
             Vegetariana: menu.dinner['Vegetariana'].dishName,
+            soup: menu.dinner.soup?.dishName || '',
           }
         : {
             'Sugestão do Chefe': '',
             'Dieta Mediterrânica': '',
             Alternativa: '',
             Vegetariana: '',
+            soup: '',
           },
     });
     setShowJsonEditor(false);
@@ -260,12 +304,14 @@ export default function AdminMenuPage() {
             'Dieta Mediterrânica': '',
             Alternativa: '',
             Vegetariana: '',
+            soup: '', // Optional soup name
           },
           dinner: {
             'Sugestão do Chefe': '',
             'Dieta Mediterrânica': '',
             Alternativa: '',
             Vegetariana: '',
+            soup: '', // Optional soup name
           },
         },
         {
@@ -275,8 +321,9 @@ export default function AdminMenuPage() {
             'Dieta Mediterrânica': '',
             Alternativa: '',
             Vegetariana: '',
+            soup: '', // Optional soup name
           },
-          // Note: Saturday has no dinner menu
+          // Dinner is optional on any day
         },
       ],
       null,
@@ -314,7 +361,14 @@ export default function AdminMenuPage() {
         <div className='flex gap-2'>
           <Button
             variant={showJsonEditor ? 'default' : 'outline'}
-            onClick={() => setShowJsonEditor(true)}>
+            onClick={() => {
+              setShowJsonEditor(true);
+              // Update URL to include upload-variant=json
+              const adminMenuPath = getAdminPath('/admin/menu');
+              router.replace(`${adminMenuPath}?upload-variant=json`, {
+                scroll: false,
+              });
+            }}>
             <Upload className='h-4 w-4 mr-2' />
             {tMenu('uploadJson') || 'Upload JSON'}
           </Button>
@@ -330,14 +384,19 @@ export default function AdminMenuPage() {
                   'Dieta Mediterrânica': '',
                   Alternativa: '',
                   Vegetariana: '',
+                  soup: '',
                 },
                 dinner: {
                   'Sugestão do Chefe': '',
                   'Dieta Mediterrânica': '',
                   Alternativa: '',
                   Vegetariana: '',
+                  soup: '',
                 },
               });
+              // Update URL to remove upload-variant parameter
+              const adminMenuPath = getAdminPath('/admin/menu');
+              router.replace(adminMenuPath, { scroll: false });
             }}>
             <Calendar className='h-4 w-4 mr-2' />
             {tMenu('manualEntry') || 'Manual Entry'}
@@ -403,21 +462,6 @@ export default function AdminMenuPage() {
                   }}
                   placeholder='DD/MM/YYYY'
                 />
-                {formData.date &&
-                  (() => {
-                    try {
-                      const date = parseMenuDate(formData.date);
-                      const isSat = isSaturday(date);
-                      return isSat ? (
-                        <p className='text-sm text-muted-foreground mt-1'>
-                          {tMenu('saturdayNotice') ||
-                            'Note: Saturday has no dinner menu (lunch only)'}
-                        </p>
-                      ) : null;
-                    } catch {
-                      return null;
-                    }
-                  })()}
               </div>
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -447,48 +491,85 @@ export default function AdminMenuPage() {
                       />
                     </div>
                   ))}
+                  {/* Soup field */}
+                  <div className='mb-3 mt-4 pt-4 border-t'>
+                    <label className='text-sm font-medium mb-1 block'>
+                      {tMenu('soupHeader') || tMenu('soup') || 'Soup'} (
+                      {tMenu('optional') || 'Optional'})
+                    </label>
+                    <Input
+                      type='text'
+                      value={formData.lunch.soup || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          lunch: {
+                            ...formData.lunch,
+                            soup: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder={
+                        tMenu('soupNamePlaceholder') ||
+                        tMenu('soupName') ||
+                        'Soup name'
+                      }
+                    />
+                  </div>
                 </div>
 
-                {/* Dinner - Hide if Saturday */}
-                {(() => {
-                  try {
-                    if (formData.date) {
-                      const date = parseMenuDate(formData.date);
-                      const isSat = isSaturday(date);
-                      if (isSat) return null;
-                    }
-                  } catch {
-                    // Invalid date, show dinner section
-                  }
-                  return (
-                    <div>
-                      <h3 className='font-semibold mb-3'>
-                        {tMenu('dinner') || 'Dinner'}
-                      </h3>
-                      {DISH_CATEGORIES.map((category) => (
-                        <div key={category} className='mb-3'>
-                          <label className='text-sm font-medium mb-1 block'>
-                            {category}
-                          </label>
-                          <Input
-                            type='text'
-                            value={formData.dinner[category]}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                dinner: {
-                                  ...formData.dinner,
-                                  [category]: e.target.value,
-                                },
-                              })
-                            }
-                            placeholder={tMenu('dishName') || 'Dish name'}
-                          />
-                        </div>
-                      ))}
+                {/* Dinner */}
+                <div>
+                  <h3 className='font-semibold mb-3'>
+                    {tMenu('dinner') || 'Dinner'}
+                  </h3>
+                  {DISH_CATEGORIES.map((category) => (
+                    <div key={category} className='mb-3'>
+                      <label className='text-sm font-medium mb-1 block'>
+                        {category}
+                      </label>
+                      <Input
+                        type='text'
+                        value={formData.dinner[category]}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            dinner: {
+                              ...formData.dinner,
+                              [category]: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder={tMenu('dishName') || 'Dish name'}
+                      />
                     </div>
-                  );
-                })()}
+                  ))}
+                  {/* Soup field */}
+                  <div className='mb-3 mt-4 pt-4 border-t'>
+                    <label className='text-sm font-medium mb-1 block'>
+                      {tMenu('soupHeader') || tMenu('soup') || 'Soup'} (
+                      {tMenu('optional') || 'Optional'})
+                    </label>
+                    <Input
+                      type='text'
+                      value={formData.dinner.soup || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          dinner: {
+                            ...formData.dinner,
+                            soup: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder={
+                        tMenu('soupNamePlaceholder') ||
+                        tMenu('soupName') ||
+                        'Soup name'
+                      }
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className='flex gap-2'>
@@ -504,12 +585,14 @@ export default function AdminMenuPage() {
                           'Dieta Mediterrânica': '',
                           Alternativa: '',
                           Vegetariana: '',
+                          soup: '',
                         },
                         dinner: {
                           'Sugestão do Chefe': '',
                           'Dieta Mediterrânica': '',
                           Alternativa: '',
                           Vegetariana: '',
+                          soup: '',
                         },
                       });
                     }}>
@@ -541,59 +624,84 @@ export default function AdminMenuPage() {
               {tMenu('noMenus') || 'No menus found'}
             </div>
           ) : (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {menus.map((menu) => (
-                <Card key={menu.id}>
-                  <CardHeader>
-                    <CardTitle>{formatMenuDate(menu.date)}</CardTitle>
-                  </CardHeader>
-                  <CardContent className='space-y-2'>
-                    <div>
-                      <strong>{tMenu('lunch') || 'Lunch'}:</strong>
-                      <ul className='list-disc list-inside text-sm mt-1'>
-                        {DISH_CATEGORIES.map((cat) => (
-                          <li key={cat}>{menu.lunch[cat]?.dishName || '-'}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    {menu.dinner ? (
+            <>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {menus.map((menu) => (
+                  <Card key={menu.id}>
+                    <CardHeader>
+                      <CardTitle>{formatMenuDate(menu.date)}</CardTitle>
+                    </CardHeader>
+                    <CardContent className='space-y-2'>
                       <div>
-                        <strong>{tMenu('dinner') || 'Dinner'}:</strong>
+                        <strong>{tMenu('lunch') || 'Lunch'}:</strong>
                         <ul className='list-disc list-inside text-sm mt-1'>
                           {DISH_CATEGORIES.map((cat) => (
                             <li key={cat}>
-                              {menu.dinner![cat]?.dishName || '-'}
+                              {menu.lunch[cat]?.dishName || '-'}
                             </li>
                           ))}
+                          {menu.lunch.soup?.dishName && (
+                            <li className='font-medium text-orange-600 dark:text-orange-400'>
+                              {tMenu('soup') || 'Soup'}:{' '}
+                              {menu.lunch.soup.dishName}
+                            </li>
+                          )}
                         </ul>
                       </div>
-                    ) : (
-                      <div>
-                        <strong>{tMenu('dinner') || 'Dinner'}:</strong>
-                        <p className='text-sm text-muted-foreground mt-1'>
-                          {tMenu('noDinner') || 'No dinner menu (Saturday)'}
-                        </p>
+                      {menu.dinner ? (
+                        <div>
+                          <strong>{tMenu('dinner') || 'Dinner'}:</strong>
+                          <ul className='list-disc list-inside text-sm mt-1'>
+                            {DISH_CATEGORIES.map((cat) => (
+                              <li key={cat}>
+                                {menu.dinner![cat]?.dishName || '-'}
+                              </li>
+                            ))}
+                            {menu.dinner.soup?.dishName && (
+                              <li className='font-medium text-orange-600 dark:text-orange-400'>
+                                {tMenu('soup') || 'Soup'}:{' '}
+                                {menu.dinner.soup.dishName}
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      ) : (
+                        <div>
+                          <strong>{tMenu('dinner') || 'Dinner'}:</strong>
+                          <p className='text-sm text-muted-foreground mt-1'>
+                            {tMenu('noDinner') || 'No dinner menu'}
+                          </p>
+                        </div>
+                      )}
+                      <div className='flex gap-2 mt-4'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => handleEditMenu(menu)}
+                          className='flex-1'>
+                          {t('edit') || 'Edit'}
+                        </Button>
+                        <Button
+                          variant='destructive'
+                          size='sm'
+                          onClick={() => handleDeleteMenu(menu.id)}>
+                          <Trash2 className='h-4 w-4' />
+                        </Button>
                       </div>
-                    )}
-                    <div className='flex gap-2 mt-4'>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => handleEditMenu(menu)}
-                        className='flex-1'>
-                        {t('edit') || 'Edit'}
-                      </Button>
-                      <Button
-                        variant='destructive'
-                        size='sm'
-                        onClick={() => handleDeleteMenu(menu.id)}>
-                        <Trash2 className='h-4 w-4' />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {allMenus.length > pageSize && (
+                <div className='mt-6'>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(allMenus.length / pageSize)}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

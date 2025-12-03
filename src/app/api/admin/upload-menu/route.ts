@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         // Update existing menu
         await updateMenuServer(existingMenu.id, {
           lunch: menu.lunch,
-          dinner: menu.dinner || null, // null if no dinner (Saturday)
+          dinner: menu.dinner || null, // null if no dinner
         });
         results.push({
           date: formatMenuDate(menu.date),
