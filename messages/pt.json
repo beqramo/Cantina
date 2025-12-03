@@ -50,6 +50,7 @@
     "addDish": "Adicionar Prato",
     "editDish": "Editar Prato",
     "deleteDish": "Eliminar Prato",
+    "edit": "Editar",
     "dishName": "Nome do Prato",
     "dishImage": "Imagem do Prato",
     "selectCategory": "Selecionar Categoria",

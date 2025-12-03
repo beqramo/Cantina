@@ -106,12 +106,16 @@ export default function AdminMenuPage() {
         throw new Error(result.error || 'Failed to upload menu');
       }
 
-      setSuccess(
+      // Show success message
+      const successMessage =
         result.message ||
-          `Successfully uploaded ${result.results?.length || 0} menu(s)`,
-      );
+        `Successfully uploaded ${result.results?.length || 0} menu(s)`;
+      setSuccess(successMessage);
       setJsonInput('');
-      loadMenus();
+
+      // Reload menus to show updated data
+      await loadMenus();
+
       // Clear success message after 5 seconds
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
@@ -163,11 +167,15 @@ export default function AdminMenuPage() {
         throw new Error(result.error || 'Failed to save menu');
       }
 
+      // Show success message
       if (editingMenu) {
         setSuccess('Menu updated successfully');
       } else {
         setSuccess('Menu created successfully');
       }
+
+      // Reload menus to show updated data
+      await loadMenus();
 
       // Clear success message after 5 seconds
       setTimeout(() => setSuccess(null), 5000);

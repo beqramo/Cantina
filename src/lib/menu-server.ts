@@ -134,8 +134,47 @@ function generateSearchTokens(name: string): string[] {
   return Array.from(tokens);
 }
 
+// Cache for dishes to avoid repeated queries
+let dishesCache: Map<string, { id: string; name: string; normalized: string }> | null = null;
+let dishesCacheTimestamp: number = 0;
+const CACHE_TTL = 60000; // 1 minute cache
+
 /**
- * Match a dish by name (normalized comparison) using Admin SDK
+ * Get all dishes with caching to improve performance
+ */
+async function getAllDishesCached(): Promise<Map<string, { id: string; name: string; normalized: string }>> {
+  const now = Date.now();
+
+  // Return cached dishes if still valid
+  if (dishesCache && (now - dishesCacheTimestamp) < CACHE_TTL) {
+    return dishesCache;
+  }
+
+  // Fetch all dishes
+  const dishesSnapshot = await adminDb
+    .collection('dishes')
+    .where('status', '==', 'approved')
+    .get();
+
+  // Build cache map
+  dishesCache = new Map();
+  for (const doc of dishesSnapshot.docs) {
+    const data = doc.data();
+    const dishName = data.name || '';
+    const normalized = normalizeSearchTerm(dishName);
+    dishesCache.set(doc.id, {
+      id: doc.id,
+      name: dishName,
+      normalized,
+    });
+  }
+
+  dishesCacheTimestamp = now;
+  return dishesCache;
+}
+
+/**
+ * Match a dish by name (normalized comparison) using Admin SDK with caching
  * Returns dish ID if found, null otherwise
  */
 export async function matchDishByNameServer(
@@ -144,30 +183,19 @@ export async function matchDishByNameServer(
   if (!name.trim()) return null;
 
   const normalizedInput = normalizeSearchTerm(name);
-
-  // Get all dishes and search client-side (Admin SDK doesn't have array-contains-any easily)
-  const dishesSnapshot = await adminDb
-    .collection('dishes')
-    .where('status', '==', 'approved')
-    .get();
+  const dishesMap = await getAllDishesCached();
 
   // First try exact match
-  for (const doc of dishesSnapshot.docs) {
-    const data = doc.data();
-    const dishName = data.name || '';
-    const normalizedDishName = normalizeSearchTerm(dishName);
-    if (normalizedDishName === normalizedInput) {
-      return { id: doc.id, name: dishName };
+  for (const dish of dishesMap.values()) {
+    if (dish.normalized === normalizedInput) {
+      return { id: dish.id, name: dish.name };
     }
   }
 
   // If no exact match, try partial match (contains)
-  for (const doc of dishesSnapshot.docs) {
-    const data = doc.data();
-    const dishName = data.name || '';
-    const normalizedDishName = normalizeSearchTerm(dishName);
-    if (normalizedDishName.includes(normalizedInput) || normalizedInput.includes(normalizedDishName)) {
-      return { id: doc.id, name: dishName };
+  for (const dish of dishesMap.values()) {
+    if (dish.normalized.includes(normalizedInput) || normalizedInput.includes(dish.normalized)) {
+      return { id: dish.id, name: dish.name };
     }
   }
 

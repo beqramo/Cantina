@@ -50,6 +50,7 @@
     "addDish": "Add Dish",
     "editDish": "Edit Dish",
     "deleteDish": "Delete Dish",
+    "edit": "Edit",
     "dishName": "Dish Name",
     "dishImage": "Dish Image",
     "selectCategory": "Select Category",
