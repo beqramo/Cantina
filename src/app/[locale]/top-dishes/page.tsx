@@ -19,14 +19,14 @@ const DishWithRank = memo(({ dish, rank }: { dish: Dish; rank: number }) => {
   return (
     <div className='relative'>
       <div
-        className={`absolute -top-2 -right-2 z-10 flex items-center justify-center font-bold text-xs shadow-md border transition-transform hover:scale-105 ${
+        className={`absolute -top-2 -right-2 z-10 flex items-center justify-center font-bold text-xs shadow-lg border transition-transform hover:scale-105 ${
           isTopThree
             ? rank === 1
               ? 'bg-amber-500 text-white border-amber-600 w-8 h-8 rounded-full'
               : rank === 2
               ? 'bg-zinc-400 text-white border-zinc-500 w-8 h-8 rounded-full'
               : 'bg-amber-700 text-white border-amber-800 w-8 h-8 rounded-full'
-            : 'bg-muted text-muted-foreground border-border w-6 h-6 rounded-md'
+            : 'bg-background/95 backdrop-blur-sm text-foreground border-border/50 w-6 h-6 rounded-md shadow-md'
         }`}>
         {rank === 1 && isTopThree ? (
           <span className='text-sm'>🥇</span>
