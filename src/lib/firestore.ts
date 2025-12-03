@@ -535,7 +535,7 @@ export async function createDish(
       name,
       nameTokens, // Array of search variations (normalized, words, prefixes) for array-contains-any queries
       imageUrl: primaryImageUrl, // Keep for backward compatibility
-      images: imagesArray.length > 0 ? imagesArray : undefined,
+      ...(imagesArray.length > 0 && { images: imagesArray }),
       category: category || null,
       tags: tags || [],
       status: status,
