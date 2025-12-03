@@ -43,50 +43,34 @@ function PendingDishRequestCard({
   const currentImage = dishImages[currentImageIndex];
 
   return (
-    <Card>
-      <CardHeader>
-        <div className='flex items-start justify-between'>
-          <div>
-            <CardTitle>{dish.name}</CardTitle>
-            {dish.nickname && (
-              <p className='text-sm text-muted-foreground mt-1'>
-                {t('requestedBy') || 'Requested by'}: {dish.nickname}
-              </p>
-            )}
-            {dish.category && (
-              <Badge variant='secondary' className='mt-2'>
-                {dish.category}
-              </Badge>
-            )}
-            {dish.tags && dish.tags.length > 0 && (
-              <div className='flex flex-wrap gap-1 mt-2'>
-                {dish.tags.map((tag) => (
-                  <Badge key={tag} variant='outline' className='text-xs'>
-                    {tag}
-                  </Badge>
-                ))}
+    <Card className='overflow-hidden flex flex-col h-full'>
+      {currentImage && (
+        <div
+          className='relative aspect-video w-full overflow-hidden bg-muted cursor-pointer group'
+          onClick={() => onOpenImageViewer(dish.id, currentImageIndex)}
+          role='button'
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onOpenImageViewer(dish.id, currentImageIndex);
+            }
+          }}
+          aria-label={`View full size image of ${dish.name}`}>
+          <Image
+            src={currentImage}
+            alt={`${dish.name} - Image ${currentImageIndex + 1}`}
+            fill
+            className='object-cover transition-opacity group-hover:opacity-90'
+          />
+          {/* Overlay on hover */}
+          <div className='absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center'>
+            <div className='opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
+              <div className='bg-black/60 backdrop-blur-sm rounded-full p-2'>
+                <Maximize2 className='h-6 w-6 md:h-8 md:w-8 text-white' />
               </div>
-            )}
+            </div>
           </div>
-          <Badge variant='outline'>{dish.status}</Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {currentImage && (
-          <div className='relative w-full h-64 mb-4 rounded-md overflow-hidden bg-muted'>
-            <Image
-              src={currentImage}
-              alt={`${dish.name} - Image ${currentImageIndex + 1}`}
-              fill
-              className='object-cover cursor-pointer'
-              onClick={() => onOpenImageViewer(dish.id, currentImageIndex)}
-            />
-            {/* Full screen button */}
-            <button
-              onClick={() => onOpenImageViewer(dish.id, currentImageIndex)}
-              className='absolute top-2 right-2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-2 transition-colors z-10'>
-              <Maximize2 className='h-4 w-4 text-white' />
-            </button>
 
             {/* Carousel Navigation */}
             {hasMultipleImages && (
@@ -140,15 +124,44 @@ function PendingDishRequestCard({
             )}
           </div>
         )}
+      <CardContent className='p-4 flex flex-col flex-1'>
+        <div className='flex-1 space-y-2 mb-4'>
+          <div className='flex items-start justify-between gap-2'>
+            <div className='flex-1'>
+              <h3 className='font-semibold text-lg'>{dish.name}</h3>
+              {dish.nickname && (
+                <p className='text-sm text-muted-foreground mt-1'>
+                  {t('requestedBy') || 'Requested by'}: {dish.nickname}
+                </p>
+              )}
+              {dish.category && (
+                <Badge variant='secondary' className='mt-2'>
+                  {dish.category}
+                </Badge>
+              )}
+              {dish.tags && dish.tags.length > 0 && (
+                <div className='flex flex-wrap gap-1 mt-2'>
+                  {dish.tags.map((tag) => (
+                    <Badge key={tag} variant='outline' className='text-xs'>
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Badge variant='outline'>{dish.status}</Badge>
+          </div>
+        </div>
         <div className='flex gap-2'>
-          <Button onClick={() => onApprove(dish.id)} className='flex-1'>
+          <Button onClick={() => onApprove(dish.id)} className='flex-1' size='sm'>
             <Check className='h-4 w-4 mr-2' />
             {t('approve')}
           </Button>
           <Button
             variant='destructive'
             onClick={() => onReject(dish.id)}
-            className='flex-1'>
+            className='flex-1'
+            size='sm'>
             <X className='h-4 w-4 mr-2' />
             {t('reject')}
           </Button>
@@ -190,106 +203,111 @@ function DishImageApprovalCard({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className='flex items-start justify-between'>
-          <div>
-            <CardTitle>{item.dish.name}</CardTitle>
-            {hasMultipleImages && (
-              <Badge variant='secondary' className='mt-2'>
-                {item.pendingImages.length} {t('imagesPending')}
-              </Badge>
-            )}
-            {currentImage.nickname && (
-              <p className='text-sm text-muted-foreground mt-1'>
-                {t('uploadedBy')}: {currentImage.nickname}
-              </p>
-            )}
-            <Badge variant='outline' className='mt-2'>
-              {new Date(currentImage.uploadedAt).toLocaleDateString()}
-            </Badge>
+    <Card className='overflow-hidden flex flex-col h-full'>
+      {/* Image Carousel */}
+      <div
+        className='relative aspect-video w-full overflow-hidden bg-muted cursor-pointer group'
+        onClick={() => onOpenImageViewer(item.dish.id, currentImageIndex)}
+        role='button'
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpenImageViewer(item.dish.id, currentImageIndex);
+          }
+        }}
+        aria-label={`View full size image of ${item.dish.name}`}>
+        <Image
+          src={currentImage.imageUrl}
+          alt={`${item.dish.name} - Image ${currentImageIndex + 1}`}
+          fill
+          className='object-cover transition-opacity group-hover:opacity-90'
+        />
+        {/* Overlay on hover */}
+        <div className='absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center'>
+          <div className='opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
+            <div className='bg-black/60 backdrop-blur-sm rounded-full p-2'>
+              <Maximize2 className='h-6 w-6 md:h-8 md:w-8 text-white' />
+            </div>
           </div>
-          <Badge variant='outline' className='bg-yellow-500 text-white'>
-            {tMenu('pendingApproval') || 'Pending Approval'}
-          </Badge>
         </div>
-      </CardHeader>
-      <CardContent>
-        {/* Image Carousel */}
-        <div className='relative w-full mb-4'>
-          <div className='relative w-full h-64 rounded-md overflow-hidden bg-muted'>
-            <Image
-              src={currentImage.imageUrl}
-              alt={`${item.dish.name} - Image ${currentImageIndex + 1}`}
-              fill
-              className='object-cover cursor-pointer'
-              onClick={() => onOpenImageViewer(item.dish.id, currentImageIndex)}
-            />
-            {/* Full screen button */}
+
+        {/* Carousel Navigation */}
+        {hasMultipleImages && (
+          <>
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onOpenImageViewer(item.dish.id, currentImageIndex);
+                setCurrentImageIndex(
+                  (prev) =>
+                    (prev - 1 + item.pendingImages.length) %
+                    item.pendingImages.length,
+                );
               }}
-              className='absolute top-2 right-2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-2 transition-colors z-10'
-              aria-label='View full screen'>
-              <Maximize2 className='h-4 w-4 text-white' />
+              className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
+              <ChevronLeft className='h-5 w-5 text-white' />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentImageIndex(
+                  (prev) => (prev + 1) % item.pendingImages.length,
+                );
+              }}
+              className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
+              <ChevronRight className='h-5 w-5 text-white' />
             </button>
 
-            {/* Carousel Navigation */}
-            {hasMultipleImages && (
-              <>
+            {/* Image Indicators */}
+            <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10'>
+              {item.pendingImages.map((_, idx) => (
                 <button
+                  key={idx}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setCurrentImageIndex(
-                      (prev) =>
-                        (prev - 1 + item.pendingImages.length) %
-                        item.pendingImages.length,
-                    );
+                    setCurrentImageIndex(idx);
                   }}
-                  className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
-                  <ChevronLeft className='h-5 w-5 text-white' />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(
-                      (prev) => (prev + 1) % item.pendingImages.length,
-                    );
-                  }}
-                  className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
-                  <ChevronRight className='h-5 w-5 text-white' />
-                </button>
+                  className={`h-2 rounded-full transition-all ${
+                    idx === currentImageIndex
+                      ? 'w-6 bg-white'
+                      : 'w-2 bg-white/50 hover:bg-white/75'
+                  }`}
+                  aria-label={`Go to image ${idx + 1}`}
+                />
+              ))}
+            </div>
 
-                {/* Image Indicators */}
-                <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10'>
-                  {item.pendingImages.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentImageIndex(idx);
-                      }}
-                      className={`h-2 rounded-full transition-all ${
-                        idx === currentImageIndex
-                          ? 'w-6 bg-white'
-                          : 'w-2 bg-white/50 hover:bg-white/75'
-                      }`}
-                      aria-label={`Go to image ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-
-                {/* Image Counter */}
-                <div className='absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded px-2 py-1 text-xs text-white z-10'>
-                  {currentImageIndex + 1} / {item.pendingImages.length}
-                </div>
-              </>
-            )}
+            {/* Image Counter */}
+            <div className='absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded px-2 py-1 text-xs text-white z-10'>
+              {currentImageIndex + 1} / {item.pendingImages.length}
+            </div>
+          </>
+        )}
+      </div>
+      <CardContent className='p-4 flex flex-col flex-1'>
+        <div className='flex-1 space-y-2 mb-4'>
+          <div className='flex items-start justify-between gap-2'>
+            <div className='flex-1'>
+              <h3 className='font-semibold text-lg'>{item.dish.name}</h3>
+              {hasMultipleImages && (
+                <Badge variant='secondary' className='mt-2'>
+                  {item.pendingImages.length} {t('imagesPending')}
+                </Badge>
+              )}
+              {currentImage.nickname && (
+                <p className='text-sm text-muted-foreground mt-1'>
+                  {t('uploadedBy')}: {currentImage.nickname}
+                </p>
+              )}
+              <Badge variant='outline' className='mt-2'>
+                {new Date(currentImage.uploadedAt).toLocaleDateString()}
+              </Badge>
+            </div>
+            <Badge variant='outline' className='bg-yellow-500 text-white'>
+              {tMenu('pendingApproval') || 'Pending Approval'}
+            </Badge>
           </div>
         </div>
-
         {/* Action Buttons */}
         <div className='flex gap-2'>
           <Button
@@ -300,14 +318,16 @@ function DishImageApprovalCard({
                 currentImage.nickname,
               )
             }
-            className='flex-1'>
+            className='flex-1'
+            size='sm'>
             <Check className='h-4 w-4 mr-2' />
             {t('approve')}
           </Button>
           <Button
             variant='destructive'
             onClick={() => onReject(item.dish.id, currentImage.imageUrl)}
-            className='flex-1'>
+            className='flex-1'
+            size='sm'>
             <X className='h-4 w-4 mr-2' />
             {t('reject')}
           </Button>
@@ -337,6 +357,11 @@ export function ApprovalList() {
   const [selectedImageIndex, setSelectedImageIndex] = useState<{
     dishId: string;
     imageIndex: number;
+  } | null>(null);
+  const [selectedMenuImage, setSelectedMenuImage] = useState<{
+    menuId: string;
+    mealType: MealType;
+    category: DishCategory;
   } | null>(null);
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const t = useTranslations('Admin');
@@ -477,6 +502,17 @@ export function ApprovalList() {
 
   const openImageViewer = (dishId: string, imageIndex: number) => {
     setSelectedImageIndex({ dishId, imageIndex });
+    setSelectedMenuImage(null);
+    setIsImageViewerOpen(true);
+  };
+
+  const openMenuImageViewer = (
+    menuId: string,
+    mealType: MealType,
+    category: DishCategory,
+  ) => {
+    setSelectedMenuImage({ menuId, mealType, category });
+    setSelectedImageIndex(null);
     setIsImageViewerOpen(true);
   };
 
@@ -525,9 +561,9 @@ export function ApprovalList() {
 
   if (loading) {
     return (
-      <div className='space-y-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className='h-32' />
+          <Skeleton key={i} className='h-64' />
         ))}
       </div>
     );
@@ -553,7 +589,7 @@ export function ApprovalList() {
           <h2 className='text-2xl font-bold mb-4'>
             {t('pendingRequests') || 'Pending Dish Requests'}
           </h2>
-          <div className='space-y-4'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
             {requests.map((dish) => (
               <PendingDishRequestCard
                 key={dish.id}
@@ -573,44 +609,73 @@ export function ApprovalList() {
           <h2 className='text-2xl font-bold mb-4'>
             {tMenu('pendingMenuImages') || 'Pending Menu Images'}
           </h2>
-          <div className='space-y-4'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
             {menuImages.map((item, index) => (
               <Card
-                key={`${item.menu.id}-${item.mealType}-${item.category}-${index}`}>
-                <CardHeader>
-                  <div className='flex items-start justify-between'>
-                    <div>
-                      <CardTitle>{item.menuItem.dishName}</CardTitle>
-                      <div className='flex gap-2 mt-2'>
-                        <Badge variant='secondary'>{item.category}</Badge>
-                        <Badge variant='outline'>
-                          {item.mealType === 'lunch'
-                            ? tMenu('lunch') || 'Lunch'
-                            : tMenu('dinner') || 'Dinner'}
-                        </Badge>
-                        <Badge variant='outline'>
-                          {formatMenuDate(item.menu.date)}
-                        </Badge>
+                key={`${item.menu.id}-${item.mealType}-${item.category}-${index}`}
+                className='overflow-hidden flex flex-col h-full'>
+                {item.menuItem.imageUrl && (
+                  <div
+                    className='relative aspect-video w-full overflow-hidden bg-muted cursor-pointer group'
+                    onClick={() =>
+                      openMenuImageViewer(
+                        item.menu.id,
+                        item.mealType,
+                        item.category,
+                      )
+                    }
+                    role='button'
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openMenuImageViewer(
+                          item.menu.id,
+                          item.mealType,
+                          item.category,
+                        );
+                      }
+                    }}
+                    aria-label={`View full size image of ${item.menuItem.dishName}`}>
+                    <Image
+                      src={item.menuItem.imageUrl}
+                      alt={item.menuItem.dishName}
+                      fill
+                      className='object-cover transition-opacity group-hover:opacity-90'
+                    />
+                    <div className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors'>
+                      <div className='opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
+                        <div className='bg-black/60 backdrop-blur-sm rounded-full p-2'>
+                          <Maximize2 className='h-6 w-6 md:h-8 md:w-8 text-white' />
+                        </div>
                       </div>
                     </div>
-                    <Badge
-                      variant='outline'
-                      className='bg-yellow-500 text-white'>
-                      {tMenu('pendingApproval') || 'Pending Approval'}
-                    </Badge>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {item.menuItem.imageUrl && (
-                    <div className='relative w-full h-48 mb-4 rounded-md overflow-hidden'>
-                      <Image
-                        src={item.menuItem.imageUrl}
-                        alt={item.menuItem.dishName}
-                        fill
-                        className='object-cover'
-                      />
+                )}
+                <CardContent className='p-4 flex flex-col flex-1'>
+                  <div className='flex-1 space-y-2 mb-4'>
+                    <div className='flex items-start justify-between gap-2'>
+                      <div className='flex-1'>
+                        <h3 className='font-semibold text-lg'>{item.menuItem.dishName}</h3>
+                        <div className='flex gap-2 mt-2'>
+                          <Badge variant='secondary'>{item.category}</Badge>
+                          <Badge variant='outline'>
+                            {item.mealType === 'lunch'
+                              ? tMenu('lunch') || 'Lunch'
+                              : tMenu('dinner') || 'Dinner'}
+                          </Badge>
+                          <Badge variant='outline'>
+                            {formatMenuDate(item.menu.date)}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Badge
+                        variant='outline'
+                        className='bg-yellow-500 text-white'>
+                        {tMenu('pendingApproval') || 'Pending Approval'}
+                      </Badge>
                     </div>
-                  )}
+                  </div>
                   <div className='flex gap-2'>
                     <Button
                       onClick={() =>
@@ -620,7 +685,8 @@ export function ApprovalList() {
                           item.category,
                         )
                       }
-                      className='flex-1'>
+                      className='flex-1'
+                      size='sm'>
                       <Check className='h-4 w-4 mr-2' />
                       {t('approve')}
                     </Button>
@@ -633,7 +699,8 @@ export function ApprovalList() {
                           item.category,
                         )
                       }
-                      className='flex-1'>
+                      className='flex-1'
+                      size='sm'>
                       <X className='h-4 w-4 mr-2' />
                       {t('reject')}
                     </Button>
@@ -651,7 +718,7 @@ export function ApprovalList() {
           <h2 className='text-2xl font-bold mb-4'>
             {tMenu('pendingDishImages')}
           </h2>
-          <div className='space-y-4'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
             {dishImages.map((item, dishIndex) => (
               <DishImageApprovalCard
                 key={`${item.dish.id}-${dishIndex}`}
@@ -666,43 +733,68 @@ export function ApprovalList() {
       )}
 
       {/* Full Screen Image Viewer */}
-      {isImageViewerOpen && selectedImageIndex && (
+      {isImageViewerOpen && (selectedImageIndex || selectedMenuImage) && (
         <ImageViewer
           imageUrl={(() => {
-            // Check if it's a dish request (has images array)
-            const dishRequest = requests.find(
-              (d) => d.id === selectedImageIndex.dishId,
-            );
-            if (dishRequest) {
-              const dishImages =
-                dishRequest.images ||
-                (dishRequest.imageUrl ? [dishRequest.imageUrl] : []);
-              return dishImages[selectedImageIndex.imageIndex] || '';
+            // Check if it's a menu image
+            if (selectedMenuImage) {
+              const menuItem = menuImages.find(
+                (item) =>
+                  item.menu.id === selectedMenuImage.menuId &&
+                  item.mealType === selectedMenuImage.mealType &&
+                  item.category === selectedMenuImage.category,
+              );
+              return menuItem?.menuItem.imageUrl || '';
             }
 
-            // Check if it's a pending dish image
-            const dishImageItem = dishImages.find(
-              (item) => item.dish.id === selectedImageIndex.dishId,
-            );
-            if (dishImageItem) {
-              return (
-                dishImageItem.pendingImages[selectedImageIndex.imageIndex]
-                  ?.imageUrl || ''
+            // Check if it's a dish request (has images array)
+            if (selectedImageIndex) {
+              const dishRequest = requests.find(
+                (d) => d.id === selectedImageIndex.dishId,
               );
+              if (dishRequest) {
+                const dishImages =
+                  dishRequest.images ||
+                  (dishRequest.imageUrl ? [dishRequest.imageUrl] : []);
+                return dishImages[selectedImageIndex.imageIndex] || '';
+              }
+
+              // Check if it's a pending dish image
+              const dishImageItem = dishImages.find(
+                (item) => item.dish.id === selectedImageIndex.dishId,
+              );
+              if (dishImageItem) {
+                return (
+                  dishImageItem.pendingImages[selectedImageIndex.imageIndex]
+                    ?.imageUrl || ''
+                );
+              }
             }
 
             return '';
           })()}
           alt={(() => {
-            const dishRequest = requests.find(
-              (d) => d.id === selectedImageIndex.dishId,
-            );
-            if (dishRequest) return dishRequest.name;
+            if (selectedMenuImage) {
+              const menuItem = menuImages.find(
+                (item) =>
+                  item.menu.id === selectedMenuImage.menuId &&
+                  item.mealType === selectedMenuImage.mealType &&
+                  item.category === selectedMenuImage.category,
+              );
+              return menuItem?.menuItem.dishName || '';
+            }
 
-            const dishImageItem = dishImages.find(
-              (item) => item.dish.id === selectedImageIndex.dishId,
-            );
-            if (dishImageItem) return dishImageItem.dish.name;
+            if (selectedImageIndex) {
+              const dishRequest = requests.find(
+                (d) => d.id === selectedImageIndex.dishId,
+              );
+              if (dishRequest) return dishRequest.name;
+
+              const dishImageItem = dishImages.find(
+                (item) => item.dish.id === selectedImageIndex.dishId,
+              );
+              if (dishImageItem) return dishImageItem.dish.name;
+            }
 
             return '';
           })()}
@@ -710,46 +802,63 @@ export function ApprovalList() {
           onClose={() => {
             setIsImageViewerOpen(false);
             setSelectedImageIndex(null);
+            setSelectedMenuImage(null);
           }}
-          onPrevious={() => {
-            if (selectedImageIndex) {
-              navigateCarousel(
-                selectedImageIndex.dishId,
-                selectedImageIndex.imageIndex,
-                'prev',
-              );
-            }
-          }}
-          onNext={() => {
-            if (selectedImageIndex) {
-              navigateCarousel(
-                selectedImageIndex.dishId,
-                selectedImageIndex.imageIndex,
-                'next',
-              );
-            }
-          }}
-          key={`${selectedImageIndex.dishId}-${selectedImageIndex.imageIndex}`}
-          showNavigation={(() => {
-            const dishRequest = requests.find(
-              (d) => d.id === selectedImageIndex.dishId,
-            );
-            if (dishRequest) {
-              const dishImages =
-                dishRequest.images ||
-                (dishRequest.imageUrl ? [dishRequest.imageUrl] : []);
-              return dishImages.length > 1;
-            }
+          onPrevious={
+            selectedImageIndex
+              ? () => {
+                  if (selectedImageIndex) {
+                    navigateCarousel(
+                      selectedImageIndex.dishId,
+                      selectedImageIndex.imageIndex,
+                      'prev',
+                    );
+                  }
+                }
+              : undefined
+          }
+          onNext={
+            selectedImageIndex
+              ? () => {
+                  if (selectedImageIndex) {
+                    navigateCarousel(
+                      selectedImageIndex.dishId,
+                      selectedImageIndex.imageIndex,
+                      'next',
+                    );
+                  }
+                }
+              : undefined
+          }
+          key={
+            selectedMenuImage
+              ? `menu-${selectedMenuImage.menuId}-${selectedMenuImage.mealType}-${selectedMenuImage.category}`
+              : `${selectedImageIndex?.dishId}-${selectedImageIndex?.imageIndex}`
+          }
+          showNavigation={
+            selectedImageIndex
+              ? (() => {
+                  const dishRequest = requests.find(
+                    (d) => d.id === selectedImageIndex.dishId,
+                  );
+                  if (dishRequest) {
+                    const dishImages =
+                      dishRequest.images ||
+                      (dishRequest.imageUrl ? [dishRequest.imageUrl] : []);
+                    return dishImages.length > 1;
+                  }
 
-            const dishImageItem = dishImages.find(
-              (item) => item.dish.id === selectedImageIndex.dishId,
-            );
-            if (dishImageItem) {
-              return dishImageItem.pendingImages.length > 1;
-            }
+                  const dishImageItem = dishImages.find(
+                    (item) => item.dish.id === selectedImageIndex.dishId,
+                  );
+                  if (dishImageItem) {
+                    return dishImageItem.pendingImages.length > 1;
+                  }
 
-            return false;
-          })()}
+                  return false;
+                })()
+              : false
+          }
         />
       )}
     </div>
