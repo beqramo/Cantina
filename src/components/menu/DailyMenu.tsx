@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getCurrentMenu } from '@/lib/firestore';
 import { getCurrentMealType, formatMenuDate } from '@/lib/time';
 import { Menu, MealType } from '@/types';
@@ -18,40 +18,78 @@ export function DailyMenu() {
   const [loading, setLoading] = useState(true);
   const [mealType, setMealType] = useState<MealType | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const isInitialLoadRef = useRef(true);
+  // Use refs to track current values for comparison without causing re-renders
+  const currentMealTypeRef = useRef<MealType | null>(null);
+  const currentMenuRef = useRef<Menu | null>(null);
 
-  const loadMenu = useCallback(async () => {
-    setLoading(true);
+  const loadMenu = useCallback(async (isInitialLoad: boolean = false) => {
+    // Only show loading state on initial load
+    if (isInitialLoad) {
+      setLoading(true);
+    }
+
     try {
       const currentMeal = getCurrentMealType();
-      setMealType(currentMeal);
-
-      // Load menu for the display date (handled by getCurrentMenu)
       const currentMenu = await getCurrentMenu();
 
-      if (currentMenu && currentMeal) {
-        // Check if dinner menu exists (dinner is optional on any day)
-        if (currentMeal === 'dinner' && !currentMenu.dinner) {
-          // If it's dinner time but no dinner menu, show lunch instead
-          setMealType('lunch');
-          setMenu(currentMenu);
-        } else {
-          setMenu(currentMenu);
-        }
+      // Determine the display meal type
+      let displayMealType: MealType | null = currentMeal;
+      if (currentMeal === 'dinner' && currentMenu && !currentMenu.dinner) {
+        // If it's dinner time but no dinner menu, show lunch instead
+        displayMealType = 'lunch';
+      }
+
+      // Only update state if something actually changed
+      if (isInitialLoad || displayMealType !== currentMealTypeRef.current) {
+        setMealType(displayMealType);
+        currentMealTypeRef.current = displayMealType;
+      }
+
+      // Check if menu data changed by comparing menu dates and content
+      let menuChanged = false;
+      if (!currentMenuRef.current && !currentMenu) {
+        // Both are null, no change
+        menuChanged = false;
+      } else if (!currentMenuRef.current || !currentMenu) {
+        // One is null, the other isn't - change detected
+        menuChanged = true;
       } else {
-        setMenu(null);
+        // Both exist, compare dates and content
+        menuChanged =
+          currentMenuRef.current.date.getTime() !==
+            currentMenu.date.getTime() ||
+          JSON.stringify(currentMenuRef.current) !==
+            JSON.stringify(currentMenu);
+      }
+
+      if (menuChanged) {
+        setMenu(currentMenu);
+        currentMenuRef.current = currentMenu;
       }
     } catch (error) {
       console.error('❌ DailyMenu - Error loading menu:', error);
+      // On error during initial load, ensure loading state is cleared
+      if (isInitialLoad) {
+        setLoading(false);
+      }
     } finally {
-      setLoading(false);
+      // Only clear loading state if it was set (initial load)
+      if (isInitialLoad) {
+        setLoading(false);
+        isInitialLoadRef.current = false;
+      }
     }
   }, []);
 
   useEffect(() => {
-    loadMenu();
+    // Initial load
+    loadMenu(true);
 
     // Refresh every minute to check if meal time changed
-    const interval = setInterval(loadMenu, 60000);
+    const interval = setInterval(() => {
+      loadMenu(false);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [loadMenu]);
@@ -59,7 +97,7 @@ export function DailyMenu() {
   // Refresh when refreshKey changes (triggered by image upload)
   useEffect(() => {
     if (refreshKey > 0) {
-      loadMenu();
+      loadMenu(false);
     }
   }, [refreshKey, loadMenu]);
 
