@@ -178,8 +178,9 @@ export function DishCardBase({
                   dishImages.length
                 }`}
                 fill
-                className='object-cover transition-transform duration-300 group-hover:scale-[1.02]'
-                sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
+                className='object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]'
+                sizes='(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw'
+                quality={90}
               />
               {/* Overlay on hover */}
               <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center'>
