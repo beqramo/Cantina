@@ -6,13 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  getMenusByDateRange,
-  createMenu,
-  updateMenu,
-  deleteMenu,
-} from '@/lib/firestore';
-import { processMenuUpload } from '@/lib/menu';
+import { getMenusByDateRange, deleteMenu } from '@/lib/firestore';
 import { Menu, MenuJSON, DishCategory } from '@/types';
 import { logoutAdmin } from '@/lib/auth';
 import { useTranslations } from 'next-intl';
@@ -96,27 +90,26 @@ export default function AdminMenuPage() {
 
     try {
       const menuData: MenuJSON = JSON.parse(jsonInput);
-      const processedMenus = await processMenuUpload(menuData);
 
-      // Create menus in Firestore
-      for (const menu of processedMenus) {
-        // Compare dates by converting to same day (ignore time)
-        const menuDateStr = formatMenuDate(menu.date);
-        const existingMenu = menus.find((m) => {
-          const existingDateStr = formatMenuDate(m.date);
-          return existingDateStr === menuDateStr;
-        });
-        if (existingMenu) {
-          await updateMenu(existingMenu.id, {
-            lunch: menu.lunch,
-            dinner: menu.dinner,
-          });
-        } else {
-          await createMenu(menu.date, menu.lunch, menu.dinner);
-        }
+      // Call API endpoint instead of client-side Firestore
+      const response = await fetch('/api/admin/upload-menu', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ menuData }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to upload menu');
       }
 
-      setSuccess(`Successfully uploaded ${processedMenus.length} menu(s)`);
+      setSuccess(
+        result.message ||
+          `Successfully uploaded ${result.results?.length || 0} menu(s)`,
+      );
       setJsonInput('');
       loadMenus();
       // Clear success message after 5 seconds
@@ -155,17 +148,24 @@ export default function AdminMenuPage() {
         menuDay.dinner = formData.dinner as MenuDayJSON['dinner'];
       }
 
-      const processedMenus = await processMenuUpload(menuDay);
-      const menu = processedMenus[0];
+      // Call API endpoint instead of client-side Firestore
+      const response = await fetch('/api/admin/upload-menu', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ menuData: menuDay }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save menu');
+      }
 
       if (editingMenu) {
-        await updateMenu(editingMenu.id, {
-          lunch: menu.lunch,
-          dinner: menu.dinner || null, // null if no dinner (Saturday)
-        });
         setSuccess('Menu updated successfully');
       } else {
-        await createMenu(menu.date, menu.lunch, menu.dinner);
         setSuccess('Menu created successfully');
       }
 
