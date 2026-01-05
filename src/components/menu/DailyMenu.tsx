@@ -196,9 +196,9 @@ export function DailyMenu() {
               <Soup className='h-5 w-5 text-orange-500' />
               {t('soupHeader') || t('soup') || 'Soup'}
             </h3>
-            <Card className='bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/30'>
-              <CardContent className='p-4'>
-                <p className='font-medium text-base'>
+            <Card className='bg-gradient-to-br from-orange-50 to-amber-50/50 dark:from-orange-950/20 dark:to-orange-950/10 border-orange-200 dark:border-orange-900/40 shadow-sm'>
+              <CardContent className='p-5'>
+                <p className='font-bold text-base text-orange-900 dark:text-orange-200'>
                   {mealItems.Sopa.dishName}
                 </p>
               </CardContent>
@@ -250,9 +250,11 @@ export function DailyMenu() {
             <Soup className='h-5 w-5 text-orange-500' />
             {t('soupHeader') || t('soup') || 'Soup'}
           </h3>
-          <Card className='bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/30'>
-            <CardContent className='p-4'>
-              <p className='font-medium text-base'>{mealItems.Sopa.dishName}</p>
+          <Card className='bg-gradient-to-br from-orange-50 to-amber-50/50 dark:from-orange-950/20 dark:to-orange-950/10 border-orange-200 dark:border-orange-900/40 shadow-sm'>
+            <CardContent className='p-5'>
+              <p className='font-bold text-base text-orange-900 dark:text-orange-200'>
+                {mealItems.Sopa.dishName}
+              </p>
             </CardContent>
           </Card>
         </div>

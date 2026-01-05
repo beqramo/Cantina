@@ -8,7 +8,7 @@ import {
   Users,
   Code,
   AlertTriangle,
-  Target,
+  Compass,
   Camera,
   HandHeart,
   DollarSign,
@@ -67,11 +67,11 @@ export default function AboutPage() {
               {/* Mission Statement */}
               <div className='group relative overflow-hidden rounded-3xl border bg-card p-8 shadow-sm transition-all hover:shadow-md'>
                 <div className='absolute top-0 right-0 p-8 text-primary/5'>
-                  <Target className='h-24 w-24' />
+                  <Compass className='h-24 w-24' />
                 </div>
                 <div className='relative z-10'>
                   <div className='inline-flex p-3 rounded-2xl bg-primary/10 text-primary mb-6'>
-                    <Target className='h-6 w-6' />
+                    <Compass className='h-6 w-6' />
                   </div>
                   <h2 className='text-2xl font-bold mb-4'>
                     {t('About.mission')}
@@ -188,7 +188,7 @@ export default function AboutPage() {
             {/* Right Column: Sidebar info */}
             <div className='space-y-6'>
               {/* Disclaimer - High Priority */}
-              <Card className='border-amber-500/50 bg-amber-50 dark:bg-amber-950/30 rounded-3xl overflow-hidden shadow-md shadow-amber-500/5'>
+              <Card className='border-amber-500/50 bg-gradient-to-br from-amber-50 via-amber-50/80 to-orange-50/50 dark:from-amber-950/40 dark:to-amber-950/20 rounded-3xl overflow-hidden shadow-md shadow-amber-500/5'>
                 <div className='bg-amber-500/10 dark:bg-amber-500/20 p-4 border-b border-amber-500/20 flex items-center gap-3'>
                   <div className='p-1.5 rounded-lg bg-amber-500 text-white shadow-sm'>
                     <AlertTriangle className='h-4 w-4' />

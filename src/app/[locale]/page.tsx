@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Link } from '@/lib/navigation';
 import { DishSearch } from '@/components/dish/DishSearch';
 import { DailyMenu } from '@/components/menu/DailyMenu';
-import { Info, Sparkles, X } from 'lucide-react';
+import { Info, HeartHandshake, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const MISSION_DISMISSED_KEY = 'cantina-mission-dismissed';
@@ -57,7 +57,7 @@ export default function HomePage() {
               </Button>
               <div className='relative z-10 flex flex-col md:flex-row items-center gap-6 pr-4'>
                 <div className='flex-shrink-0 p-3 rounded-xl bg-primary/10 text-primary'>
-                  <Sparkles className='h-8 w-8' />
+                  <HeartHandshake className='h-8 w-8' />
                 </div>
                 <div className='flex-1 text-center md:text-left'>
                   <h2 className='text-xl md:text-2xl font-bold mb-3 flex items-center justify-center md:justify-start gap-2'>
