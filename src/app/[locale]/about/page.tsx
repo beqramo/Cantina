@@ -188,15 +188,17 @@ export default function AboutPage() {
             {/* Right Column: Sidebar info */}
             <div className='space-y-6'>
               {/* Disclaimer - High Priority */}
-              <Card className='border-amber-500/30 bg-amber-500/5 rounded-3xl overflow-hidden'>
-                <div className='bg-amber-500/10 p-4 border-b border-amber-500/20'>
-                  <h3 className='font-bold flex items-center gap-2 text-amber-700 dark:text-amber-400'>
+              <Card className='border-amber-500/50 bg-amber-50 dark:bg-amber-950/30 rounded-3xl overflow-hidden shadow-md shadow-amber-500/5'>
+                <div className='bg-amber-500/10 dark:bg-amber-500/20 p-4 border-b border-amber-500/20 flex items-center gap-3'>
+                  <div className='p-1.5 rounded-lg bg-amber-500 text-white shadow-sm'>
                     <AlertTriangle className='h-4 w-4' />
+                  </div>
+                  <h3 className='font-extrabold text-amber-900 dark:text-amber-100'>
                     {t('About.disclaimer')}
                   </h3>
                 </div>
                 <CardContent className='p-6'>
-                  <p className='text-sm text-amber-800/80 dark:text-amber-200/80 leading-relaxed font-medium'>
+                  <p className='text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-semibold'>
                     {t('About.disclaimerDescription')}
                   </p>
                 </CardContent>
