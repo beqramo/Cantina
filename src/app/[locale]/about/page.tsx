@@ -2,6 +2,9 @@
 
 import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
+import { useEffect } from 'react';
 import {
   ExternalLink,
   Heart,
@@ -20,6 +23,15 @@ import Link from 'next/link';
 
 export default function AboutPage() {
   const t = useTranslations();
+
+  useEffect(() => {
+    if (analytics) {
+      logEvent(analytics, 'select_content', {
+        content_type: 'page',
+        content_id: 'about_page',
+      });
+    }
+  }, []);
 
   return (
     <div className='min-h-screen bg-background'>

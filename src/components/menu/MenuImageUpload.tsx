@@ -16,6 +16,8 @@ import { Menu, MealType, DishCategory } from '@/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslations } from 'next-intl';
 import { Turnstile } from '@/components/ui/Turnstile';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 
 interface MenuImageUploadProps {
   menu: Menu;
@@ -111,6 +113,13 @@ export function MenuImageUpload({
     setLoading(true);
     setError(null);
 
+    if (analytics) {
+      logEvent(analytics, 'upload_image_start', {
+        item_category: category,
+        meal_type: mealType,
+      });
+    }
+
     try {
       // Upload image with Turnstile token
       const imageUrl = await uploadImage(imageFile, {
@@ -121,13 +130,30 @@ export function MenuImageUpload({
       // Update menu item
       await updateMenuItemImage(menu.id, mealType, category, imageUrl);
 
+      if (analytics) {
+        logEvent(analytics, 'upload_image_success', {
+          item_category: category,
+          meal_type: mealType,
+        });
+      }
+
       // Reset form
       setImageFile(null);
       setImagePreview(null);
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon('error'));
+      const errorMessage =
+        err instanceof Error ? err.message : tCommon('error');
+      setError(errorMessage);
+
+      if (analytics) {
+        logEvent(analytics, 'upload_image_error', {
+          item_category: category,
+          meal_type: mealType,
+          error_message: errorMessage,
+        });
+      }
     } finally {
       setLoading(false);
     }

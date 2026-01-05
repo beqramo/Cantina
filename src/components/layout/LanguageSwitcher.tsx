@@ -4,6 +4,8 @@ import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from '@/lib/navigation';
 import { Button } from '@/components/ui/button';
 import { useTransition } from 'react';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 
 // Helper to set cookie
 function setLocaleCookie(locale: string) {
@@ -22,6 +24,12 @@ export function LanguageSwitcher() {
     // Save user's preference to cookie so it persists
     setLocaleCookie(newLocale);
 
+    if (analytics) {
+      logEvent(analytics, 'change_language', {
+        language: newLocale,
+      });
+    }
+
     startTransition(() => {
       router.replace(pathname, { locale: newLocale });
     });
@@ -30,7 +38,9 @@ export function LanguageSwitcher() {
   // Show only the button for the language we can switch TO
   const targetLocale = locale === 'pt' ? 'en' : 'pt';
   const targetLabel = targetLocale === 'pt' ? 'PT' : 'EN';
-  const ariaLabel = `Switch to ${targetLocale === 'pt' ? 'Portuguese' : 'English'}`;
+  const ariaLabel = `Switch to ${
+    targetLocale === 'pt' ? 'Portuguese' : 'English'
+  }`;
 
   return (
     <div className='relative z-10'>

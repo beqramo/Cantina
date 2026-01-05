@@ -11,6 +11,8 @@ import { DISH_CATEGORIES } from '@/lib/constants';
 import { FiSearch } from 'react-icons/fi';
 import { Soup } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 
 export function DailyMenu() {
   const t = useTranslations('Menu');
@@ -66,6 +68,17 @@ export function DailyMenu() {
       if (menuChanged) {
         setMenu(currentMenu);
         currentMenuRef.current = currentMenu;
+
+        if (analytics && currentMenu) {
+          logEvent(analytics, 'view_item_list', {
+            item_list_id: 'daily_menu',
+            item_list_name: 'Daily Menu',
+            items: [
+              // Mapping all items is complex here, maybe just log that list was viewed for now
+              // or we could map categories if needed, but keeping it simple is better for start
+            ],
+          });
+        }
       }
     } catch (error) {
       console.error('❌ DailyMenu - Error loading menu:', error);
@@ -196,9 +209,9 @@ export function DailyMenu() {
               <Soup className='h-5 w-5 text-orange-500' />
               {t('soupHeader') || t('soup') || 'Soup'}
             </h3>
-            <Card className='bg-gradient-to-br from-orange-50 to-amber-50/50 dark:from-orange-950/20 dark:to-orange-950/10 border-orange-200 dark:border-orange-900/40 shadow-sm'>
+            <Card className='border-l-4 border-l-orange-500 border-y border-r border-orange-200 bg-orange-50 dark:bg-orange-950/50 dark:border-orange-900/50 dark:border-l-orange-500 rounded-xl overflow-hidden shadow-sm'>
               <CardContent className='p-5'>
-                <p className='font-bold text-base text-orange-900 dark:text-orange-200'>
+                <p className='font-bold text-base text-orange-900 dark:text-orange-100'>
                   {mealItems.Sopa.dishName}
                 </p>
               </CardContent>
@@ -250,9 +263,9 @@ export function DailyMenu() {
             <Soup className='h-5 w-5 text-orange-500' />
             {t('soupHeader') || t('soup') || 'Soup'}
           </h3>
-          <Card className='bg-gradient-to-br from-orange-50 to-amber-50/50 dark:from-orange-950/20 dark:to-orange-950/10 border-orange-200 dark:border-orange-900/40 shadow-sm'>
+          <Card className='border-l-4 border-l-orange-500 border-y border-r border-orange-200 bg-orange-50 dark:bg-orange-950/50 dark:border-orange-900/50 dark:border-l-orange-500 rounded-xl overflow-hidden shadow-sm'>
             <CardContent className='p-5'>
-              <p className='font-bold text-base text-orange-900 dark:text-orange-200'>
+              <p className='font-bold text-base text-orange-900 dark:text-orange-100'>
                 {mealItems.Sopa.dishName}
               </p>
             </CardContent>

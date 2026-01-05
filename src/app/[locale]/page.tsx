@@ -2,6 +2,8 @@
 
 import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 import { Link } from '@/lib/navigation';
 import { DishSearch } from '@/components/dish/DishSearch';
 import { DailyMenu } from '@/components/menu/DailyMenu';
@@ -21,6 +23,12 @@ export default function HomePage() {
       setIsDismissed(false);
     }
     setIsVisible(true);
+
+    if (analytics) {
+      logEvent(analytics, 'view_menu', {
+        menu_location: 'home_page',
+      });
+    }
   }, []);
 
   const handleDismissMission = () => {

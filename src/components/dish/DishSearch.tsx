@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/dialog';
 import { DishRequestForm } from './DishRequestForm';
 import { STORAGE_KEYS } from '@/lib/constants';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 
 // Type for pending dish stored in localStorage
 interface PendingDishEntry {
@@ -43,15 +45,20 @@ export function DishSearch() {
   useEffect(() => {
     const loadPendingDishes = async () => {
       try {
-        const pendingDishesJson = localStorage.getItem(STORAGE_KEYS.PENDING_DISHES);
+        const pendingDishesJson = localStorage.getItem(
+          STORAGE_KEYS.PENDING_DISHES,
+        );
         if (!pendingDishesJson) {
           setPendingDishes([]);
           return;
         }
 
-        const pendingEntries: PendingDishEntry[] = JSON.parse(pendingDishesJson);
-        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-        const validEntries = pendingEntries.filter(e => e.createdAt > thirtyDaysAgo);
+        const pendingEntries: PendingDishEntry[] =
+          JSON.parse(pendingDishesJson);
+        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+        const validEntries = pendingEntries.filter(
+          (e) => e.createdAt > thirtyDaysAgo,
+        );
 
         // Fetch actual dish data from Firestore
         const fetchedDishes: Dish[] = [];
@@ -73,7 +80,10 @@ export function DishSearch() {
 
         // Update localStorage with only valid pending dishes
         if (stillValidEntries.length !== validEntries.length) {
-          localStorage.setItem(STORAGE_KEYS.PENDING_DISHES, JSON.stringify(stillValidEntries));
+          localStorage.setItem(
+            STORAGE_KEYS.PENDING_DISHES,
+            JSON.stringify(stillValidEntries),
+          );
         }
 
         setPendingDishes(fetchedDishes);
@@ -95,6 +105,12 @@ export function DishSearch() {
         if (debouncedSearch.trim()) {
           // Global search - ignore tags when searching
           results = await searchDishes(debouncedSearch);
+
+          if (analytics) {
+            logEvent(analytics, 'search', {
+              search_term: debouncedSearch,
+            });
+          }
         } else {
           // Tag filtering disabled - not usable for users currently
           // else if (selectedTags.length > 0) {
@@ -117,8 +133,8 @@ export function DishSearch() {
 
   // Filter pending dishes that match the search term
   const matchingPendingDishes = debouncedSearch.trim()
-    ? pendingDishes.filter(dish =>
-        dish.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    ? pendingDishes.filter((dish) =>
+        dish.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
       )
     : [];
 
@@ -170,39 +186,49 @@ export function DishSearch() {
         </div>
       )}
 
-      {!loading && debouncedSearch.trim() && dishes.length === 0 && matchingPendingDishes.length === 0 && (
-        <Alert>
-          <AlertDescription className='flex flex-col gap-4'>
-            <p>{t('noResults')}</p>
-            <Dialog
-              open={showRequestDialog}
-              onOpenChange={(open) => {
-                setShowRequestDialog(open);
-                // Reset form submitted state when dialog closes
-                if (!open) setFormSubmitted(false);
-              }}>
-              <DialogTrigger asChild>
-                <Button variant='outline'>{t('requestDish')}</Button>
-              </DialogTrigger>
-              <DialogContent>
-                {!formSubmitted && (
-                  <DialogHeader>
-                    <DialogTitle>{t('requestDish')}</DialogTitle>
-                    <DialogDescription>
-                      {t('requestDishDescription')}
-                    </DialogDescription>
-                  </DialogHeader>
-                )}
-                <DishRequestForm
-                  initialName={debouncedSearch}
-                  onSuccess={() => setShowRequestDialog(false)}
-                  onFormSubmitted={() => setFormSubmitted(true)}
-                />
-              </DialogContent>
-            </Dialog>
-          </AlertDescription>
-        </Alert>
-      )}
+      {!loading &&
+        debouncedSearch.trim() &&
+        dishes.length === 0 &&
+        matchingPendingDishes.length === 0 && (
+          <Alert>
+            <AlertDescription className='flex flex-col gap-4'>
+              <p>{t('noResults')}</p>
+              <Dialog
+                open={showRequestDialog}
+                onOpenChange={(open) => {
+                  setShowRequestDialog(open);
+                  // Reset form submitted state when dialog closes
+                  if (!open) setFormSubmitted(false);
+                }}>
+                <DialogTrigger asChild>
+                  <Button variant='outline'>{t('requestDish')}</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  {!formSubmitted && (
+                    <DialogHeader>
+                      <DialogTitle>{t('requestDish')}</DialogTitle>
+                      <DialogDescription>
+                        {t('requestDishDescription')}
+                      </DialogDescription>
+                    </DialogHeader>
+                  )}
+                  <DishRequestForm
+                    initialName={debouncedSearch}
+                    onSuccess={() => {
+                      setShowRequestDialog(false);
+                      if (analytics) {
+                        logEvent(analytics, 'suggest_dish', {
+                          dish_name_suggestion: debouncedSearch,
+                        });
+                      }
+                    }}
+                    onFormSubmitted={() => setFormSubmitted(true)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </AlertDescription>
+          </Alert>
+        )}
 
       {!loading && dishes.length > 0 && (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>

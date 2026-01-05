@@ -6,6 +6,7 @@ import {
   Firestore,
 } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getAnalytics, isSupported, Analytics } from 'firebase/analytics';
 
 /**
  * Firebase client-side configuration
@@ -28,6 +29,7 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let storage: FirebaseStorage | null = null;
+let analytics: Analytics | null = null;
 
 function initializeFirebase() {
   if (typeof window === 'undefined') return null;
@@ -37,6 +39,15 @@ function initializeFirebase() {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+
+    // Initialize Analytics only on the client side
+    if (typeof window !== 'undefined') {
+      isSupported().then((yes) => {
+        if (yes) {
+          analytics = getAnalytics(app!);
+        }
+      });
+    }
 
     // Enable offline persistence with unlimited cache size
     if (typeof window !== 'undefined') {
@@ -54,7 +65,7 @@ function initializeFirebase() {
     }
   }
 
-  return { app, auth, db, storage };
+  return { app, auth, db, storage, analytics };
 }
 
 // Initialize Firebase on client side
@@ -63,5 +74,5 @@ if (typeof window !== 'undefined') {
 }
 
 // Export Firebase services (null on server side)
-export { auth, db, storage };
+export { auth, db, storage, analytics };
 export default app;

@@ -5,6 +5,8 @@ import { MenuItem, DishCategory } from '@/types';
 import { Menu, MealType } from '@/types';
 import { DishCardBase } from '@/components/dish/DishCardBase';
 import { MenuImageUpload } from './MenuImageUpload';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 
 interface MenuDishCardProps {
   menu: Menu;
@@ -37,6 +39,16 @@ export function MenuDishCard({
         imageUrl={menuItem.imageUrl}
         imageAlt={menuItem.dishName}
         onAddImageClick={handleAddImageClick}
+        onImageClick={() => {
+          if (analytics) {
+            logEvent(analytics, 'select_content', {
+              content_type: 'dish',
+              content_id: menuItem.dishId || menuItem.dishName,
+              item_name: menuItem.dishName,
+              item_category: category,
+            });
+          }
+        }}
         isPendingApproval={menuItem.imagePendingApproval === true}
         name={menuItem.dishName}
         category={category}

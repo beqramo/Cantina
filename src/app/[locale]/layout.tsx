@@ -4,6 +4,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
 import { WelcomePopup } from '@/components/WelcomePopup';
 import { locales } from '@/i18n';
+import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -36,9 +37,11 @@ export default async function LocaleLayout({
         defaultTheme='system'
         enableSystem
         disableTransitionOnChange>
-        <Header />
-        {children}
-        <WelcomePopup />
+        <AnalyticsProvider>
+          <Header />
+          {children}
+          <WelcomePopup />
+        </AnalyticsProvider>
       </ThemeProvider>
     </NextIntlClientProvider>
   );
