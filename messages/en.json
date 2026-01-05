@@ -11,7 +11,10 @@
     "approvals": "Approvals"
   },
   "Home": {
-    "subtitle": "Discover and rate dishes from the IPB university canteen"
+    "subtitle": "Discover and rate dishes from the IPB university canteen",
+    "missionTitle": "Our Community Mission",
+    "missionDescription": "Each member's participation is super important! Everyone can upload dishes and pictures, helping both the next generation of students and yourself. Your contributions keep the menu up to date for everyone.",
+    "missionLink": "Learn more about the project"
   },
   "Search": {
     "searchPlaceholder": "Search for a dish...",
@@ -96,14 +99,17 @@
     "contact": "Contact",
     "contactDescription": "Have questions, feedback, or found a bug? Feel free to reach out!",
     "thankYou": "Thank You",
-    "thankYouDescription": "Thank you for being part of this community. Together, we can build something valuable that will help IPB students for years to come. Every dish you add, every image you upload, and every vote you cast makes a difference!"
+    "thankYouDescription": "Thank you for being part of this community. Together, we can build something valuable that will help IPB students for years to come. Every dish you add, every image you upload, and every vote you cast makes a difference!",
+    "badgeStudents": "By student, for students",
+    "badgeNonProfit": "100% Non-profit",
+    "instagramFollow": "Follow on Instagram"
   },
   "Welcome": {
     "title": "Welcome to Cantina IPB! 🍽️",
     "subtitle": "Your community guide to IPB canteen dishes",
     "description": "We're a student-made platform to help you discover and rate the dishes served at IPB's canteen. Browse meals, see real photos, and share your experiences!",
-    "workInProgress": "We're Just Getting Started",
-    "workInProgressDescription": "You might notice we don't have many dish photos yet – that's because we've just launched! This platform grows with YOUR contributions.",
+    "workInProgress": "Building Our Collection",
+    "workInProgressDescription": "We already have nearly 100 dish photos, but we're aiming for thousands! This platform grows with YOUR contributions.",
     "callToAction": "Help Us Grow!",
     "callToActionDescription": "With your help, we can build an amazing resource filled with dish photos and reviews. When you eat at the canteen, snap a photo and upload it! Your contributions will help current students and future generations discover great meals.",
     "notOfficial": "Note: This is an independent student project, not affiliated with IPB officially.",
@@ -117,7 +123,10 @@
     "rule3": "The dessert must be only one to be picked.",
     "rule4": "It is highly desired to have a student card with you.",
     "rule5": "You can take up to 1 bread but secretly after getting the plate, later you can get more too if you want.",
-    "rule6": "You can ask for a refill for the food."
+    "rule6": "You can ask for a refill for the food.",
+    "subtitle": "Guidelines and tips to make your IPB canteen experience smoother and more enjoyable.",
+    "ruleNumber": "Rule",
+    "footerNote": "These details help maintain order and ensure everyone can enjoy their meal. When in doubt, feel free to ask the friendly staff at the canteen!"
   },
   "Common": {
     "loading": "Loading...",

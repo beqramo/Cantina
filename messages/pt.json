@@ -11,7 +11,10 @@
     "approvals": "Aprovações"
   },
   "Home": {
-    "subtitle": "Descobre e avalia pratos da cantina da universidade IPB"
+    "subtitle": "Descobre e avalia pratos da cantina da universidade IPB",
+    "missionTitle": "A Nossa Missão Comunitária",
+    "missionDescription": "A participação de cada membro é super importante! Todos podem carregar pratos e fotografias, ajudando tanto a próxima geração de estudantes como a si próprio. As suas contribuições mantêm o menu atualizado para todos.",
+    "missionLink": "Saiba mais sobre o projeto"
   },
   "Search": {
     "searchPlaceholder": "Pesquisar um prato...",
@@ -96,14 +99,17 @@
     "contact": "Contacto",
     "contactDescription": "Tens perguntas, feedback ou encontraste um bug? Não hesites em entrar em contacto!",
     "thankYou": "Obrigado",
-    "thankYouDescription": "Obrigado por fazeres parte desta comunidade. Juntos, podemos construir algo valioso que ajudará os estudantes do IPB por muitos anos. Cada prato que adicionas, cada imagem que carregas e cada voto que dás faz a diferença!"
+    "thankYouDescription": "Obrigado por fazeres parte desta comunidade. Juntos, podemos construir algo valioso que ajudará os estudantes do IPB por muitos anos. Cada prato que adicionas, cada imagem que carregas e cada voto que dás faz a diferença!",
+    "badgeStudents": "Por estudante, para estudantes",
+    "badgeNonProfit": "100% Sem fins lucrativos",
+    "instagramFollow": "Seguir no Instagram"
   },
   "Welcome": {
     "title": "Bem-vindo à Cantina IPB! 🍽️",
     "subtitle": "O teu guia comunitário para os pratos da cantina do IPB",
     "description": "Somos uma plataforma feita por estudantes para te ajudar a descobrir e avaliar os pratos servidos na cantina do IPB. Explora refeições, vê fotos reais e partilha as tuas experiências!",
-    "workInProgress": "Estamos Apenas a Começar",
-    "workInProgressDescription": "Podes notar que ainda não temos muitas fotos de pratos – isso é porque acabámos de lançar! Esta plataforma cresce com AS TUAS contribuições.",
+    "workInProgress": "A Construir a Nossa Coleção",
+    "workInProgressDescription": "Já temos quase 100 fotos de pratos, mas queremos chegar aos milhares! Esta plataforma cresce com AS TUAS contribuições.",
     "callToAction": "Ajuda-nos a Crescer!",
     "callToActionDescription": "Com a tua ajuda, podemos construir um recurso incrível cheio de fotos e avaliações de pratos. Quando comeres na cantina, tira uma foto e carrega-a! As tuas contribuições vão ajudar os estudantes atuais e as gerações futuras a descobrir ótimas refeições.",
     "notOfficial": "Nota: Este é um projeto estudantil independente, não afiliado oficialmente ao IPB.",
@@ -117,7 +123,10 @@
     "rule3": "A sobremesa deve ser apenas uma para escolher.",
     "rule4": "É altamente desejável ter um cartão de estudante contigo.",
     "rule5": "Podes levar até 1 pão mas secretamente depois de receber o prato, depois podes levar mais também se quiseres.",
-    "rule6": "Podes pedir um refill para a comida."
+    "rule6": "Podes pedir um refill para a comida.",
+    "subtitle": "Diretrizes e dicas para tornar a tua experiência na cantina do IPB mais tranquila e agradável.",
+    "ruleNumber": "Regra",
+    "footerNote": "Estes detalhes ajudam a manter a ordem e garantem que todos possam desfrutar da sua refeição. Em caso de dúvida, não hesites em perguntar à simpática equipa da cantina!"
   },
   "Common": {
     "loading": "A carregar...",
