@@ -8,7 +8,7 @@ import {
   Users,
   Code,
   AlertTriangle,
-  Compass,
+  Target,
   Camera,
   HandHeart,
   DollarSign,
@@ -66,12 +66,9 @@ export default function AboutPage() {
             <div className='lg:col-span-2 space-y-8'>
               {/* Mission Statement */}
               <div className='group relative overflow-hidden rounded-3xl border bg-card p-8 shadow-sm transition-all hover:shadow-md'>
-                <div className='absolute top-0 right-0 p-8 text-primary/5'>
-                  <Compass className='h-24 w-24' />
-                </div>
                 <div className='relative z-10'>
                   <div className='inline-flex p-3 rounded-2xl bg-primary/10 text-primary mb-6'>
-                    <Compass className='h-6 w-6' />
+                    <Target className='h-6 w-6' />
                   </div>
                   <h2 className='text-2xl font-bold mb-4'>
                     {t('About.mission')}
@@ -188,20 +185,16 @@ export default function AboutPage() {
             {/* Right Column: Sidebar info */}
             <div className='space-y-6'>
               {/* Disclaimer - High Priority */}
-              <Card className='border-amber-500/50 bg-gradient-to-br from-amber-50 via-amber-50/80 to-orange-50/50 dark:from-amber-950/40 dark:to-amber-950/20 rounded-3xl overflow-hidden shadow-md shadow-amber-500/5'>
-                <div className='bg-amber-500/10 dark:bg-amber-500/20 p-4 border-b border-amber-500/20 flex items-center gap-3'>
-                  <div className='p-1.5 rounded-lg bg-amber-500 text-white shadow-sm'>
-                    <AlertTriangle className='h-4 w-4' />
-                  </div>
-                  <h3 className='font-extrabold text-amber-900 dark:text-amber-100'>
+              <Card className='border-l-4 border-l-amber-500 border-y border-r border-amber-200 bg-amber-50 dark:bg-amber-950/50 dark:border-amber-900/50 dark:border-l-amber-500 rounded-xl overflow-hidden shadow-sm'>
+                <div className='p-5'>
+                  <h3 className='font-bold flex items-center gap-2 text-amber-900 dark:text-amber-100 mb-2'>
+                    <AlertTriangle className='h-5 w-5 text-amber-600 dark:text-amber-500' />
                     {t('About.disclaimer')}
                   </h3>
-                </div>
-                <CardContent className='p-6'>
-                  <p className='text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-semibold'>
+                  <p className='text-sm text-amber-900/90 dark:text-amber-100/90 leading-relaxed font-medium'>
                     {t('About.disclaimerDescription')}
                   </p>
-                </CardContent>
+                </div>
               </Card>
 
               {/* Contact Card */}
