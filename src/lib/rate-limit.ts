@@ -115,7 +115,7 @@ class RateLimiter {
  * Default: 10 uploads per minute per IP
  */
 export const uploadRateLimiter = new RateLimiter({
-  limit: 10,
+  limit: 4,
   windowSeconds: 60,
   identifier: 'upload',
 });

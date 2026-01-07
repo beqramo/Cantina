@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
+import { sendEmail } from '@/lib/email';
+import { ImageUploadEmail } from '@/components/emails/ImageUploadEmail';
 import { adminStorage } from '@/lib/firebase-admin';
 import {
   uploadRateLimiter,
@@ -327,6 +329,26 @@ export async function POST(request: NextRequest) {
 
     // Get the public URL
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+
+    // Send email notification if dishName is provided
+    const dishName = formData.get('dishName') as string | null;
+    const nickname = formData.get('nickname') as string | null;
+
+    if (dishName) {
+      // Fire and forget email notification
+      sendEmail({
+        subject: `New Image Upload for: ${dishName}`,
+        react: (
+          <ImageUploadEmail
+            dishName={dishName}
+            nickname={nickname || undefined}
+            imageUrl={publicUrl}
+          />
+        ),
+      }).catch((err) =>
+        console.error('[Image Upload] Failed to send notification:', err),
+      );
+    }
 
     return NextResponse.json(
       {

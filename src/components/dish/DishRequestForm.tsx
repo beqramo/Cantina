@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { uploadImage } from '@/lib/storage';
-import { createDishRequest } from '@/lib/firestore';
 import { DishCategory, DishTag } from '@/types';
 import { useTranslations } from 'next-intl';
 import { DISH_CATEGORIES } from '@/lib/constants';
@@ -168,42 +167,28 @@ export function DishRequestForm({
         );
       }
 
-      // Create request
-      const dishId = await createDishRequest(
-        data.name,
-        imageUrl,
-        (category as DishCategory) || null,
-        selectedTags,
-        userId,
-        data.nickname?.trim() || undefined,
-      );
-
-      // Save pending dish to localStorage so user can see it in search results
-      const pendingDishesJson = localStorage.getItem(
-        STORAGE_KEYS.PENDING_DISHES,
-      );
-      const pendingDishes: Array<{
-        id: string;
-        name: string;
-        createdAt: number;
-      }> = pendingDishesJson ? JSON.parse(pendingDishesJson) : [];
-
-      // Add the new pending dish
-      pendingDishes.push({
-        id: dishId,
-        name: data.name,
-        createdAt: Date.now(),
+      // Create request via API (handles notification server-side)
+      const response = await fetch('/api/dishes/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          imageUrl,
+          category: (category as DishCategory) || null,
+          tags: selectedTags,
+          requestedBy: userId,
+          nickname: data.nickname?.trim() || undefined,
+          turnstileToken,
+        }),
       });
 
-      // Keep only dishes from the last 30 days
-      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      const recentPendingDishes = pendingDishes.filter(
-        (d) => d.createdAt > thirtyDaysAgo,
-      );
-      localStorage.setItem(
-        STORAGE_KEYS.PENDING_DISHES,
-        JSON.stringify(recentPendingDishes),
-      );
+      if (!response.ok) {
+        throw new Error('Failed to create dish request');
+      }
+
+      const { id: dishId } = await response.json();
 
       setSuccess(true);
       onFormSubmitted?.();

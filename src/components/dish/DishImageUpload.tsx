@@ -126,10 +126,12 @@ export function DishImageUpload({
     setError(null);
 
     try {
-      // Upload image with Turnstile token
+      // Upload image with Turnstile token and metadata for notification
       const imageUrl = await uploadImage(imageFile, {
         isRequest: false,
         turnstileToken: turnstileToken || undefined,
+        dishName: dish.name,
+        nickname: nickname.trim(),
       });
 
       // Add pending image to dish

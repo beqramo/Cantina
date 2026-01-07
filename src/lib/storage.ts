@@ -202,6 +202,10 @@ interface UploadImageOptions {
   turnstileToken?: string;
   /** Internal API key for server-side/script uploads (bypasses Turnstile) */
   internalApiKey?: string;
+  /** Name of the dish (for email notifications) */
+  dishName?: string;
+  /** Nickname of the uploader (for email notifications) */
+  nickname?: string;
 }
 
 /**
@@ -223,7 +227,13 @@ export async function uploadImage(
       ? { isRequest: optionsOrIsRequest, turnstileToken }
       : optionsOrIsRequest;
 
-  const { isRequest = false, turnstileToken: token, internalApiKey } = options;
+  const {
+    isRequest = false,
+    turnstileToken: token,
+    internalApiKey,
+    dishName,
+    nickname,
+  } = options;
 
   // Validate file size before processing (max 10MB before compression)
   const MAX_INPUT_SIZE = 10 * 1024 * 1024; // 10MB
@@ -267,6 +277,14 @@ export async function uploadImage(
     // Include internal API key if provided (for script/server-side uploads)
     if (internalApiKey) {
       formData.append('internal-api-key', internalApiKey);
+    }
+
+    // Include metadata for notifications
+    if (dishName) {
+      formData.append('dishName', dishName);
+    }
+    if (nickname) {
+      formData.append('nickname', nickname);
     }
 
     const response = await fetch('/api/upload-image', {
