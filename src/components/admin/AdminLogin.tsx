@@ -8,8 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { loginAdmin } from '@/lib/auth';
 import { useTranslations, useLocale } from 'next-intl';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -25,6 +33,7 @@ export function AdminLogin() {
   const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const {
     register,
@@ -45,60 +54,92 @@ export function AdminLogin() {
 
     try {
       await loginAdmin(data.email, data.password);
-      router.push(getAdminPath('/admin/dashboard'));
+      setSuccess(true);
+      // Short delay to let user see success message before redirect
+      setTimeout(() => {
+        router.push(getAdminPath('/admin/dashboard'));
+      }, 1000);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
           : 'Failed to login. Please check your credentials.',
       );
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className='flex min-h-screen items-center justify-center p-4'>
-      <div className='w-full max-w-md space-y-6'>
-        <div className='text-center'>
-          <h1 className='text-3xl font-bold'>{t('admin')}</h1>
-          <p className='text-muted-foreground mt-2'>{t('login')}</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
-          {error && (
-            <Alert variant='destructive'>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div>
-            <label className='text-sm font-medium mb-2 block'>Email</label>
-            <Input type='email' {...register('email')} />
-            {errors.email && (
-              <p className='text-sm text-destructive mt-1'>
-                {errors.email.message}
-              </p>
+      <Card className='w-full max-w-md shadow-lg'>
+        <CardHeader className='space-y-1 text-center'>
+          <CardTitle className='text-2xl font-bold tracking-tight'>
+            {t('admin')}
+          </CardTitle>
+          <CardDescription>{t('login')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+            {error && (
+              <Alert variant='destructive'>
+                <AlertCircle className='h-4 w-4' />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-          </div>
 
-          <div>
-            <label className='text-sm font-medium mb-2 block'>
-              {tCommon('password')}
-            </label>
-            <Input type='password' {...register('password')} />
-            {errors.password && (
-              <p className='text-sm text-destructive mt-1'>
-                {errors.password.message}
-              </p>
+            {success && (
+              <Alert className='border-green-500 text-green-600 dark:text-green-400'>
+                <CheckCircle2 className='h-4 w-4 stroke-green-600 dark:stroke-green-400' />
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>
+                  Login successful! Redirecting...
+                </AlertDescription>
+              </Alert>
             )}
-          </div>
 
-          <Button type='submit' className='w-full' disabled={loading}>
-            {loading ? tCommon('loading') : t('login')}
-          </Button>
-        </form>
-      </div>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                Email
+              </label>
+              <Input
+                type='email'
+                disabled={loading || success}
+                placeholder='admin@example.com'
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className='text-sm text-destructive'>
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className='space-y-2'>
+              <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                {tCommon('password')}
+              </label>
+              <Input
+                type='password'
+                disabled={loading || success}
+                {...register('password')}
+              />
+              {errors.password && (
+                <p className='text-sm text-destructive'>
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <Button
+              type='submit'
+              className='w-full'
+              disabled={loading || success}>
+              {loading || success ? tCommon('loading') : t('login')}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
