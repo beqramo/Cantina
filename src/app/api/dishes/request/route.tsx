@@ -117,6 +117,27 @@ export async function POST(request: NextRequest) {
 
     const docRef = await adminDb.collection('dishes').add(dishData);
 
+    // CLAIM IMAGE: Remove from temporary_uploads
+    if (imageUrl) {
+      try {
+        const tempSnapshot = await adminDb
+          .collection('temporary_uploads')
+          .where('url', '==', imageUrl)
+          .limit(1)
+          .get();
+
+        if (!tempSnapshot.empty) {
+          await tempSnapshot.docs[0].ref.delete();
+          console.log(
+            `[Dish Request] Image claimed (removed from temp): ${imageUrl}`,
+          );
+        }
+      } catch (err) {
+        console.warn('[Dish Request] Failed to claim image:', err);
+        // Non-fatal, just means cron might double-check it later (but cron checks dishes so it's safe)
+      }
+    }
+
     // Send email notification
     const subject = `New Dish Request: ${name}`;
 
