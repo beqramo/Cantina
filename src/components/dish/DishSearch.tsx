@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/useDebounce';
 import { searchDishes, getDishById } from '@/lib/firestore';
@@ -23,6 +23,8 @@ import { DishRequestForm } from './DishRequestForm';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { analytics } from '@/lib/firebase-client';
 import { logEvent } from 'firebase/analytics';
+import { useSWRFirebase } from '@/hooks/useSWRFirebase';
+import { CACHE_KEYS, CACHE_TTL } from '@/lib/cache-keys';
 
 // Type for pending dish stored in localStorage
 interface PendingDishEntry {
@@ -33,110 +35,82 @@ interface PendingDishEntry {
 
 export function DishSearch() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [dishes, setDishes] = useState<Dish[]>([]);
-  const [pendingDishes, setPendingDishes] = useState<Dish[]>([]);
-  const [loading, setLoading] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const t = useTranslations('Search');
 
-  // Load user's pending dishes from localStorage and Firestore
-  useEffect(() => {
-    const loadPendingDishes = async () => {
-      try {
-        const pendingDishesJson = localStorage.getItem(
+  // Use SWR for search results
+  const { data: dishes, isLoading: searchLoading } = useSWRFirebase({
+    cacheKey: debouncedSearch.trim()
+      ? CACHE_KEYS.DISHES_SEARCH(debouncedSearch)
+      : null,
+    fetcher: async () => {
+      const results = await searchDishes(debouncedSearch);
+      if (analytics) {
+        logEvent(analytics, 'search', {
+          search_term: debouncedSearch,
+        });
+      }
+      return results;
+    },
+    ttl: CACHE_TTL.SHORT, // 30 seconds for dynamic search results
+    enabled: !!debouncedSearch.trim(),
+  });
+
+  // Use SWR for pending dishes from localStorage
+  const { data: pendingDishes, mutate: mutatePending } = useSWRFirebase({
+    cacheKey: CACHE_KEYS.DISH_REQUESTS_PENDING,
+    fetcher: async () => {
+      const pendingDishesJson = localStorage.getItem(
+        STORAGE_KEYS.PENDING_DISHES,
+      );
+      if (!pendingDishesJson) return [];
+
+      const pendingEntries: PendingDishEntry[] = JSON.parse(pendingDishesJson);
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const validEntries = pendingEntries.filter(
+        (e) => e.createdAt > thirtyDaysAgo,
+      );
+
+      const fetchedDishes: Dish[] = [];
+      const stillValidEntries: PendingDishEntry[] = [];
+
+      // Note: We use sequential fetches here to avoid overwhelming but with SWR this happens once per cache lifecycle
+      for (const entry of validEntries) {
+        const dish = await getDishById(entry.id);
+        if (dish && dish.status === 'pending') {
+          fetchedDishes.push(dish);
+          stillValidEntries.push(entry);
+        }
+      }
+
+      // Update localStorage with only valid pending dishes
+      if (stillValidEntries.length !== validEntries.length) {
+        localStorage.setItem(
           STORAGE_KEYS.PENDING_DISHES,
+          JSON.stringify(stillValidEntries),
         );
-        if (!pendingDishesJson) {
-          setPendingDishes([]);
-          return;
-        }
-
-        const pendingEntries: PendingDishEntry[] =
-          JSON.parse(pendingDishesJson);
-        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-        const validEntries = pendingEntries.filter(
-          (e) => e.createdAt > thirtyDaysAgo,
-        );
-
-        // Fetch actual dish data from Firestore
-        const fetchedDishes: Dish[] = [];
-        const stillValidEntries: PendingDishEntry[] = [];
-
-        for (const entry of validEntries) {
-          const dish = await getDishById(entry.id);
-          if (dish) {
-            // Only include if still pending
-            if (dish.status === 'pending') {
-              fetchedDishes.push(dish);
-              stillValidEntries.push(entry);
-            }
-            // If approved, don't include (it's now in regular search)
-          } else {
-            // Dish was deleted (rejected), don't include
-          }
-        }
-
-        // Update localStorage with only valid pending dishes
-        if (stillValidEntries.length !== validEntries.length) {
-          localStorage.setItem(
-            STORAGE_KEYS.PENDING_DISHES,
-            JSON.stringify(stillValidEntries),
-          );
-        }
-
-        setPendingDishes(fetchedDishes);
-      } catch (error) {
-        console.error('Error loading pending dishes:', error);
-        setPendingDishes([]);
       }
-    };
 
-    loadPendingDishes();
-  }, [showRequestDialog]); // Reload when dialog closes (after submission)
+      return fetchedDishes;
+    },
+    ttl: CACHE_TTL.DEFAULT, // 1 minute
+    // Revalidation when dialog closes is handled by mutate() call in Dialog onOpenChange
+  });
 
-  useEffect(() => {
-    const loadDishes = async () => {
-      setLoading(true);
-      try {
-        let results: Dish[] = [];
-
-        if (debouncedSearch.trim()) {
-          // Global search - ignore tags when searching
-          results = await searchDishes(debouncedSearch);
-
-          if (analytics) {
-            logEvent(analytics, 'search', {
-              search_term: debouncedSearch,
-            });
-          }
-        } else {
-          // Tag filtering disabled - not usable for users currently
-          // else if (selectedTags.length > 0) {
-          //   results = await getDishesByTags(selectedTags);
-          // } else {
-          results = [];
-          // }
-        }
-
-        setDishes(results);
-      } catch (error) {
-        console.error('Error loading dishes:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDishes();
-  }, [debouncedSearch]); // selectedTags removed - filtering disabled
+  const dishesToDisplay = useMemo(() => dishes || [], [dishes]);
+  const loading = searchLoading;
 
   // Filter pending dishes that match the search term
-  const matchingPendingDishes = debouncedSearch.trim()
-    ? pendingDishes.filter((dish) =>
-        dish.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
-      )
-    : [];
+  const matchingPendingDishes = useMemo(() => {
+    if (!pendingDishes) return [];
+    return debouncedSearch.trim()
+      ? pendingDishes.filter((dish) =>
+          dish.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
+        )
+      : [];
+  }, [pendingDishes, debouncedSearch]);
 
   return (
     <div className='space-y-6'>
@@ -188,7 +162,7 @@ export function DishSearch() {
 
       {!loading &&
         debouncedSearch.trim() &&
-        dishes.length === 0 &&
+        dishesToDisplay.length === 0 &&
         matchingPendingDishes.length === 0 && (
           <Alert>
             <AlertDescription className='flex flex-col gap-4'>
@@ -198,7 +172,10 @@ export function DishSearch() {
                 onOpenChange={(open) => {
                   setShowRequestDialog(open);
                   // Reset form submitted state when dialog closes
-                  if (!open) setFormSubmitted(false);
+                  if (!open) {
+                    setFormSubmitted(false);
+                    mutatePending(); // Refresh pending dishes when dialog closes
+                  }
                 }}>
                 <DialogTrigger asChild>
                   <Button variant='outline'>{t('requestDish')}</Button>
@@ -230,9 +207,9 @@ export function DishSearch() {
           </Alert>
         )}
 
-      {!loading && dishes.length > 0 && (
+      {!loading && dishesToDisplay.length > 0 && (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-          {dishes.map((dish) => (
+          {dishesToDisplay.map((dish) => (
             <DishCard key={dish.id} dish={dish} />
           ))}
         </div>

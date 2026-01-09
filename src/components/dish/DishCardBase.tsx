@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, ReactNode } from 'react';
 import Image from 'next/image';
 import {
   Camera,
@@ -22,6 +22,8 @@ import { ImageViewer } from './ImageViewer';
 import { useTranslations } from 'next-intl';
 import { getDishById } from '@/lib/firestore';
 import { useTranslateData } from '@/hooks/useTranslateData';
+import { useSWRFirebase } from '@/hooks/useSWRFirebase';
+import { CACHE_KEYS, CACHE_TTL } from '@/lib/cache-keys';
 
 interface DishCardBaseProps {
   // Image props
@@ -63,11 +65,21 @@ export function DishCardBase({
   const tMenu = useTranslations('Menu');
   const { translateCategory, translateTag } = useTranslateData();
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
-  const [dish, setDish] = useState<Dish | null>(providedDish || null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Fetch dish data using SWR if dishId provided and no dish prop
+  const { data: fetchedDish } = useSWRFirebase({
+    cacheKey: dishId && !providedDish ? CACHE_KEYS.DISH_BY_ID(dishId) : null,
+    fetcher: async () => {
+      if (!dishId) return null;
+      return await getDishById(dishId);
+    },
+    ttl: CACHE_TTL.LONG, // 5 minutes - dish data doesn't change frequently
+    enabled: !!dishId && !providedDish,
+  });
+
   // Use provided dish or fetched dish
-  const displayDish = providedDish || dish;
+  const displayDish = providedDish || fetchedDish;
 
   // Get all images for the dish (from images array or fallback to imageUrl)
   const dishImages = displayDish?.images || (imageUrl ? [imageUrl] : []);
@@ -80,20 +92,10 @@ export function DishCardBase({
       : 0;
   const currentImageUrl = dishImages[safeImageIndex] || imageUrl || '';
 
-  // Note: safeImageIndex automatically clamps currentImageIndex to valid range
-  // So we don't need to reset the index when dish changes - it will be clamped automatically
-
   // Check if image exists (regardless of approval status)
   const hasImageUrl = !!currentImageUrl;
   // Only show image if it exists AND is approved
   const hasImage = hasImageUrl && !isPendingApproval;
-
-  // Fetch dish data if dishId exists and dish not provided
-  useEffect(() => {
-    if (dishId && !providedDish) {
-      getDishById(dishId).then(setDish).catch(console.error);
-    }
-  }, [dishId, providedDish]);
 
   const handleImageClick = () => {
     if (hasImage) {

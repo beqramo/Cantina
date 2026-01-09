@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { getCurrentMenu } from '@/lib/firestore';
 import { getCurrentMealType, formatMenuDate } from '@/lib/time';
 import { Menu, MealType } from '@/types';
@@ -13,108 +13,47 @@ import { Soup } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { analytics } from '@/lib/firebase-client';
 import { logEvent } from 'firebase/analytics';
+import { useSWRFirebase } from '@/hooks/useSWRFirebase';
+import { CACHE_KEYS, CACHE_TTL } from '@/lib/cache-keys';
 
 export function DailyMenu() {
   const t = useTranslations('Menu');
-  const [menu, setMenu] = useState<Menu | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [mealType, setMealType] = useState<MealType | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const isInitialLoadRef = useRef(true);
-  // Use refs to track current values for comparison without causing re-renders
-  const currentMealTypeRef = useRef<MealType | null>(null);
-  const currentMenuRef = useRef<Menu | null>(null);
 
-  const loadMenu = useCallback(async (isInitialLoad: boolean = false) => {
-    // Only show loading state on initial load
-    if (isInitialLoad) {
-      setLoading(true);
-    }
-
-    try {
-      const currentMeal = getCurrentMealType();
+  // Use SWR for fetching current menu
+  const {
+    data: menu,
+    isLoading,
+    mutate,
+  } = useSWRFirebase({
+    cacheKey: CACHE_KEYS.MENU_CURRENT,
+    fetcher: async () => {
       const currentMenu = await getCurrentMenu();
+      if (currentMenu && analytics) {
+        logEvent(analytics, 'view_item_list', {
+          item_list_id: 'daily_menu',
+          item_list_name: 'Daily Menu',
+        });
+      }
+      return currentMenu;
+    },
+    ttl: CACHE_TTL.DEFAULT, // 1 minute cache
+    swrConfig: {
+      refreshInterval: 60000, // Refresh every minute to keep up with time changes
+    },
+  });
 
-      // Determine the display meal type
-      let displayMealType: MealType | null = currentMeal;
-      if (currentMeal === 'dinner' && currentMenu && !currentMenu.dinner) {
-        // If it's dinner time but no dinner menu, show lunch instead
-        displayMealType = 'lunch';
-      }
+  // Calculate meal type based on current time and menu availability
+  const mealType = useMemo(() => {
+    if (!menu) return null;
+    const currentMeal = getCurrentMealType();
 
-      // Only update state if something actually changed
-      if (isInitialLoad || displayMealType !== currentMealTypeRef.current) {
-        setMealType(displayMealType);
-        currentMealTypeRef.current = displayMealType;
-      }
-
-      // Check if menu data changed by comparing menu dates and content
-      let menuChanged = false;
-      if (!currentMenuRef.current && !currentMenu) {
-        // Both are null, no change
-        menuChanged = false;
-      } else if (!currentMenuRef.current || !currentMenu) {
-        // One is null, the other isn't - change detected
-        menuChanged = true;
-      } else {
-        // Both exist, compare dates and content
-        menuChanged =
-          currentMenuRef.current.date.getTime() !==
-            currentMenu.date.getTime() ||
-          JSON.stringify(currentMenuRef.current) !==
-            JSON.stringify(currentMenu);
-      }
-
-      if (menuChanged) {
-        setMenu(currentMenu);
-        currentMenuRef.current = currentMenu;
-
-        if (analytics && currentMenu) {
-          logEvent(analytics, 'view_item_list', {
-            item_list_id: 'daily_menu',
-            item_list_name: 'Daily Menu',
-            items: [
-              // Mapping all items is complex here, maybe just log that list was viewed for now
-              // or we could map categories if needed, but keeping it simple is better for start
-            ],
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ DailyMenu - Error loading menu:', error);
-      // On error during initial load, ensure loading state is cleared
-      if (isInitialLoad) {
-        setLoading(false);
-      }
-    } finally {
-      // Only clear loading state if it was set (initial load)
-      if (isInitialLoad) {
-        setLoading(false);
-        isInitialLoadRef.current = false;
-      }
+    if (currentMeal === 'dinner' && !menu.dinner) {
+      return 'lunch';
     }
-  }, []);
+    return currentMeal as MealType;
+  }, [menu]);
 
-  useEffect(() => {
-    // Initial load
-    loadMenu(true);
-
-    // Refresh every minute to check if meal time changed
-    const interval = setInterval(() => {
-      loadMenu(false);
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [loadMenu]);
-
-  // Refresh when refreshKey changes (triggered by image upload)
-  useEffect(() => {
-    if (refreshKey > 0) {
-      loadMenu(false);
-    }
-  }, [refreshKey, loadMenu]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className='space-y-4'>
         <h2 className='text-2xl font-bold'>{t('dailyMenu') || 'Daily Menu'}</h2>
@@ -196,7 +135,7 @@ export function DailyMenu() {
                 mealType={displayMealType}
                 category={category}
                 menuItem={menuItem}
-                onImageUploaded={() => setRefreshKey((prev) => prev + 1)}
+                onImageUploaded={() => mutate()}
               />
             );
           })}
@@ -250,7 +189,7 @@ export function DailyMenu() {
               mealType={mealType}
               category={category}
               menuItem={menuItem}
-              onImageUploaded={() => setRefreshKey((prev) => prev + 1)}
+              onImageUploaded={() => mutate()}
             />
           );
         })}
