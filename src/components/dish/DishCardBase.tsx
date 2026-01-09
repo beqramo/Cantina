@@ -2,6 +2,8 @@
 
 import { useState, ReactNode } from 'react';
 import Image from 'next/image';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 import {
   Camera,
   Clock,
@@ -100,6 +102,14 @@ export function DishCardBase({
   const handleImageClick = () => {
     if (hasImage) {
       setIsImageViewerOpen(true);
+      // Log image viewer open event
+      if (analytics) {
+        logEvent(analytics, 'view_dish_image', {
+          dish_id: displayDish?.id || dishId,
+          dish_name: name,
+          image_count: dishImages.length,
+        });
+      }
       onImageClick?.();
     } else if (onAddImageClick) {
       onAddImageClick();

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -142,6 +144,16 @@ export function DishRequestForm({
     setLoading(true);
     setError(null);
 
+    // Log dish request start
+    if (analytics) {
+      logEvent(analytics, 'dish_request_start', {
+        dish_name: data.name,
+        has_image: !!imageFile,
+        has_category: !!category,
+        tags_count: selectedTags.length,
+      });
+    }
+
     try {
       // Get or create user ID
       let userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
@@ -190,9 +202,25 @@ export function DishRequestForm({
 
       const { id: dishId } = await response.json();
 
+      // Log dish request success
+      if (analytics) {
+        logEvent(analytics, 'dish_request_success', {
+          dish_name: data.name,
+          dish_id: dishId,
+          has_image: !!imageFile,
+        });
+      }
+
       setSuccess(true);
       onFormSubmitted?.();
     } catch (err) {
+      // Log dish request error
+      if (analytics) {
+        logEvent(analytics, 'dish_request_error', {
+          dish_name: data.name,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);

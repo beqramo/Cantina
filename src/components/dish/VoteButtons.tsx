@@ -5,6 +5,8 @@ import { Dish } from '@/types';
 import { useVote } from '@/hooks/useVote';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 
 interface VoteButtonsProps {
   dish: Dish;
@@ -26,6 +28,22 @@ export function VoteButtons({ dish }: VoteButtonsProps) {
     const success = await vote(dish, voteType);
 
     if (success) {
+      // Log the vote event to analytics
+      if (analytics) {
+        const action =
+          previousVote === voteType
+            ? 'remove_vote'
+            : previousVote
+            ? 'change_vote'
+            : 'new_vote';
+        logEvent(analytics, 'vote_dish', {
+          dish_id: dish.id,
+          dish_name: dish.name,
+          vote_type: voteType,
+          vote_action: action,
+        });
+      }
+
       // Handle vote changes
       if (previousVote === voteType) {
         // User clicked the same button - remove vote

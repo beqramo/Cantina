@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +37,10 @@ export function WelcomePopup() {
       // Small delay to let the page render first
       const timer = setTimeout(() => {
         setIsOpen(true);
+        // Log welcome popup shown
+        if (analytics) {
+          logEvent(analytics, 'welcome_popup_shown');
+        }
       }, 800);
       return () => clearTimeout(timer);
     }
@@ -44,11 +50,21 @@ export function WelcomePopup() {
     if (dontShowAgain) {
       localStorage.setItem(WELCOME_POPUP_KEY, 'true');
     }
+    // Log welcome popup dismissed
+    if (analytics) {
+      logEvent(analytics, 'welcome_popup_dismissed', {
+        dont_show_again: dontShowAgain,
+      });
+    }
     setIsOpen(false);
   };
 
   const handleGetStarted = () => {
     localStorage.setItem(WELCOME_POPUP_KEY, 'true');
+    // Log get started click
+    if (analytics) {
+      logEvent(analytics, 'welcome_get_started');
+    }
     setIsOpen(false);
   };
 
@@ -56,7 +72,7 @@ export function WelcomePopup() {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className='sm:max-w-md rounded-[2.5rem] border-none shadow-2xl overflow-hidden p-0'>
         {/* Decorative Header with Language Switcher */}
-        <div className='relative h-32 bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center overflow-hidden'>
+        <div className='relative h-32 bg-linear-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center overflow-hidden'>
           <div className='absolute top-4 right-4 z-50'>
             <LanguageSwitcher />
           </div>
@@ -118,7 +134,7 @@ export function WelcomePopup() {
 
           {/* Disclaimer */}
           <div className='flex items-center gap-3 p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10'>
-            <Info className='h-4 w-4 text-amber-600 flex-shrink-0' />
+            <Info className='h-4 w-4 text-amber-600 shrink-0' />
             <p className='text-[10px] md:text-xs text-muted-foreground font-medium leading-tight italic'>
               {t('notOfficial')}
             </p>

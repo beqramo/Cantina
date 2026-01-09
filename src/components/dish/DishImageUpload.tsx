@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -125,6 +127,14 @@ export function DishImageUpload({
     setLoading(true);
     setError(null);
 
+    // Log upload start
+    if (analytics) {
+      logEvent(analytics, 'dish_image_upload_start', {
+        dish_id: dish.id,
+        dish_name: dish.name,
+      });
+    }
+
     try {
       // Upload image with Turnstile token and metadata for notification
       const imageUrl = await uploadImage(imageFile, {
@@ -146,12 +156,28 @@ export function DishImageUpload({
         localStorage.setItem(STORAGE_KEYS.NICKNAME, nickname.trim());
       }
 
+      // Log upload success
+      if (analytics) {
+        logEvent(analytics, 'dish_image_upload_success', {
+          dish_id: dish.id,
+          dish_name: dish.name,
+        });
+      }
+
       // Reset form
       setImageFile(null);
       setImagePreview(null);
       onSuccess();
       onClose();
     } catch (err) {
+      // Log upload error
+      if (analytics) {
+        logEvent(analytics, 'dish_image_upload_error', {
+          dish_id: dish.id,
+          dish_name: dish.name,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
       setError(err instanceof Error ? err.message : tCommon('error'));
     } finally {
       setLoading(false);

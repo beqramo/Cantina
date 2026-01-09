@@ -171,6 +171,12 @@ export function DishSearch() {
                 open={showRequestDialog}
                 onOpenChange={(open) => {
                   setShowRequestDialog(open);
+                  // Log dialog open event
+                  if (open && analytics) {
+                    logEvent(analytics, 'open_dish_request_dialog', {
+                      search_term: debouncedSearch,
+                    });
+                  }
                   // Reset form submitted state when dialog closes
                   if (!open) {
                     setFormSubmitted(false);

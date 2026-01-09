@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, useMemo, memo, useEffect } from 'react';
+import { analytics } from '@/lib/firebase-client';
+import { logEvent } from 'firebase/analytics';
 import { getTopDishes } from '@/lib/firestore';
 import { Dish, DishCategory } from '@/types';
 import { DishCard } from '@/components/dish/DishCard';
@@ -71,9 +73,23 @@ export default function TopDishesPage() {
     ttl: CACHE_TTL.LONG, // 5 minutes - top dishes don't change frequently
   });
 
+  // Log page view on mount
+  useEffect(() => {
+    if (analytics) {
+      logEvent(analytics, 'view_top_dishes');
+    }
+  }, []);
+
   const handleCategoryChange = useCallback(
     (category: DishCategory | undefined) => {
       setSelectedCategory(category);
+      // Log category filter change
+      if (analytics) {
+        logEvent(analytics, 'filter_category', {
+          category: category || 'all',
+          page: 'top_dishes',
+        });
+      }
       // SWR will re-fetch when selectedCategory changes
     },
     [],
