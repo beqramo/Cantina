@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/useDebounce';
 import { searchDishes, getDishById } from '@/lib/firestore';
@@ -25,18 +25,17 @@ import { analytics } from '@/lib/firebase-client';
 import { logEvent } from 'firebase/analytics';
 import { useSWRFirebase } from '@/hooks/useSWRFirebase';
 import { CACHE_KEYS, CACHE_TTL } from '@/lib/cache-keys';
-
-// Type for pending dish stored in localStorage
-interface PendingDishEntry {
-  id: string;
-  name: string;
-  createdAt: number;
-}
+import {
+  getPendingApprovals,
+  PendingApprovalEntry,
+  PENDING_UPDATE_EVENT,
+} from '@/lib/pending-approvals';
 
 export function DishSearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [pendingDishes, setPendingDishes] = useState<Dish[]>([]);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const t = useTranslations('Search');
 
@@ -58,53 +57,48 @@ export function DishSearch() {
     enabled: !!debouncedSearch.trim(),
   });
 
-  // Use SWR for pending dishes from localStorage
-  const { data: pendingDishes, mutate: mutatePending } = useSWRFirebase({
-    cacheKey: CACHE_KEYS.DISH_REQUESTS_PENDING,
-    fetcher: async () => {
-      const pendingDishesJson = localStorage.getItem(
-        STORAGE_KEYS.PENDING_DISHES,
-      );
-      if (!pendingDishesJson) return [];
+  // Load pending dishes from centralized Lib
+  useEffect(() => {
+    const loadPending = () => {
+      const items = getPendingApprovals();
 
-      const pendingEntries: PendingDishEntry[] = JSON.parse(pendingDishesJson);
-      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      const validEntries = pendingEntries.filter(
-        (e) => e.createdAt > thirtyDaysAgo,
-      );
+      // Convert PendingApprovalEntry[] to Dish[] for UI compatibility
+      const mappedDishes: Dish[] = items.map((item) => ({
+        id: item.id,
+        name: item.name || '',
+        imageUrl: item.imageUrl || '',
+        images: item.imageUrl ? [item.imageUrl] : [],
+        category: undefined,
+        tags: [],
+        status: 'pending',
+        thumbsUp: 0,
+        thumbsDown: 0,
+        createdAt: new Date(item.createdAt),
+        updatedAt: new Date(item.createdAt),
+      }));
 
-      const fetchedDishes: Dish[] = [];
-      const stillValidEntries: PendingDishEntry[] = [];
+      setPendingDishes(mappedDishes);
+    };
 
-      // Note: We use sequential fetches here to avoid overwhelming but with SWR this happens once per cache lifecycle
-      for (const entry of validEntries) {
-        const dish = await getDishById(entry.id);
-        if (dish && dish.status === 'pending') {
-          fetchedDishes.push(dish);
-          stillValidEntries.push(entry);
-        }
-      }
+    loadPending();
 
-      // Update localStorage with only valid pending dishes
-      if (stillValidEntries.length !== validEntries.length) {
-        localStorage.setItem(
-          STORAGE_KEYS.PENDING_DISHES,
-          JSON.stringify(stillValidEntries),
-        );
-      }
+    // Refresh when approvals change
+    window.addEventListener(PENDING_UPDATE_EVENT, loadPending);
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEYS.PENDING_APPROVALS) loadPending();
+    });
 
-      return fetchedDishes;
-    },
-    ttl: CACHE_TTL.DEFAULT, // 1 minute
-    // Revalidation when dialog closes is handled by mutate() call in Dialog onOpenChange
-  });
+    return () => {
+      window.removeEventListener(PENDING_UPDATE_EVENT, loadPending);
+      window.removeEventListener('storage', loadPending); // Remove the storage listener too
+    };
+  }, []);
 
   const dishesToDisplay = useMemo(() => dishes || [], [dishes]);
   const loading = searchLoading;
 
   // Filter pending dishes that match the search term
   const matchingPendingDishes = useMemo(() => {
-    if (!pendingDishes) return [];
     return debouncedSearch.trim()
       ? pendingDishes.filter((dish) =>
           dish.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
@@ -180,7 +174,7 @@ export function DishSearch() {
                   // Reset form submitted state when dialog closes
                   if (!open) {
                     setFormSubmitted(false);
-                    mutatePending(); // Refresh pending dishes when dialog closes
+                    // mutatePending(); // Removed legacy SWR call
                   }
                 }}>
                 <DialogTrigger asChild>

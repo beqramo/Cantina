@@ -98,15 +98,19 @@ export function getMenuDisplayDate(): Date {
   const minutes = portugalTime.getMinutes();
   const totalMinutes = hours * 60 + minutes;
 
+  let displayDate = new Date(portugalTime);
+
   // After dinner (after 21:45), show next day's menu
   if (totalMinutes > 1305) {
-    const tomorrow = new Date(portugalTime);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow;
+    displayDate.setDate(displayDate.getDate() + 1);
   }
 
-  // Otherwise show today's menu
-  return portugalTime;
+  // If the target day is Sunday (0), show Monday's (1) menu
+  if (displayDate.getDay() === 0) {
+    displayDate.setDate(displayDate.getDate() + 1);
+  }
+
+  return displayDate;
 }
 
 /**
@@ -120,11 +124,20 @@ export function parseMenuDate(dateStr: string): Date {
 /**
  * Format Date object to DD/MM/YYYY string
  */
-export function formatMenuDate(date: Date): string {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
+export function formatMenuDate(date: Date, locale: string = 'pt'): string {
+  const formatter = new Intl.DateTimeFormat(
+    locale === 'en' ? 'en-US' : 'pt-PT',
+    {
+      weekday: 'long',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    },
+  );
+
+  // Capitalize first letter of weekday
+  const formatted = formatter.format(date);
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
 
 /**

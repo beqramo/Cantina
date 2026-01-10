@@ -27,6 +27,8 @@ import {
   PendingDishImage,
 } from '@/types';
 import { DocumentData } from 'firebase/firestore';
+import { STORAGE_KEYS } from './constants';
+import { getMenuDisplayDate } from './time';
 
 // Helper function to convert Firestore document data to Dish object
 function firestoreDataToDish(docId: string, data: DocumentData): Dish {
@@ -206,6 +208,7 @@ function generateSearchTokens(name: string): string[] {
 export async function searchDishes(
   searchTerm: string,
   tags?: DishTag[],
+  includeAllStatuses = false,
 ): Promise<Dish[]> {
   if (!db || !searchTerm.trim()) return [];
 
@@ -253,8 +256,8 @@ export async function searchDishes(
           }
 
           const dish = firestoreDataToDish(doc.id, data);
-          // Only include approved dishes in search results
-          if (dish.status === 'approved') {
+          // Only include approved dishes in search results, unless requested otherwise
+          if (includeAllStatuses || dish.status === 'approved') {
             dishes.push(dish);
           }
         });
@@ -292,8 +295,8 @@ export async function searchDishes(
             }
 
             const dish = firestoreDataToDish(doc.id, data);
-            // Only include approved dishes in search results
-            if (dish.status === 'approved') {
+            // Only include approved dishes in search results, unless requested otherwise
+            if (includeAllStatuses || dish.status === 'approved') {
               dishes.push(dish);
             }
           });
@@ -422,12 +425,62 @@ export async function getAllDishes(
   }
 }
 
+export async function getDishesPaginated(
+  pageSize: number = 20,
+  includeAllStatuses = false,
+  lastDoc?: QueryDocumentSnapshot,
+): Promise<{
+  dishes: Dish[];
+  lastDoc: QueryDocumentSnapshot | null;
+  hasMore: boolean;
+}> {
+  if (!db) return { dishes: [], lastDoc: null, hasMore: false };
+
+  try {
+    const dishesRef = collection(db, 'dishes');
+    const constraints: QueryConstraint[] = [
+      orderBy('createdAt', 'desc'),
+      limit(pageSize + 1),
+    ];
+
+    if (!includeAllStatuses) {
+      constraints.push(where('status', '==', 'approved'));
+    }
+
+    if (lastDoc) {
+      constraints.push(startAfter(lastDoc));
+    }
+
+    const q = query(dishesRef, ...constraints);
+    const querySnapshot = await getDocs(q);
+
+    const dishes: Dish[] = [];
+    querySnapshot.docs.slice(0, pageSize).forEach((doc) => {
+      dishes.push(firestoreDataToDish(doc.id, doc.data()));
+    });
+
+    const hasMore = querySnapshot.docs.length > pageSize;
+    const lastVisible = hasMore
+      ? querySnapshot.docs[pageSize - 1]
+      : querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+
+    return { dishes, lastDoc: lastVisible, hasMore };
+  } catch (error) {
+    console.error('Error getting paginated dishes:', error);
+    return { dishes: [], lastDoc: null, hasMore: false };
+  }
+}
+
 export async function getTopDishes(
   pageSize: number = 10,
   tags?: DishTag[],
   category?: DishCategory,
   lastDoc?: QueryDocumentSnapshot,
-): Promise<{ dishes: Dish[]; hasMore: boolean; lastDoc: QueryDocumentSnapshot | null }> {
+): Promise<{
+  dishes: Dish[];
+  hasMore: boolean;
+  lastDoc: QueryDocumentSnapshot | null;
+}> {
   if (!db) return { dishes: [], hasMore: false, lastDoc: null };
 
   try {
@@ -496,7 +549,9 @@ export async function getTopDishes(
       // Find the last dish in the paginated results (after sorting)
       const lastDish = paginatedDishes[paginatedDishes.length - 1];
       // Find its corresponding document in the original querySnapshot (ordered by thumbsUp)
-      const lastDocSnapshot = querySnapshot.docs.find((doc) => doc.id === lastDish.id);
+      const lastDocSnapshot = querySnapshot.docs.find(
+        (doc) => doc.id === lastDish.id,
+      );
       lastDocument = lastDocSnapshot || null;
     }
 
@@ -824,52 +879,17 @@ export async function getMenuByDate(date: Date): Promise<Menu | null> {
 }
 
 export async function getCurrentMenu(): Promise<Menu | null> {
-  // Get Portugal time using Intl formatter to get actual Portugal date components
-  // This ensures we get the correct date components regardless of the user's local timezone
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Lisbon',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-
-  const parts = formatter.formatToParts(now);
-  const dateTime: { [key: string]: string } = {};
-  parts.forEach((part) => {
-    dateTime[part.type] = part.value;
-  });
-
-  // Extract Portugal date components
-  const ptYear = parseInt(dateTime.year!);
-  const ptMonth = parseInt(dateTime.month!) - 1; // 0-indexed
-  const ptDay = parseInt(dateTime.day!);
-  const ptHour = parseInt(dateTime.hour!);
-  const ptMinute = parseInt(dateTime.minute!);
-  const totalMinutes = ptHour * 60 + ptMinute;
-
-  // Determine which date to query
-  let queryYear = ptYear;
-  let queryMonth = ptMonth;
-  let queryDay = ptDay;
-
-  // After dinner (after 21:45), show next day's menu
-  if (totalMinutes > 1305) {
-    // Calculate tomorrow's date in Portugal timezone
-    const ptDate = new Date(ptYear, ptMonth, ptDay);
-    ptDate.setDate(ptDate.getDate() + 1);
-    queryYear = ptDate.getFullYear();
-    queryMonth = ptDate.getMonth();
-    queryDay = ptDate.getDate();
-  }
+  const displayDate = getMenuDisplayDate();
 
   // Create UTC date for query (midnight UTC of the target date)
   // This matches how dates are stored in Firebase
-  const currentDate = new Date(Date.UTC(queryYear, queryMonth, queryDay));
+  const currentDate = new Date(
+    Date.UTC(
+      displayDate.getFullYear(),
+      displayDate.getMonth(),
+      displayDate.getDate(),
+    ),
+  );
 
   return getMenuByDate(currentDate);
 }
@@ -1149,17 +1169,17 @@ export async function getMenusWithPendingImages(): Promise<
 /**
  * Get or create a unique device ID for tracking uploads
  */
-function getDeviceId(): string {
+export function getDeviceId(): string {
   if (typeof window === 'undefined') {
     return `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   }
 
-  let deviceId = localStorage.getItem('cantina_device_id');
+  let deviceId = localStorage.getItem(STORAGE_KEYS.DEVICE_ID);
   if (!deviceId) {
     deviceId = `device_${Date.now()}_${Math.random()
       .toString(36)
       .substring(2, 9)}`;
-    localStorage.setItem('cantina_device_id', deviceId);
+    localStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId);
   }
   return deviceId;
 }
@@ -1171,7 +1191,7 @@ function getDeviceId(): string {
 export function hasDeviceUploadedDishImage(dishId: string): boolean {
   if (typeof window === 'undefined') return false;
   const deviceId = getDeviceId();
-  const key = `cantina_dish_image_${dishId}_${deviceId}`;
+  const key = `${STORAGE_KEYS.DISH_IMAGE_PREFIX}${dishId}_${deviceId}`;
   return !!localStorage.getItem(key);
 }
 

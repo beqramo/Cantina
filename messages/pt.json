@@ -104,6 +104,22 @@
     "badgeNonProfit": "100% Sem fins lucrativos",
     "instagramFollow": "Seguir no Instagram"
   },
+
+  "ThankYou": {
+    "thankYouTitle": "Obrigado — a tua contribuição conta!",
+    "dishApproved": "O teu prato \"{dish}\" foi aprovado e adicionado.",
+    "imageApproved": "A tua imagem para \"{dish}\" foi aprovada — obrigado por contribuir!",
+    "close": "Fechar",
+    "view": "Ver",
+    "hide": "Ocultar"
+  },
+  "PendingReview": {
+    "title": "Em Revisão",
+    "singleDish": "O teu prato \"{dish}\" está a aguardar aprovação.",
+    "singleImage": "A tua imagem para \"{dish}\" está a aguardar aprovação.",
+    "multipleItems": "Tens {count} itens a aguardar aprovação.",
+    "close": "Fechar"
+  },
   "Welcome": {
     "title": "Bem-vindo à Cantina IPB! 🍽️",
     "subtitle": "O teu guia comunitário para os pratos da cantina do IPB",
@@ -132,7 +148,10 @@
     "loading": "A carregar...",
     "error": "Erro",
     "success": "Sucesso",
-    "password": "Palavra-passe"
+    "password": "Palavra-passe",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "page": "Página"
   },
   "Menu": {
     "dailyMenu": "Menu Diário",

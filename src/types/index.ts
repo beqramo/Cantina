@@ -115,3 +115,10 @@ export interface MenuDayJSON {
 
 // Support both single day object and array of days
 export type MenuJSON = MenuDayJSON | MenuDayJSON[];
+
+export interface PendingDishEntry {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  createdAt: number;
+}

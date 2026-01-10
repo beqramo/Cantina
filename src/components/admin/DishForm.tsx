@@ -118,7 +118,11 @@ export function DishForm({ dish, onSuccess, onCancel }: DishFormProps) {
       let imageUrl = dish?.imageUrl || '';
 
       if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
+        // Include dish name so the server can send an email notification
+        const nameForNotification = data.name || dish?.name || '';
+        imageUrl = await uploadImage(imageFile, {
+          dishName: nameForNotification,
+        });
       }
 
       if (dish) {

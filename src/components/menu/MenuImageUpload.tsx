@@ -121,14 +121,44 @@ export function MenuImageUpload({
     }
 
     try {
-      // Upload image with Turnstile token
+      // Determine a friendly name for notifications (menu item name if available)
+      const dishNameForNotification =
+        menu?.[mealType]?.[category]?.dishName || `${category} (${mealType})`;
+
+      // Log what will be sent for easier debugging in production
+      console.log(
+        '[MenuImageUpload] Sending notification for:',
+        dishNameForNotification,
+      );
+
+      // Upload image with Turnstile token and dish name for server notifications
       const imageUrl = await uploadImage(imageFile, {
         isRequest: false,
         turnstileToken: turnstileToken || undefined,
+        dishName: dishNameForNotification,
       });
 
       // Update menu item
       await updateMenuItemImage(menu.id, mealType, category, imageUrl);
+
+      // Save to pending approvals so we can notify later when approved
+      const dishId = menu?.[mealType]?.[category]?.dishId;
+      if (dishId) {
+        try {
+          const { addPendingApproval } = await import(
+            '@/lib/pending-approvals'
+          );
+          addPendingApproval({
+            id: dishId,
+            type: 'image',
+            name: dishNameForNotification,
+            imageUrl,
+            createdAt: Date.now(),
+          });
+        } catch (e) {
+          console.error('Failed to save pending approval for menu image', e);
+        }
+      }
 
       if (analytics) {
         logEvent(analytics, 'upload_image_success', {

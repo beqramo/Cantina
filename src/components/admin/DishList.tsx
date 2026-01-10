@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllDishes, deleteDish } from '@/lib/firestore';
+import { deleteDish, getDishesPaginated, searchDishes } from '@/lib/firestore';
 import { Dish } from '@/types';
 import { DishCard } from '@/components/dish/DishCard';
 import { Button } from '@/components/ui/button';
@@ -15,15 +15,32 @@ import {
 import { DishForm } from './DishForm';
 import { ImageViewer } from '@/components/dish/ImageViewer';
 import { useTranslations } from 'next-intl';
-import { Trash2, Edit, Plus, Maximize2 } from 'lucide-react';
+import {
+  Trash2,
+  Edit,
+  Plus,
+  Maximize2,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/useDebounce';
+import { QueryDocumentSnapshot } from 'firebase/firestore';
 
 export function DishList() {
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+  const [pageStack, setPageStack] = useState<QueryDocumentSnapshot[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const PAGE_SIZE = 12;
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [viewingImage, setViewingImage] = useState<{
@@ -31,16 +48,39 @@ export function DishList() {
     alt: string;
   } | null>(null);
   const t = useTranslations('Admin');
+  const tCommon = useTranslations('Common');
+  const tSearch = useTranslations('Search');
 
   useEffect(() => {
-    loadDishes();
-  }, []);
+    // Reset pagination when search term changes
+    setLastDoc(null);
+    setPageStack([]);
+    loadDishes(null, true);
+  }, [debouncedSearch]);
 
-  const loadDishes = async () => {
+  const loadDishes = async (
+    cursor: QueryDocumentSnapshot | null = null,
+    reset = false,
+  ) => {
     setLoading(true);
     try {
-      const allDishes = await getAllDishes(); // Returns all dishes including pending
-      setDishes(allDishes);
+      if (debouncedSearch.trim()) {
+        const results = await searchDishes(debouncedSearch, [], true);
+        setDishes(results);
+        setHasMore(false);
+      } else {
+        const {
+          dishes: paginatedDishes,
+          lastDoc: nextCursor,
+          hasMore: more,
+        } = await getDishesPaginated(PAGE_SIZE, true, cursor || undefined);
+        setDishes(paginatedDishes);
+        setLastDoc(nextCursor);
+        setHasMore(more);
+        if (reset) {
+          setPageStack([]);
+        }
+      }
     } catch (error) {
       console.error('Error loading dishes:', error);
     } finally {
@@ -48,11 +88,29 @@ export function DishList() {
     }
   };
 
+  const handleNextPage = () => {
+    if (lastDoc) {
+      setPageStack((prev: QueryDocumentSnapshot[]) => [...prev, lastDoc]);
+      loadDishes(lastDoc);
+    }
+  };
+
+  const handlePrevPage = () => {
+    const newStack = [...pageStack];
+    newStack.pop(); // Remove current page's start
+    const prevCursor =
+      newStack.length > 0 ? newStack[newStack.length - 1] : null;
+    setPageStack(newStack);
+    loadDishes(prevCursor);
+  };
+
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this dish?')) {
       try {
         await deleteDish(id);
-        loadDishes();
+        const currentCursor =
+          pageStack.length > 0 ? pageStack[pageStack.length - 1] : null;
+        loadDishes(currentCursor);
       } catch (error) {
         console.error('Error deleting dish:', error);
       }
@@ -62,7 +120,9 @@ export function DishList() {
   const handleSuccess = () => {
     setShowAddDialog(false);
     setEditingDish(null);
-    loadDishes();
+    const currentCursor =
+      pageStack.length > 0 ? pageStack[pageStack.length - 1] : null;
+    loadDishes(currentCursor);
   };
 
   if (loading) {
@@ -77,8 +137,20 @@ export function DishList() {
 
   return (
     <div className='space-y-6'>
-      <div className='flex justify-between items-center'>
-        <h2 className='text-2xl font-bold'>{t('allDishes')}</h2>
+      <div className='flex flex-col md:flex-row gap-4 items-center justify-between mb-6'>
+        <div className='flex flex-col md:flex-row gap-4 items-center w-full md:w-auto'>
+          <h2 className='text-2xl font-bold'>{t('allDishes')}</h2>
+          <div className='relative w-full md:w-80'>
+            <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+            <Input
+              type='text'
+              placeholder={tSearch('searchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='pl-10'
+            />
+          </div>
+        </div>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
             <Button>
@@ -99,7 +171,7 @@ export function DishList() {
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-        {dishes.map((dish) => (
+        {dishes.map((dish: Dish) => (
           <Card key={dish.id} className='overflow-hidden'>
             <div
               className={`relative aspect-video w-full ${
@@ -159,7 +231,7 @@ export function DishList() {
                   )}
                   {dish.tags && dish.tags.length > 0 && (
                     <div className='flex flex-wrap gap-1 mt-2'>
-                      {dish.tags.map((tag) => (
+                      {dish.tags.map((tag: string) => (
                         <Badge key={tag} variant='outline' className='text-xs'>
                           {tag}
                         </Badge>
@@ -204,6 +276,27 @@ export function DishList() {
           </Card>
         ))}
       </div>
+      {!debouncedSearch.trim() && (
+        <div className='flex items-center justify-center gap-4 mt-8'>
+          <Button
+            variant='outline'
+            onClick={handlePrevPage}
+            disabled={pageStack.length === 0 || loading}>
+            <ChevronLeft className='h-4 w-4 mr-2' />
+            {tCommon('previous')}
+          </Button>
+          <span className='text-sm text-muted-foreground'>
+            {tCommon('page')} {pageStack.length + 1}
+          </span>
+          <Button
+            variant='outline'
+            onClick={handleNextPage}
+            disabled={!hasMore || loading}>
+            {tCommon('next')}
+            <ChevronRight className='h-4 w-4 ml-2' />
+          </Button>
+        </div>
+      )}
       {viewingImage && (
         <ImageViewer
           imageUrl={viewingImage.url}

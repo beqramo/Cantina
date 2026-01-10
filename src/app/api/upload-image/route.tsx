@@ -346,24 +346,26 @@ export async function POST(request: NextRequest) {
       // Non-blocking error, we still return success but this image might be missed by specific cleanup logic
     }
 
-    // Send email notification if dishName is provided
     const dishName = formData.get('dishName') as string | null;
     const nickname = formData.get('nickname') as string | null;
 
     if (dishName) {
-      // Fire and forget email notification
-      sendEmail({
-        subject: `New Image Upload for: ${dishName}`,
-        react: (
-          <ImageUploadEmail
-            dishName={dishName}
-            nickname={nickname || undefined}
-            imageUrl={publicUrl}
-          />
-        ),
-      }).catch((err) =>
-        console.error('[Image Upload] Failed to send notification:', err),
-      );
+      try {
+        console.log(`[Image Upload] Sending email for: ${dishName}`);
+        await sendEmail({
+          subject: `New Image Upload for: ${dishName}`,
+          react: (
+            <ImageUploadEmail
+              dishName={dishName}
+              nickname={nickname || undefined}
+              imageUrl={publicUrl}
+            />
+          ),
+        });
+        console.log('[Image Upload] Email sent successfully');
+      } catch (err) {
+        console.error('[Image Upload] Failed to send notification:', err);
+      }
     }
 
     return NextResponse.json(

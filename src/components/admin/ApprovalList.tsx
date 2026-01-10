@@ -17,7 +17,7 @@ import { MealType, DishCategory, Menu, PendingDishImage, Dish } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Check, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
@@ -72,58 +72,58 @@ function PendingDishRequestCard({
             </div>
           </div>
 
-            {/* Carousel Navigation */}
-            {hasMultipleImages && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(
-                      (prev) =>
-                        (prev - 1 + dishImages.length) % dishImages.length,
-                    );
-                  }}
-                  className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
-                  <ChevronLeft className='h-5 w-5 text-white' />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(
-                      (prev) => (prev + 1) % dishImages.length,
-                    );
-                  }}
-                  className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
-                  <ChevronRight className='h-5 w-5 text-white' />
-                </button>
+          {/* Carousel Navigation */}
+          {hasMultipleImages && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex(
+                    (prev) =>
+                      (prev - 1 + dishImages.length) % dishImages.length,
+                  );
+                }}
+                className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
+                <ChevronLeft className='h-5 w-5 text-white' />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex(
+                    (prev) => (prev + 1) % dishImages.length,
+                  );
+                }}
+                className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
+                <ChevronRight className='h-5 w-5 text-white' />
+              </button>
 
-                {/* Image Indicators */}
-                <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10'>
-                  {dishImages.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentImageIndex(idx);
-                      }}
-                      className={`h-2 rounded-full transition-all ${
-                        idx === currentImageIndex
-                          ? 'w-6 bg-white'
-                          : 'w-2 bg-white/50 hover:bg-white/75'
-                      }`}
-                      aria-label={`Go to image ${idx + 1}`}
-                    />
-                  ))}
-                </div>
+              {/* Image Indicators */}
+              <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10'>
+                {dishImages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(idx);
+                    }}
+                    className={`h-2 rounded-full transition-all ${
+                      idx === currentImageIndex
+                        ? 'w-6 bg-white'
+                        : 'w-2 bg-white/50 hover:bg-white/75'
+                    }`}
+                    aria-label={`Go to image ${idx + 1}`}
+                  />
+                ))}
+              </div>
 
-                {/* Image Counter */}
-                <div className='absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded px-2 py-1 text-xs text-white z-10'>
-                  {currentImageIndex + 1} / {dishImages.length}
-                </div>
-              </>
-            )}
-          </div>
-        )}
+              {/* Image Counter */}
+              <div className='absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded px-2 py-1 text-xs text-white z-10'>
+                {currentImageIndex + 1} / {dishImages.length}
+              </div>
+            </>
+          )}
+        </div>
+      )}
       <CardContent className='p-4 flex flex-col flex-1'>
         <div className='flex-1 space-y-2 mb-4'>
           <div className='flex items-start justify-between gap-2'>
@@ -153,7 +153,10 @@ function PendingDishRequestCard({
           </div>
         </div>
         <div className='flex gap-2'>
-          <Button onClick={() => onApprove(dish.id)} className='flex-1' size='sm'>
+          <Button
+            onClick={() => onApprove(dish.id)}
+            className='flex-1'
+            size='sm'>
             <Check className='h-4 w-4 mr-2' />
             {t('approve')}
           </Button>
@@ -338,6 +341,7 @@ function DishImageApprovalCard({
 }
 
 export function ApprovalList() {
+  const locale = useLocale();
   const [requests, setRequests] = useState<Dish[]>([]);
   const [menuImages, setMenuImages] = useState<
     Array<{
@@ -656,7 +660,9 @@ export function ApprovalList() {
                   <div className='flex-1 space-y-2 mb-4'>
                     <div className='flex items-start justify-between gap-2'>
                       <div className='flex-1'>
-                        <h3 className='font-semibold text-lg'>{item.menuItem.dishName}</h3>
+                        <h3 className='font-semibold text-lg'>
+                          {item.menuItem.dishName}
+                        </h3>
                         <div className='flex gap-2 mt-2'>
                           <Badge variant='secondary'>{item.category}</Badge>
                           <Badge variant='outline'>
@@ -665,7 +671,7 @@ export function ApprovalList() {
                               : tMenu('dinner') || 'Dinner'}
                           </Badge>
                           <Badge variant='outline'>
-                            {formatMenuDate(item.menu.date)}
+                            {formatMenuDate(item.menu.date, locale)}
                           </Badge>
                         </div>
                       </div>

@@ -172,11 +172,12 @@ export function DishRequestForm({
       // Upload image if provided
       let imageUrl: string | null = null;
       if (imageFile) {
-        imageUrl = await uploadImage(
-          imageFile,
-          true,
-          turnstileToken || undefined,
-        );
+        imageUrl = await uploadImage(imageFile, {
+          isRequest: true,
+          turnstileToken: turnstileToken || undefined,
+          dishName: data.name,
+          nickname: data.nickname?.trim(),
+        });
       }
 
       // Create request via API (handles notification server-side)
@@ -209,6 +210,20 @@ export function DishRequestForm({
           dish_id: dishId,
           has_image: !!imageFile,
         });
+      }
+
+      // Save to pending approvals so we can notify later when approved
+      try {
+        const { addPendingApproval } = await import('@/lib/pending-approvals');
+        addPendingApproval({
+          id: dishId,
+          type: 'dish',
+          name: data.name,
+          createdAt: Date.now(),
+        });
+      } catch (e) {
+        // Non-fatal
+        console.error('Failed to save pending approval', e);
       }
 
       setSuccess(true);

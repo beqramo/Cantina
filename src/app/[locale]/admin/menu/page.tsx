@@ -250,7 +250,7 @@ export default function AdminMenuPage() {
 
   const handleEditMenu = (menu: Menu) => {
     setEditingMenu(menu);
-    const date = formatMenuDate(menu.date);
+    const date = formatMenuDate(menu.date, locale);
 
     setFormData({
       date,
@@ -630,7 +630,7 @@ export default function AdminMenuPage() {
                 {menus.map((menu) => (
                   <Card key={menu.id}>
                     <CardHeader>
-                      <CardTitle>{formatMenuDate(menu.date)}</CardTitle>
+                      <CardTitle>{formatMenuDate(menu.date, locale)}</CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-2'>
                       <div>

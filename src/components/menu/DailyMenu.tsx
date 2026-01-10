@@ -6,7 +6,7 @@ import { getCurrentMealType, formatMenuDate } from '@/lib/time';
 import { Menu, MealType } from '@/types';
 import { MenuDishCard } from './MenuDishCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { DISH_CATEGORIES } from '@/lib/constants';
 import { FiSearch } from 'react-icons/fi';
 import { Soup } from 'lucide-react';
@@ -18,6 +18,7 @@ import { CACHE_KEYS, CACHE_TTL } from '@/lib/cache-keys';
 
 export function DailyMenu() {
   const t = useTranslations('Menu');
+  const locale = useLocale();
 
   // Use SWR for fetching current menu
   const {
@@ -118,7 +119,7 @@ export function DailyMenu() {
             {t('lunchMenu') || 'Lunch Menu'}
           </h2>
           <span className='text-sm text-muted-foreground'>
-            {formatMenuDate(menu.date)}
+            {formatMenuDate(menu.date, locale)}
           </span>
         </div>
 
@@ -172,7 +173,7 @@ export function DailyMenu() {
             : t('dinnerMenu') || 'Dinner Menu'}
         </h2>
         <span className='text-sm text-muted-foreground'>
-          {formatMenuDate(menu.date)}
+          {formatMenuDate(menu.date, locale)}
         </span>
       </div>
 

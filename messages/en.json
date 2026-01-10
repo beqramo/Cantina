@@ -104,6 +104,21 @@
     "badgeNonProfit": "100% Non-profit",
     "instagramFollow": "Follow on Instagram"
   },
+  "ThankYou": {
+    "thankYouTitle": "Thanks — your contribution matters!",
+    "dishApproved": "Your dish \"{dish}\" has been approved and added.",
+    "imageApproved": "Your image for \"{dish}\" was approved — thank you for contributing!",
+    "close": "Close",
+    "view": "View",
+    "hide": "Hide"
+  },
+  "PendingReview": {
+    "title": "Under Review",
+    "singleDish": "Your dish \"{dish}\" is waiting for approval.",
+    "singleImage": "Your image for \"{dish}\" is waiting for approval.",
+    "multipleItems": "You have {count} items waiting for approval.",
+    "close": "Close"
+  },
   "Welcome": {
     "title": "Welcome to Cantina IPB! 🍽️",
     "subtitle": "Your community guide to IPB canteen dishes",
@@ -132,7 +147,10 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "password": "Password"
+    "password": "Password",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page"
   },
   "Menu": {
     "dailyMenu": "Daily Menu",

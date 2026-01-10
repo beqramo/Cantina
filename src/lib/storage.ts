@@ -315,54 +315,6 @@ export async function uploadImage(
   } catch (error) {
     console.error('Error uploading image:', error);
 
-    // Fallback to direct Firebase upload if API fails
-    console.log('Attempting fallback to direct Firebase upload...');
-    return uploadImageDirect(file, isRequest);
-  }
-}
-
-/**
- * Direct Firebase upload with client-side compression only
- * Used as fallback if server API is unavailable
- */
-async function uploadImageDirect(
-  file: File,
-  isRequest: boolean = false,
-): Promise<string> {
-  const { storage } = await import('@/lib/firebase-client');
-
-  if (!storage) {
-    throw new Error('Firebase Storage is not initialized');
-  }
-
-  const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
-
-  try {
-    // Compress image before upload
-    const compressedFile = await compressImageClientSide(file);
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2, 9);
-    const folder = isRequest ? 'request-images' : 'dish-images';
-    const filename = `${folder}/${timestamp}_${randomId}_${compressedFile.name}`;
-    const storageRef = ref(storage, filename);
-
-    // Upload compressed file with explicit content type metadata
-    const metadata = {
-      contentType: compressedFile.type || 'image/jpeg',
-    };
-    await uploadBytes(storageRef, compressedFile, metadata);
-
-    // Get download URL
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
-  } catch (error) {
-    console.error('Error in direct upload:', error);
-    throw new Error(
-      error instanceof Error
-        ? `Failed to upload image: ${error.message}`
-        : 'Failed to upload image. Please try again.',
-    );
+    throw error;
   }
 }

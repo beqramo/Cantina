@@ -7,6 +7,8 @@ import { logEvent } from 'firebase/analytics';
 import { Link } from '@/lib/navigation';
 import { DishSearch } from '@/components/dish/DishSearch';
 import { DailyMenu } from '@/components/menu/DailyMenu';
+import { ThankYouCard } from '@/components/ThankYouCard';
+import { PendingReviewCard } from '@/components/PendingReviewCard';
 import { Info, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -55,7 +57,7 @@ export default function HomePage() {
         <div className='max-w-4xl mx-auto space-y-12'>
           {/* Mission Statement */}
           {!isDismissed && (
-            <section className='relative overflow-hidden rounded-2xl border bg-gradient-to-br from-amber-500/5 via-primary/5 to-transparent p-6 md:p-8 transition-all duration-300 animate-in fade-in slide-in-from-top-4'>
+            <section className='relative overflow-hidden rounded-2xl border bg-linear-to-br from-amber-500/5 via-primary/5 to-transparent p-6 md:p-8 transition-all duration-300 animate-in fade-in slide-in-from-top-4'>
               <Button
                 variant='ghost'
                 size='icon'
@@ -64,7 +66,7 @@ export default function HomePage() {
                 <X className='h-4 w-4' />
               </Button>
               <div className='relative z-10 flex flex-col md:flex-row items-center gap-6 pr-4'>
-                <div className='flex-shrink-0 p-3 rounded-xl bg-primary/10 text-primary'>
+                <div className='shrink-0 p-3 rounded-xl bg-primary/10 text-primary'>
                   <Sparkles className='h-8 w-8' />
                 </div>
                 <div className='flex-1 text-center md:text-left'>
@@ -90,6 +92,8 @@ export default function HomePage() {
             </section>
           )}
 
+          <PendingReviewCard />
+          <ThankYouCard />
           <DishSearch />
           <DailyMenu />
         </div>
