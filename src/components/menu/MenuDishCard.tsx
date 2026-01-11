@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { MenuItem, DishCategory } from '@/types';
 import { Menu, MealType } from '@/types';
 import { DishCardBase } from '@/components/dish/DishCardBase';
@@ -16,7 +16,7 @@ interface MenuDishCardProps {
   onImageUploaded?: () => void;
 }
 
-export function MenuDishCard({
+export const MenuDishCard = memo(function MenuDishCard({
   menu,
   mealType,
   category,
@@ -65,4 +65,4 @@ export function MenuDishCard({
       />
     </>
   );
-}
+});

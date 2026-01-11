@@ -5,6 +5,10 @@ import {
   getPendingApprovals,
   removePendingApproval,
   updateLastChecked,
+  getResolvedApprovals,
+  addResolvedApproval,
+  removeResolvedApproval,
+  RESOLVED_UPDATE_EVENT,
   PendingApprovalEntry,
 } from '@/lib/pending-approvals';
 import { getDishById } from '@/lib/firestore';
@@ -27,8 +31,30 @@ export function ThankYouCard() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    const syncApprovals = () => {
+      const items = getResolvedApprovals();
+      setApprovedItems(items as ApprovedItem[]);
+      if (items.length > 0) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key?.includes('resolved_approvals')) syncApprovals();
+    };
+
+    syncApprovals();
     checkApprovals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    window.addEventListener(RESOLVED_UPDATE_EVENT, syncApprovals);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener(RESOLVED_UPDATE_EVENT, syncApprovals);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   const checkApprovals = async () => {
@@ -40,7 +66,7 @@ export function ThankYouCard() {
     // Process checks
     await Promise.all(
       pending.map(async (entry) => {
-        // Skip if checked recently
+        // Skip if checked recently (within 60s)
         if (
           entry.lastChecked &&
           Date.now() - entry.lastChecked < CHECK_THROTTLE_MS
@@ -49,26 +75,28 @@ export function ThankYouCard() {
         }
 
         try {
-          // Update last checked immediately
           updateLastChecked(entry.id, entry.imageUrl);
-
-          // Fetch fresh dish data
           const dish = await getDishById(entry.id);
 
           if (!dish) {
-            // Should likely not happen unless deleted. If so, maybe remove pending?
-            // For now, let's ignore.
+            removePendingApproval((e) => e.id === entry.id);
             return;
           }
 
           if (entry.type === 'dish') {
             if (dish.status === 'approved') {
-              // Approved!
-              newApprovedItems.push({ ...entry, dishName: dish.name });
-              // Remove from pending so we don't show it again after dismiss/reload
-              removePendingApproval((e) => e.id === entry.id);
+              // Double check if still pending (parallel logic safety)
+              const currentPending = getPendingApprovals();
+              if (
+                currentPending.some(
+                  (e) => e.id === entry.id && e.type === 'dish',
+                )
+              ) {
+                addResolvedApproval({ ...entry, dishName: dish.name });
+                removePendingApproval((e) => e.id === entry.id);
+              }
             } else if (dish.status === 'rejected') {
-              // Rejected :( Remove silently
+              removePendingApproval((e) => e.id === entry.id);
             }
           } else if (entry.type === 'image' && entry.imageUrl) {
             const isPending = dish.pendingImages?.some(
@@ -80,15 +108,19 @@ export function ThankYouCard() {
 
             if (!isPending) {
               if (isApproved) {
-                // Approved!
-                newApprovedItems.push({ ...entry, dishName: dish.name });
-                removePendingApproval(
+                // Double check if it's still pending before resolving (parallel logic safety)
+                const currentPending = getPendingApprovals();
+                const stillPending = currentPending.some(
                   (e) => e.id === entry.id && e.imageUrl === entry.imageUrl,
                 );
+
+                if (stillPending) {
+                  addResolvedApproval({ ...entry, dishName: dish.name });
+                  removePendingApproval(
+                    (e) => e.id === entry.id && e.imageUrl === entry.imageUrl,
+                  );
+                }
               } else {
-                // Not pending and not approved = Rejected (or deleted)
-                // BUT: Give it a grace period (e.g. 5 mins) to account for Firestore consistency/propagation
-                // prevents removing a just-uploaded image that hasn't appeared in pendingImages yet
                 const isNew = Date.now() - entry.createdAt < 5 * 60 * 1000;
                 if (!isNew) {
                   removePendingApproval(
@@ -103,57 +135,46 @@ export function ThankYouCard() {
         }
       }),
     );
-
-    if (newApprovedItems.length > 0) {
-      setApprovedItems((prev) => [...prev, ...newApprovedItems]);
-      setIsVisible(true);
-    }
   };
 
   const handleDismiss = (index: number) => {
-    // Optimistic UI update
-    setApprovedItems((prev) => {
-      const newItems = prev.filter((_, i) => i !== index);
-      if (newItems.length === 0) {
-        setIsVisible(false);
-      }
-      return newItems;
-    });
-    // Also remove from pending approvals (though it should be gone already from checking loop)
-    // But if we want to be safe or if the loop didn't remove it yet
-    if (approvedItems[index]) {
-      const item = approvedItems[index];
-      if (item.type === 'dish') {
-        removePendingApproval((e) => e.id === item.id);
-      } else {
-        removePendingApproval(
-          (e) => e.id === item.id && e.imageUrl === item.imageUrl,
-        );
-      }
-    }
+    const item = approvedItems[index];
+    if (!item) return;
+
+    removeResolvedApproval(
+      (e) =>
+        e.id === item.id &&
+        e.type === item.type &&
+        (e.imageUrl ?? '') === (item.imageUrl ?? ''),
+    );
   };
 
   const handleDismissAll = () => {
-    setApprovedItems([]);
-    setIsVisible(false);
+    approvedItems.forEach((_, i) => handleDismiss(i));
   };
 
-  if (!isVisible || approvedItems.length === 0) return null;
+  if (approvedItems.length === 0) return null;
 
   const firstItem = approvedItems[0];
   const otherItems = approvedItems.slice(1);
 
   return (
-    <div className='w-full max-w-4xl mx-auto mb-6 px-1 transition-all duration-500 ease-in-out'>
+    <div className='w-full max-w-4xl mx-auto mb-8 px-2 transition-all duration-500 ease-in-out'>
       <div
         className={cn(
-          'relative overflow-hidden rounded-xl border bg-card shadow-sm transition-all',
-          'bg-linear-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800',
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4',
+          'relative overflow-hidden rounded-2xl border backdrop-blur-2xl transition-all duration-500',
+          'bg-card/95 border-border shadow-2xl shadow-black/5',
+          isVisible
+            ? 'opacity-100 translate-y-0 scale-100'
+            : 'opacity-0 -translate-y-4 scale-95',
         )}>
+        {/* Subtle decorative glow */}
+        <div className='absolute -right-20 -top-20 w-64 h-64 bg-emerald-500/3 rounded-full blur-3xl' />
+        <div className='absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-500/3 rounded-full blur-3xl' />
+
         {/* Main Card Content (First Item) */}
         <div className='p-4 sm:p-5 flex items-start gap-4'>
-          <div className='shrink-0 p-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400'>
+          <div className='shrink-0 w-11 h-11 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20'>
             <Sparkles className='w-5 h-5' />
           </div>
 

@@ -629,22 +629,48 @@ export default function AdminMenuPage() {
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
                 {menus.map((menu) => (
                   <Card key={menu.id}>
-                    <CardHeader>
-                      <CardTitle>{formatMenuDate(menu.date, locale)}</CardTitle>
+                    <CardHeader className='pb-3'>
+                      <div className='flex justify-between items-start gap-4'>
+                        <CardTitle>
+                          {formatMenuDate(menu.date, locale)}
+                        </CardTitle>
+                        <span className='text-[10px] font-mono text-muted-foreground  bg-muted/50 px-1.5 py-0.5 rounded border'>
+                          ID:{' '}
+                          <span className='font-medium select-all'>
+                            {menu.id}
+                          </span>
+                        </span>
+                      </div>
                     </CardHeader>
                     <CardContent className='space-y-2'>
                       <div>
                         <strong>{tMenu('lunch') || 'Lunch'}:</strong>
                         <ul className='list-disc list-inside text-sm mt-1'>
                           {DISH_CATEGORIES.map((cat) => (
-                            <li key={cat}>
-                              {menu.lunch[cat]?.dishName || '-'}
+                            <li
+                              key={cat}
+                              className='flex justify-between items-start gap-2 py-0.5'>
+                              <span className='line-clamp-1'>
+                                {menu.lunch[cat]?.dishName || '-'}
+                              </span>
+                              {menu.lunch[cat]?.dishId && (
+                                <span className='text-[10px] font-mono text-muted-foreground select-all mt-0.5'>
+                                  #{menu.lunch[cat]?.dishId?.slice(-4)}
+                                </span>
+                              )}
                             </li>
                           ))}
                           {menu.lunch.Sopa?.dishName && (
-                            <li className='font-medium text-orange-600 dark:text-orange-400'>
-                              {tMenu('soup') || 'Soup'}:{' '}
-                              {menu.lunch.Sopa.dishName}
+                            <li className='font-medium text-orange-600 dark:text-orange-400 flex justify-between items-start gap-2 pt-1 border-t border-orange-100 dark:border-orange-900/30 mt-1'>
+                              <span className='line-clamp-1'>
+                                {tMenu('soup') || 'Soup'}:{' '}
+                                {menu.lunch.Sopa.dishName}
+                              </span>
+                              {menu.lunch.Sopa?.dishId && (
+                                <span className='text-[10px] font-mono opacity-60 select-all mt-0.5'>
+                                  #{menu.lunch.Sopa?.dishId?.slice(-4)}
+                                </span>
+                              )}
                             </li>
                           )}
                         </ul>
@@ -654,14 +680,30 @@ export default function AdminMenuPage() {
                           <strong>{tMenu('dinner') || 'Dinner'}:</strong>
                           <ul className='list-disc list-inside text-sm mt-1'>
                             {DISH_CATEGORIES.map((cat) => (
-                              <li key={cat}>
-                                {menu.dinner![cat]?.dishName || '-'}
+                              <li
+                                key={cat}
+                                className='flex justify-between items-start gap-2 py-0.5'>
+                                <span className='line-clamp-1'>
+                                  {menu.dinner![cat]?.dishName || '-'}
+                                </span>
+                                {menu.dinner![cat]?.dishId && (
+                                  <span className='text-[10px] font-mono text-muted-foreground select-all mt-0.5'>
+                                    #{menu.dinner![cat]?.dishId?.slice(-4)}
+                                  </span>
+                                )}
                               </li>
                             ))}
                             {menu.dinner.Sopa?.dishName && (
-                              <li className='font-medium text-orange-600 dark:text-orange-400'>
-                                {tMenu('soup') || 'Soup'}:{' '}
-                                {menu.dinner.Sopa.dishName}
+                              <li className='font-medium text-orange-600 dark:text-orange-400 flex justify-between items-start gap-2 pt-1 border-t border-orange-100 dark:border-orange-900/30 mt-1'>
+                                <span className='line-clamp-1'>
+                                  {tMenu('soup') || 'Soup'}:{' '}
+                                  {menu.dinner.Sopa.dishName}
+                                </span>
+                                {menu.dinner.Sopa?.dishId && (
+                                  <span className='text-[10px] font-mono opacity-60 select-all mt-0.5'>
+                                    #{menu.dinner.Sopa?.dishId?.slice(-4)}
+                                  </span>
+                                )}
                               </li>
                             )}
                           </ul>

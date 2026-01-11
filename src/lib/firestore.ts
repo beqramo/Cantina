@@ -1371,3 +1371,102 @@ export async function rejectPendingDishImage(
     throw error;
   }
 }
+
+// Menu navigation functions
+export async function checkMenuExists(date: Date): Promise<boolean> {
+  if (!db) return false;
+
+  try {
+    const menu = await getMenuByDate(date);
+    return menu !== null;
+  } catch (error) {
+    console.error('Error checking menu existence:', error);
+    return false;
+  }
+}
+
+export async function getPreviousMenuDate(
+  currentDate: Date,
+  rangeDays: number = 7,
+): Promise<Date | null> {
+  if (!db) return null;
+
+  try {
+    // Create UTC dates for consistent comparison
+    const startOfRange = new Date(Date.UTC(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate() - rangeDays,
+    ));
+    const endOfRange = new Date(Date.UTC(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate() - 1,
+    ));
+
+    const menusRef = collection(db, 'menus');
+    
+    // Query only previous menus within range, ordered by date descending
+    const q = query(
+      menusRef,
+      where('date', '>=', Timestamp.fromDate(startOfRange)),
+      where('date', '<=', Timestamp.fromDate(endOfRange)),
+      orderBy('date', 'desc'),
+      limit(1)
+    );
+
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const data = querySnapshot.docs[0].data();
+      return (data.date as Timestamp)?.toDate() || null;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error getting previous menu date:', error);
+    return null;
+  }
+}
+
+export async function getNextMenuDate(
+  currentDate: Date,
+  rangeDays: number = 7,
+): Promise<Date | null> {
+  if (!db) return null;
+
+  try {
+    // Create UTC dates for consistent comparison
+    const startOfRange = new Date(Date.UTC(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate() + 1,
+    ));
+    const endOfRange = new Date(Date.UTC(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate() + rangeDays,
+    ));
+
+    const menusRef = collection(db, 'menus');
+    
+    // Query only next menus within range, ordered by date ascending
+    const q = query(
+      menusRef,
+      where('date', '>=', Timestamp.fromDate(startOfRange)),
+      where('date', '<=', Timestamp.fromDate(endOfRange)),
+      orderBy('date', 'asc'),
+      limit(1)
+    );
+
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const data = querySnapshot.docs[0].data();
+      return (data.date as Timestamp)?.toDate() || null;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error getting next menu date:', error);
+    return null;
+  }
+}

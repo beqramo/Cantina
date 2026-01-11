@@ -33,6 +33,7 @@ const ALLOWED_FOLDERS = ['dish-images', 'request-images'];
 
 /**
  * Compress image using sharp with iterative quality reduction
+ * Adds a "cantina-ipb" watermark to the bottom-left corner
  * Ensures output is under MAX_OUTPUT_SIZE
  */
 async function compressImage(
@@ -51,6 +52,39 @@ async function compressImage(
       fit: 'inside',
     });
   }
+
+  // Create watermark SVG
+  // Size based on common mobile/web resolution (approx 4-5% of width)
+  const watermarkWidth = Math.max(
+    100,
+    Math.floor((metadata.width || MAX_WIDTH) * 0.15),
+  );
+  const watermarkHeight = Math.floor(watermarkWidth * 0.25);
+
+  const watermarkSvg = `
+    <svg width="${watermarkWidth}" height="${watermarkHeight}">
+      <style>
+        .text {
+          fill: rgba(255, 255, 255, 0.5);
+          font-family: sans-serif;
+          font-weight: bold;
+          font-size: ${Math.floor(watermarkHeight * 0.7)}px;
+        }
+      </style>
+      <text x="10" y="${Math.floor(
+        watermarkHeight * 0.8,
+      )}" class="text">cantina-ipb</text>
+    </svg>
+  `;
+
+  // Apply watermark - do this before compression
+  sharpInstance = sharpInstance.composite([
+    {
+      input: Buffer.from(watermarkSvg),
+      gravity: 'southwest',
+      blend: 'over',
+    },
+  ]);
 
   // Output format - prefer webp for best compression
   const outputMimeType = 'image/webp';
@@ -91,6 +125,15 @@ async function compressImage(
       fit: 'inside',
     });
 
+    // Re-apply watermark on smaller image
+    sharpInstance = sharpInstance.composite([
+      {
+        input: Buffer.from(watermarkSvg),
+        gravity: 'southwest',
+        blend: 'over',
+      },
+    ]);
+
     compressedBuffer = await sharpInstance
       .webp({
         quality: 60,
@@ -116,6 +159,13 @@ async function compressImage(
       withoutEnlargement: true,
       fit: 'inside',
     })
+    .composite([
+      {
+        input: Buffer.from(watermarkSvg),
+        gravity: 'southwest',
+        blend: 'over',
+      },
+    ])
     .webp({
       quality: 40,
       effort: 6,

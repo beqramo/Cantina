@@ -150,7 +150,8 @@
     "password": "Password",
     "previous": "Previous",
     "next": "Next",
-    "page": "Page"
+    "page": "Page",
+    "today": "Today"
   },
   "Menu": {
     "dailyMenu": "Daily Menu",
@@ -193,7 +194,19 @@
     "existingMenus": "Existing Menus",
     "noMenus": "No menus found",
     "pendingMenuImages": "Pending Menu Images",
-    "pendingDishImages": "Pending Dish Images"
+    "pendingDishImages": "Pending Dish Images",
+    "seeDinnerMenu": "See Dinner Menu",
+    "hideDinnerMenu": "Hide Dinner Menu",
+    "noDinnerMenuAvailable": "No dinner menu for this day",
+    "navigateToPrevious": "Previous day with menu",
+    "navigateToNext": "Next day with menu",
+    "weekNavigation": "Week Navigation",
+    "previous": "Previous",
+    "next": "Next",
+    "today": "Today",
+    "soupDescription": "Freshly prepared daily with seasonal ingredients",
+    "dailySelection": "Daily Selection",
+    "serving": "Serving"
   },
   "Categories": {
     "Sugestão do Chefe": "Chef's Suggestion",

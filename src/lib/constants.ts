@@ -44,4 +44,5 @@ export const STORAGE_KEYS = {
   DISH_IMAGE_PREFIX: 'cantina_dish_image_',
   PENDING_DISHES: 'cantina_pending_dishes',
   PENDING_APPROVALS: 'cantina_pending_approvals',
+  RESOLVED_APPROVALS: 'cantina_resolved_approvals',
 } as const;

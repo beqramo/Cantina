@@ -151,7 +151,8 @@
     "password": "Palavra-passe",
     "previous": "Anterior",
     "next": "Próximo",
-    "page": "Página"
+    "page": "Página",
+    "today": "Hoje"
   },
   "Menu": {
     "dailyMenu": "Menu Diário",
@@ -194,7 +195,19 @@
     "existingMenus": "Menus Existentes",
     "noMenus": "Nenhum menu encontrado",
     "pendingMenuImages": "Imagens de Menu Pendentes",
-    "pendingDishImages": "Imagens de Pratos Pendentes"
+    "pendingDishImages": "Imagens de Pratos Pendentes",
+    "seeDinnerMenu": "Ver Menu do Jantar",
+    "hideDinnerMenu": "Ocultar Menu do Jantar",
+    "noDinnerMenuAvailable": "Nenhum menu de jantar disponível para este dia",
+    "navigateToPrevious": "Dia anterior com menu",
+    "navigateToNext": "Próximo dia com menu",
+    "weekNavigation": "Navegação Semanal",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "today": "Hoje",
+    "soupDescription": "Preparada diariamente com ingredientes selecionados",
+    "dailySelection": "Seleção do Dia",
+    "serving": "Dose"
   },
   "Categories": {
     "Sugestão do Chefe": "Sugestão do Chefe",

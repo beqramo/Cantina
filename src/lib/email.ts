@@ -18,11 +18,14 @@ export async function sendEmail({ to, subject, react }: SendEmailParams) {
   const adminEmail = process.env.ADMIN_EMAIL || 'beqa31198@gmail.com';
 
   try {
+    const { render } = await import('@react-email/render');
+    const html = await render(react);
+
     const data = await resend.emails.send({
       from: 'Cantina <onboarding@resend.dev>', // Default Resend test sender
       to: to || adminEmail,
       subject,
-      react,
+      html, // Send the rendered HTML
     });
     return data;
   } catch (error) {

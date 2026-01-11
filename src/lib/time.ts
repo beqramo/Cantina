@@ -98,7 +98,7 @@ export function getMenuDisplayDate(): Date {
   const minutes = portugalTime.getMinutes();
   const totalMinutes = hours * 60 + minutes;
 
-  let displayDate = new Date(portugalTime);
+  const displayDate = new Date(portugalTime);
 
   // After dinner (after 21:45), show next day's menu
   if (totalMinutes > 1305) {
@@ -145,4 +145,16 @@ export function formatMenuDate(date: Date, locale: string = 'pt'): string {
  */
 export function isSaturday(date: Date): boolean {
   return date.getDay() === 6;
+}
+
+/**
+ * Get menu navigation range (±7 days from today)
+ */
+export function getMenuNavigationRange(): { startDate: Date; endDate: Date } {
+  const today = getPortugalTime();
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - 7);
+  const endDate = new Date(today);
+  endDate.setDate(endDate.getDate() + 7);
+  return { startDate, endDate };
 }

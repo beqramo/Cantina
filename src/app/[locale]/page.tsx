@@ -21,9 +21,8 @@ export default function HomePage() {
 
   useEffect(() => {
     const dismissed = localStorage.getItem(MISSION_DISMISSED_KEY);
-    if (!dismissed) {
-      setIsDismissed(false);
-    }
+    const shouldShowMission = !dismissed;
+    setIsDismissed(!shouldShowMission);
     setIsVisible(true);
 
     if (analytics) {

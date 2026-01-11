@@ -49,7 +49,7 @@ export function PendingReviewCard() {
     };
   }, []);
 
-  if (!isVisible || pendingItems.length === 0) return null;
+  if (pendingItems.length === 0) return null;
 
   // Logic to determine what text to show
   // User requested "only one" card.
@@ -62,15 +62,21 @@ export function PendingReviewCard() {
   const count = pendingItems.length;
 
   return (
-    <div className='w-full max-w-4xl mx-auto mb-6 px-1 transition-all duration-500 ease-in-out'>
+    <div className='w-full max-w-4xl mx-auto mb-8 px-2 transition-all duration-500 ease-in-out'>
       <div
         className={cn(
-          'relative overflow-hidden rounded-xl border bg-card shadow-sm transition-all',
-          'bg-linear-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200 dark:border-amber-800',
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4',
+          'relative overflow-hidden rounded-2xl border backdrop-blur-2xl transition-all duration-500',
+          'bg-card/95 border-border shadow-2xl shadow-black/5',
+          isVisible
+            ? 'opacity-100 translate-y-0 scale-100'
+            : 'opacity-0 -translate-y-4 scale-95',
         )}>
+        {/* Subtle decorative glow */}
+        <div className='absolute -right-20 -top-20 w-64 h-64 bg-amber-500/3 rounded-full blur-3xl' />
+        <div className='absolute -left-20 -bottom-20 w-64 h-64 bg-amber-500/3 rounded-full blur-3xl' />
+
         <div className='p-4 sm:p-5 flex items-start gap-4'>
-          <div className='shrink-0 p-2 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'>
+          <div className='shrink-0 w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/20'>
             <Clock className='w-5 h-5' />
           </div>
 
