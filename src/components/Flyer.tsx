@@ -13,6 +13,7 @@ interface FlyerProps {
 }
 
 export function Flyer({ variant }: FlyerProps) {
+  const isIndigo = variant.includes('indigo');
   const isBilingual = variant.includes('bilingual');
   const isEnglish = variant.includes('en');
 
@@ -25,12 +26,13 @@ export function Flyer({ variant }: FlyerProps) {
       className={cn(
         'relative flex flex-col justify-between overflow-hidden shadow-2xl transition-all',
         'w-[210mm] h-[297mm] p-[60px]',
-        'print:shadow-none print:w-[210mm] print:h-[297mm] print:m-0 print:border-none',
+        'print:shadow-none print:w-full print:h-full print:p-[40px] print:m-0',
+        // Border logic: simple black border on screen, none on print (handled by container clipping usually, or keep it)
+        'border border-black print:border-none',
       )}
       style={{
         backgroundColor: bgColor,
         color: textColor,
-        border: `1px solid ${textColor}`,
       }}>
       {/* Background Patterns - Subtle grayscale */}
       <div
