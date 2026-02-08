@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cantina IPB Flyer Variants</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #4f46e5;
+        --background: #ffffff;
+        --white: #ffffff;
+        --black: #000000;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f3f4f6;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+        align-items: center;
+      }
+
+      .flyer {
+        width: 210mm;
+        height: 297mm;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        page-break-after: always;
+      }
+
+      /* Indigo Style */
+      .indigo {
+        background-color: var(--primary);
+        color: var(--white);
+      }
+
+      /* Black & White Style */
+      .bw {
+        background-color: var(--white);
+        color: var(--black);
+        border: 2px solid var(--black);
+        box-shadow: none;
+      }
+
+      .indigo::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 40px 40px;
+        z-index: 1;
+      }
+
+      .bw::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+          linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+        background-size: 40px 40px;
+        z-index: 1;
+      }
+
+      .decoration {
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        z-index: 0;
+      }
+
+      .bw .decoration {
+        background: radial-gradient(
+          circle,
+          rgba(0, 0, 0, 0.03) 0%,
+          transparent 70%
+        );
+      }
+
+      .content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .header {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+        margin-bottom: 60px;
+      }
+      .logo {
+        font-size: 32px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .indigo .logo-box {
+        background: var(--white);
+        color: var(--primary);
+        padding: 4px 12px;
+        border-radius: 8px;
+      }
+      .bw .logo-box {
+        background: var(--black);
+        color: var(--white);
+        padding: 4px 12px;
+        border-radius: 8px;
+      }
+
+      .headline-container {
+        margin-bottom: 40px;
+      }
+      .headline {
+        font-size: 64px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 16px;
+        letter-spacing: -2px;
+      }
+      .subheadline {
+        font-size: 28px;
+        font-weight: 400;
+        opacity: 0.9;
+      }
+
+      .qr-section {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .qr-placeholder {
+        width: 220px;
+        height: 220px;
+        border-radius: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .indigo .qr-placeholder {
+        background: rgba(255, 255, 255, 0.1);
+        border: 4px solid var(--white);
+      }
+      .bw .qr-placeholder {
+        background: rgba(0, 0, 0, 0.05);
+        border: 4px solid var(--black);
+      }
+
+      .qr-label {
+        font-size: 16px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .footer {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        padding-top: 30px;
+      }
+      .url {
+        font-size: 32px;
+        font-weight: 700;
+      }
+
+      .mission {
+        font-size: 18px;
+        opacity: 0.8;
+        padding-top: 15px;
+        width: 100%;
+      }
+      .indigo .mission {
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .bw .mission {
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      /* Bilingual Specifics */
+      .bilingual .headline {
+        font-size: 48px;
+        margin-bottom: 10px;
+      }
+      .bw.bilingual .headline {
+        font-size: 44px;
+      }
+      .bilingual .subheadline {
+        font-size: 22px;
+      }
+      .bilingual .separator {
+        width: 50px;
+        height: 2px;
+        margin: 20px auto;
+      }
+      .indigo .separator {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      .bw .separator {
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      @media print {
+        body {
+          background: none;
+          padding: 0;
+        }
+        .flyer {
+          box-shadow: none;
+          border: none;
+          margin: 0;
+          width: 100%;
+          height: 100vh;
+        }
+        .bw {
+          border: 2px solid #000;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- SVG Definition for Reuse -->
+    <svg style="display: none">
+      <symbol id="custom-qr" viewBox="0 0 29 29">
+        <rect fill="#FFFFFF" width="100%" height="100%" />
+        <path
+          class="modules"
+          fill="#000000"
+          d="M10 2 m0 0h1v1h-1z M14 2 m0 0h1v1h-1z M16 2 m0 0h1v1h-1z M17 2 m0 0h1v1h-1z M10 3 m0 0h1v1h-1z M13 3 m0 0h1v1h-1z M14 3 m0 0h1v1h-1z M18 3 m0 0h1v1h-1z M10 4 m0 0h1v1h-1z M15 4 m0 0h1v1h-1z M12 5 m0 0h1v1h-1z M13 5 m0 0h1v1h-1z M15 5 m0 0h1v1h-1z M17 5 m0 0h1v1h-1z M18 5 m0 0h1v1h-1z M10 6 m0 0h1v1h-1z M11 6 m0 0h1v1h-1z M15 6 m0 0h1v1h-1z M16 6 m0 0h1v1h-1z M11 7 m0 0h1v1h-1z M12 7 m0 0h1v1h-1z M13 7 m0 0h1v1h-1z M14 7 m0 0h1v1h-1z M10 8 m0 0h1v1h-1z M12 8 m0 0h1v1h-1z M14 8 m0 0h1v1h-1z M16 8 m0 0h1v1h-1z M18 8 m0 0h1v1h-1z M11 9 m0 0h1v1h-1z M12 9 m0 0h1v1h-1z M15 9 m0 0h1v1h-1z M17 9 m0 0h1v1h-1z M18 9 m0 0h1v1h-1z M2 10 m0 0h1v1h-1z M5 10 m0 0h1v1h-1z M6 10 m0 0h1v1h-1z M7 10 m0 0h1v1h-1z M8 10 m0 0h1v1h-1z M9 10 m0 0h1v1h-1z M10 10 m0 0h1v1h-1z M11 10 m0 0h1v1h-1z M12 10 m0 0h1v1h-1z M13 10 m0 0h1v1h-1z M14 10 m0 0h1v1h-1z M16 10 m0 0h1v1h-1z M17 10 m0 0h1v1h-1z M18 10 m0 0h1v1h-1z M19 10 m0 0h1v1h-1z M22 10 m0 0h1v1h-1z M24 10 m0 0h1v1h-1z M25 10 m0 0h1v1h-1z M26 10 m0 0h1v1h-1z M4 11 m0 0h1v1h-1z M5 11 m0 0h1v1h-1z M6 11 m0 0h1v1h-1z M9 11 m0 0h1v1h-1z M10 11 m0 0h1v1h-1z M11 11 m0 0h1v1h-1z M12 11 m0 0h1v1h-1z M13 11 m0 0h1v1h-1z M14 11 m0 0h1v1h-1z M16 11 m0 0h1v1h-1z M17 11 m0 0h1v1h-1z M19 11 m0 0h1v1h-1z M21 11 m0 0h1v1h-1z M22 11 m0 0h1v1h-1z M23 11 m0 0h1v1h-1z M24 11 m0 0h1v1h-1z M25 11 m0 0h1v1h-1z M2 12 m0 0h1v1h-1z M3 12 m0 0h1v1h-1z M5 12 m0 0h1v1h-1z M8 12 m0 0h1v1h-1z M10 12 m0 0h1v1h-1z M11 12 m0 0h1v1h-1z M15 12 m0 0h1v1h-1z M17 12 m0 0h1v1h-1z M19 12 m0 0h1v1h-1z M20 12 m0 0h1v1h-1z M21 12 m0 0h1v1h-1z M22 12 m0 0h1v1h-1z M23 12 m0 0h1v1h-1z M26 12 m0 0h1v1h-1z M3 13 m0 0h1v1h-1z M5 13 m0 0h1v1h-1z M11 13 m0 0h1v1h-1z M12 13 m0 0h1v1h-1z M13 13 m0 0h1v1h-1z M16 13 m0 0h1v1h-1z M17 13 m0 0h1v1h-1z M18 13 m0 0h1v1h-1z M19 13 m0 0h1v1h-1z M23 13 m0 0h1v1h-1z M24 13 m0 0h1v1h-1z M25 13 m0 0h1v1h-1z M26 13 m0 0h1v1h-1z M5 14 m0 0h1v1h-1z M8 14 m0 0h1v1h-1z M14 14 m0 0h1v1h-1z M17 14 m0 0h1v1h-1z M20 14 m0 0h1v1h-1z M26 14 m0 0h1v1h-1z M2 15 m0 0h1v1h-1z M3 15 m0 0h1v1h-1z M5 15 m0 0h1v1h-1z M10 15 m0 0h1v1h-1z M11 15 m0 0h1v1h-1z M12 15 m0 0h1v1h-1z M15 15 m0 0h1v1h-1z M16 15 m0 0h1v1h-1z M17 15 m0 0h1v1h-1z M18 15 m0 0h1v1h-1z M19 15 m0 0h1v1h-1z M22 15 m0 0h1v1h-1z M25 15 m0 0h1v1h-1z M2 16 m0 0h1v1h-1z M3 16 m0 0h1v1h-1z M4 16 m0 0h1v1h-1z M5 16 m0 0h1v1h-1z M7 16 m0 0h1v1h-1z M8 16 m0 0h1v1h-1z M9 16 m0 0h1v1h-1z M10 16 m0 0h1v1h-1z M11 16 m0 0h1v1h-1z M13 16 m0 0h1v1h-1z M14 16 m0 0h1v1h-1z M17 16 m0 0h1v1h-1z M19 16 m0 0h1v1h-1z M20 16 m0 0h1v1h-1z M22 16 m0 0h1v1h-1z M23 16 m0 0h1v1h-1z M24 16 m0 0h1v1h-1z M25 16 m0 0h1v1h-1z M26 16 m0 0h1v1h-1z M2 17 m0 0h1v1h-1z M4 17 m0 0h1v1h-1z M6 17 m0 0h1v1h-1z M7 17 m0 0h1v1h-1z M9 17 m0 0h1v1h-1z M10 17 m0 0h1v1h-1z M11 17 m0 0h1v1h-1z M12 17 m0 0h1v1h-1z M13 17 m0 0h1v1h-1z M17 17 m0 0h1v1h-1z M20 17 m0 0h1v1h-1z M21 17 m0 0h1v1h-1z M23 17 m0 0h1v1h-1z M24 17 m0 0h1v1h-1z M26 17 m0 0h1v1h-1z M2 18 m0 0h1v1h-1z M4 18 m0 0h1v1h-1z M8 18 m0 0h1v1h-1z M10 18 m0 0h1v1h-1z M15 18 m0 0h1v1h-1z M18 18 m0 0h1v1h-1z M19 18 m0 0h1v1h-1z M20 18 m0 0h1v1h-1z M21 18 m0 0h1v1h-1z M22 18 m0 0h1v1h-1z M24 18 m0 0h1v1h-1z M25 18 m0 0h1v1h-1z M10 19 m0 0h1v1h-1z M11 19 m0 0h1v1h-1z M13 19 m0 0h1v1h-1z M14 19 m0 0h1v1h-1z M15 19 m0 0h1v1h-1z M16 19 m0 0h1v1h-1z M18 19 m0 0h1v1h-1z M22 19 m0 0h1v1h-1z M24 19 m0 0h1v1h-1z M25 19 m0 0h1v1h-1z M10 20 m0 0h1v1h-1z M12 20 m0 0h1v1h-1z M13 20 m0 0h1v1h-1z M15 20 m0 0h1v1h-1z M16 20 m0 0h1v1h-1z M18 20 m0 0h1v1h-1z M20 20 m0 0h1v1h-1z M22 20 m0 0h1v1h-1z M26 20 m0 0h1v1h-1z M10 21 m0 0h1v1h-1z M14 21 m0 0h1v1h-1z M15 21 m0 0h1v1h-1z M17 21 m0 0h1v1h-1z M18 21 m0 0h1v1h-1z M22 21 m0 0h1v1h-1z M25 21 m0 0h1v1h-1z M10 22 m0 0h1v1h-1z M11 22 m0 0h1v1h-1z M12 22 m0 0h1v1h-1z M14 22 m0 0h1v1h-1z M17 22 m0 0h1v1h-1z M18 22 m0 0h1v1h-1z M19 22 m0 0h1v1h-1z M20 22 m0 0h1v1h-1z M21 22 m0 0h1v1h-1z M22 22 m0 0h1v1h-1z M25 22 m0 0h1v1h-1z M26 22 m0 0h1v1h-1z M10 23 m0 0h1v1h-1z M11 23 m0 0h1v1h-1z M19 23 m0 0h1v1h-1z M20 23 m0 0h1v1h-1z M25 23 m0 0h1v1h-1z M26 23 m0 0h1v1h-1z M12 24 m0 0h1v1h-1z M14 24 m0 0h1v1h-1z M18 24 m0 0h1v1h-1z M19 24 m0 0h1v1h-1z M22 24 m0 0h1v1h-1z M23 24 m0 0h1v1h-1z M24 24 m0 0h1v1h-1z M25 24 m0 0h1v1h-1z M26 24 m0 0h1v1h-1z M21 25 m0 0h1v1h-1z M22 25 m0 0h1v1h-1z M24 25 m0 0h1v1h-1z M25 25 m0 0h1v1h-1z M26 25 m0 0h1v1h-1z M10 26 m0 0h1v1h-1z M11 26 m0 0h1v1h-1z M12 26 m0 0h1v1h-1z M14 26 m0 0h1v1h-1z M15 26 m0 0h1v1h-1z M16 26 m0 0h1v1h-1z M17 26 m0 0h1v1h-1z M18 26 m0 0h1v1h-1z M23 26 m0 0h1v1h-1z M26 26 m0 0h1v1h-1z"
+        />
+        <path
+          class="outer"
+          fill="#000000"
+          d="M2 2 m0 0h7.02v7.02h-7.02zm1.17 1.17v4.68h4.68v-4.68z"
+        />
+        <path class="inner" fill="#000000" d="M2 2 m2 2h3v3h-3z" />
+        <path
+          class="outer"
+          fill="#000000"
+          d="M2 20 m0 0h7.02v7.02h-7.02zm1.17 1.17v4.68h4.68v-4.68z"
+        />
+        <path class="inner" fill="#000000" d="M2 20 m2 2h3v3h-3z" />
+        <path
+          class="outer"
+          fill="#000000"
+          d="M20 2 m0 0h7.02v7.02h-7.02zm1.17 1.17v4.68h4.68v-4.68z"
+        />
+        <path class="inner" fill="#000000" d="M20 2 m2 2h3v3h-3z" />
+      </symbol>
+    </svg>
+
+    <!-- 1. INDIGO PORTUGUESE -->
+    <div class="flyer indigo" id="indigo-pt">
+      <div class="decoration"></div>
+      <div class="content">
+        <div class="header">
+          <div class="logo">Cantina <span class="logo-box">IPB</span> /></div>
+        </div>
+        <div class="headline-container">
+          <h1 class="headline">Sabe o que vais comer hoje?</h1>
+          <p class="subheadline">Ementa do dia e sugestões.</p>
+        </div>
+        <div class="qr-section">
+          <div
+            class="qr-placeholder"
+            style="border: none; background: white; padding: 20px"
+          >
+            <svg viewBox="0 0 29 29" style="width: 100%; height: 100%">
+              <use href="#custom-qr" />
+            </svg>
+          </div>
+          <p class="qr-label" style="opacity: 0.8; margin-top: 15px">
+            Digitaliza aqui
+          </p>
+        </div>
+        <div class="footer">
+          <div class="url">cantina-ipb.vercel.app</div>
+          <p class="mission">Por alunos, para alunos.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. INDIGO ENGLISH -->
+    <div class="flyer indigo" id="indigo-en">
+      <div class="decoration"></div>
+      <div class="content">
+        <div class="header">
+          <div class="logo">Cantina <span class="logo-box">IPB</span> /></div>
+        </div>
+        <div class="headline-container">
+          <h1 class="headline">Know what you are eating today?</h1>
+          <p class="subheadline">Daily menu and suggestions.</p>
+        </div>
+        <div class="qr-section">
+          <div
+            class="qr-placeholder"
+            style="border: none; background: white; padding: 20px"
+          >
+            <svg viewBox="0 0 29 29" style="width: 100%; height: 100%">
+              <use href="#custom-qr" />
+            </svg>
+          </div>
+          <p class="qr-label" style="opacity: 0.8; margin-top: 15px">
+            Scan here
+          </p>
+        </div>
+        <div class="footer">
+          <div class="url">cantina-ipb.vercel.app</div>
+          <p class="mission">By students, for students.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. INDIGO BILINGUAL -->
+    <div class="flyer indigo bilingual" id="indigo-bilingual">
+      <div class="decoration"></div>
+      <div class="content">
+        <div class="header">
+          <div class="logo">Cantina <span class="logo-box">IPB</span> /></div>
+        </div>
+        <div class="headline-container">
+          <h1 class="headline" style="font-size: 44px; margin-bottom: 5px">
+            Sabe o que vais comer hoje?
+          </h1>
+          <h1
+            class="headline"
+            style="font-size: 38px; color: rgba(255, 255, 255, 0.7)"
+          >
+            Know what you 're having?
+          </h1>
+          <div class="separator"></div>
+          <p class="subheadline">Ementa Completa • Full Menu</p>
+        </div>
+        <div class="qr-section" style="margin-top: -20px">
+          <div
+            class="qr-placeholder"
+            style="
+              width: 200px;
+              height: 200px;
+              border: none;
+              background: white;
+              padding: 15px;
+            "
+          >
+            <svg viewBox="0 0 29 29" style="width: 100%; height: 100%">
+              <use href="#custom-qr" />
+            </svg>
+          </div>
+          <p
+            class="qr-label"
+            style="opacity: 0.8; font-size: 14px; margin-top: 15px"
+          >
+            Digitaliza / Scan
+          </p>
+        </div>
+        <div class="footer">
+          <div class="url">cantina-ipb.vercel.app</div>
+          <p class="mission">
+            Por alunos, para alunos • By students, for students.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. BLACK & WHITE BILINGUAL (Printer Friendly) -->
+    <div class="flyer bw bilingual" id="bw-bilingual">
+      <div class="decoration"></div>
+      <div class="content">
+        <div class="header">
+          <div class="logo">Cantina <span class="logo-box">IPB</span> /></div>
+        </div>
+        <div class="headline-container">
+          <h1 class="headline" style="font-size: 44px; margin-bottom: 5px">
+            Sabe o que vais comer hoje?
+          </h1>
+          <h1
+            class="headline"
+            style="font-size: 38px; color: rgba(0, 0, 0, 0.5)"
+          >
+            Know what you 're having?
+          </h1>
+          <div class="separator"></div>
+          <p class="subheadline">Ementa Completa • Full Menu</p>
+        </div>
+        <div class="qr-section" style="margin-top: -20px">
+          <div
+            class="qr-placeholder"
+            style="
+              width: 200px;
+              height: 200px;
+              border: none;
+              background: black;
+              padding: 4px;
+            "
+          >
+            <div
+              style="
+                background: white;
+                width: 100%;
+                height: 100%;
+                padding: 10px;
+                border-radius: 4px;
+              "
+            >
+              <svg viewBox="0 0 29 29" style="width: 100%; height: 100%">
+                <use href="#custom-qr" />
+              </svg>
+            </div>
+          </div>
+          <p
+            class="qr-label"
+            style="opacity: 0.8; font-size: 14px; margin-top: 15px"
+          >
+            Digitaliza / Scan
+          </p>
+        </div>
+        <div class="footer">
+          <div class="url">cantina-ipb.vercel.app</div>
+          <p class="mission">
+            Por alunos, para alunos • By students, for students.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

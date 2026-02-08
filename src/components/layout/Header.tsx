@@ -6,6 +6,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
+import { Logo } from '@/components/ui/Logo';
 
 export function Header() {
   const t = useTranslations('Navigation');
@@ -14,6 +15,9 @@ export function Header() {
 
   // pathname from next-intl navigation is already without locale prefix
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isFlyerRoute = pathname?.startsWith('/flyer');
+
+  if (isFlyerRoute) return null;
 
   const navLinks = !isAdminRoute
     ? [
@@ -32,8 +36,10 @@ export function Header() {
       {/* Top Row: Logo and Controls */}
       <div className='container flex h-12 md:h-16 items-center justify-between px-3 md:px-4'>
         <div className='flex items-center gap-2 md:gap-6'>
-          <Link href='/' className='text-base md:text-xl font-bold shrink-0'>
-            Cantina IPB
+          <Link
+            href='/'
+            className='shrink-0 hover:opacity-80 transition-opacity'>
+            <Logo className='text-lg md:text-xl' />
           </Link>
           {/* Desktop Navigation - Inline with logo */}
           <nav className='hidden md:flex items-center gap-4'>
