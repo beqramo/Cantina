@@ -52,10 +52,9 @@ export default function FlyerPage() {
       </div>
 
       {/* Container for the Flyer - shadow only visible on screen */}
-      {/* Container for the Flyer - shadow only visible on screen */}
-      <div className='relative print:static flex justify-center w-full min-h-screen print:min-h-0 print:block'>
-        {/* On screen: Scale transform. On print: Fixed full screen overlay */}
-        <div className='transform scale-[0.6] sm:scale-[0.8] md:scale-100 origin-top print:fixed print:inset-0 print:w-screen print:h-screen print:scale-100 print:origin-top-left print:z-[9999] print:bg-white'>
+      <div className='relative print:block flex justify-center w-full min-h-screen print:min-h-0'>
+        {/* On screen: Scale transform. On print: Natural flow */}
+        <div className='transform scale-[0.6] sm:scale-[0.8] md:scale-100 origin-top print:transform-none print:static print:w-auto print:h-auto'>
           <Flyer variant={variant} />
         </div>
       </div>
@@ -70,7 +69,7 @@ export default function FlyerPage() {
             background-color: white !important;
             margin: 0 !important;
             padding: 0 !important;
-            overflow: hidden !important; /* Prevent scrollbars affecting print size */
+            overflow: visible !important;
           }
           header,
           .print\\:hidden,
@@ -78,10 +77,6 @@ export default function FlyerPage() {
           button,
           .mb-8 {
             display: none !important;
-          }
-          /* Ensure our specific container takes precedence */
-          .print\\:fixed {
-            position: fixed !important;
           }
           /* Force backgrounds */
           * {
