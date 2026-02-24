@@ -14,10 +14,12 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  Copy,
 } from 'lucide-react';
 import { Dish, DishCategory } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { VoteButtons } from './VoteButtons';
 import { ImageViewer } from './ImageViewer';
@@ -179,8 +181,8 @@ export function DishCardBase({
             hasImage
               ? `View full size image of ${imageAlt}`
               : onAddImageClick
-              ? `Add image for ${imageAlt}`
-              : undefined
+                ? `Add image for ${imageAlt}`
+                : undefined
           }>
           {hasImage ? (
             <>
@@ -308,9 +310,21 @@ export function DishCardBase({
             )}
 
             {/* Dish Name */}
-            <h3 className='font-semibold text-sm leading-snug line-clamp-2'>
-              {name}
-            </h3>
+            <div
+              className='flex items-start gap-2 group/copy cursor-pointer'
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                navigator.clipboard.writeText(name).then(() => {
+                  toast.success(t('dishNameCopied') || 'Copied to clipboard!');
+                });
+              }}
+              title={t('copyToClipboard') || 'Copy to clipboard'}>
+              <h3 className='font-semibold text-sm leading-snug line-clamp-2 flex-1'>
+                {name}
+              </h3>
+              <Copy className='h-3.5 w-3.5 text-muted-foreground opacity-100 md:opacity-0 md:group-hover/copy:opacity-100 transition-opacity shrink-0 mt-0.5' />
+            </div>
 
             {/* Tags */}
             {displayDish?.tags && displayDish.tags.length > 0 && (

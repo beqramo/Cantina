@@ -8,7 +8,8 @@
     "login": "Login",
     "logout": "Logout",
     "dashboard": "Dashboard",
-    "approvals": "Approvals"
+    "approvals": "Approvals",
+    "orderNow": "Order Now"
   },
   "Home": {
     "subtitle": "Discover and rate dishes from the IPB university canteen",
@@ -40,7 +41,9 @@
     "nicknamePlaceholder": "Your nickname",
     "nicknameDescription": "If provided, your nickname will be shown when the image is approved.",
     "cancel": "Cancel",
-    "upload": "Upload"
+    "upload": "Upload",
+    "dishNameCopied": "Dish name copied!",
+    "copyToClipboard": "Copy to clipboard"
   },
   "TopDishes": {
     "title": "Top Dishes",

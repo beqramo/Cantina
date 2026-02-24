@@ -220,6 +220,8 @@ export function validateOrigin(request: Request): boolean {
     process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : null,
+    'https://cantina-ipb.vercel.app',
+    'https://cantina-ipb.vercel.app/',
   ].filter(Boolean) as string[];
 
   // Also dynamically allow the request's own origin/host

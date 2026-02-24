@@ -7,6 +7,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { Logo } from '@/components/ui/Logo';
+import { ExternalLink } from 'lucide-react';
 
 export function Header() {
   const t = useTranslations('Navigation');
@@ -58,6 +59,19 @@ export function Header() {
           </nav>
         </div>
         <div className='flex items-center gap-1 md:gap-4 shrink-0'>
+          {!isAdminRoute && (
+            <a
+              href='https://online.ipb.pt/ui/#/site/sas/senhas'
+              target='_blank'
+              rel='noopener noreferrer'>
+              <Button
+                size='sm'
+                className='h-8 px-2.5 text-[11px] font-semibold sm:text-xs md:h-9 md:px-4 md:text-sm bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md border-0 tracking-tight sm:tracking-normal'>
+                {t('orderNow') || 'Order Now'}
+                <ExternalLink className='w-3 h-3 ml-1.5 opacity-90 hidden sm:inline-block' />
+              </Button>
+            </a>
+          )}
           <LanguageSwitcher />
           <ThemeToggle />
           {user && !isAdminRoute && (

@@ -8,7 +8,8 @@
     "login": "Entrar",
     "logout": "Sair",
     "dashboard": "Painel",
-    "approvals": "Aprovações"
+    "approvals": "Aprovações",
+    "orderNow": "Encomendar"
   },
   "Home": {
     "subtitle": "Descobre e avalia pratos da cantina da universidade IPB",
@@ -40,7 +41,9 @@
     "nicknamePlaceholder": "A tua alcunha",
     "nicknameDescription": "Se fornecida, a tua alcunha será mostrada quando a imagem for aprovada.",
     "cancel": "Cancelar",
-    "upload": "Carregar"
+    "upload": "Carregar",
+    "dishNameCopied": "Nome do prato copiado!",
+    "copyToClipboard": "Copiar para a área de transferência"
   },
   "TopDishes": {
     "title": "Pratos Top",
