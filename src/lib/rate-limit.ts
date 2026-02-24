@@ -217,27 +217,64 @@ export function validateOrigin(request: Request): boolean {
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : null,
   ].filter(Boolean) as string[];
 
-  // If no origin check configured, allow (but log warning)
+  // Also dynamically allow the request's own origin/host
+  try {
+    const reqOrigin = new URL(request.url).origin;
+    if (reqOrigin && !allowedOrigins.includes(reqOrigin)) {
+      allowedOrigins.push(reqOrigin);
+    }
+  } catch {
+    // Ignore URL parsing errors
+  }
+
+  const host = request.headers.get('host');
+  if (host) {
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const hostOrigin = `${protocol}://${host}`;
+    if (!allowedOrigins.includes(hostOrigin)) {
+      allowedOrigins.push(hostOrigin);
+    }
+  }
+
+  // If no origin check configured and we couldn't derive anything, allow (but log warning)
   if (allowedOrigins.length === 0) {
     console.warn(
-      '[Security] No NEXT_PUBLIC_SITE_URL configured - origin validation disabled',
+      '[Security] No NEXT_PUBLIC_SITE_URL configured and could not derive host - origin validation disabled',
     );
     return true;
   }
 
   // Check origin header
   if (origin) {
-    return allowedOrigins.some((allowed) => origin.startsWith(allowed));
+    if (allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
+      return true;
+    }
+    console.warn(
+      `[Security] Rejected origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`,
+    );
+    return false;
   }
 
   // Check referer as fallback
   if (referer) {
-    return allowedOrigins.some((allowed) => referer.startsWith(allowed));
+    if (allowedOrigins.some((allowed) => referer.startsWith(allowed))) {
+      return true;
+    }
+    console.warn(
+      `[Security] Rejected referer: ${referer}. Allowed: ${allowedOrigins.join(', ')}`,
+    );
+    return false;
   }
 
   // No origin info - could be a direct API call or bot
+  console.warn(
+    `[Security] Missing origin and referer headers. Rejected by default.`,
+  );
   return false;
 }
 
