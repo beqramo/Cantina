@@ -43,7 +43,8 @@
     "cancel": "Cancel",
     "upload": "Upload",
     "dishNameCopied": "Dish name copied!",
-    "copyToClipboard": "Copy to clipboard"
+    "copyToClipboard": "Copy to clipboard",
+    "searchInGoogle": "Search in Google"
   },
   "TopDishes": {
     "title": "Top Dishes",

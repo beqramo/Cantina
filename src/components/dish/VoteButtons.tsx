@@ -34,8 +34,8 @@ export function VoteButtons({ dish }: VoteButtonsProps) {
           previousVote === voteType
             ? 'remove_vote'
             : previousVote
-            ? 'change_vote'
-            : 'new_vote';
+              ? 'change_vote'
+              : 'new_vote';
         logEvent(analytics, 'vote_dish', {
           dish_id: dish.id,
           dish_name: dish.name,
@@ -76,7 +76,7 @@ export function VoteButtons({ dish }: VoteButtonsProps) {
   };
 
   return (
-    <div className='flex items-center gap-4 mt-4'>
+    <div className='flex items-center gap-4'>
       <Button
         variant={userVote === 'up' ? 'default' : 'outline'}
         size='sm'

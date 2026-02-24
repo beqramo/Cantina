@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Copy,
 } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
 import { Dish, DishCategory } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -352,8 +353,8 @@ export function DishCardBase({
             {children}
           </div>
 
-          {/* Vote Buttons */}
-          <div className='mt-3 pt-2 border-t'>
+          {/* Vote Buttons and Actions */}
+          <div className='mt-3 pt-2 border-t flex flex-row items-center justify-between'>
             {displayDish ? (
               <VoteButtons dish={displayDish} />
             ) : (
@@ -362,6 +363,20 @@ export function DishCardBase({
                 <div className='h-7 w-14 bg-muted rounded animate-pulse' />
               </div>
             )}
+            <Button
+              variant='outline'
+              size='icon'
+              className='h-9 w-9 text-muted-foreground shrink-0 mt-0 flex'
+              asChild>
+              <a
+                href={`https://www.google.com/search?q=${encodeURIComponent(name)}`}
+                target='_blank'
+                rel='noopener noreferrer'
+                onClick={(e) => e.stopPropagation()}
+                title={t('searchInGoogle') || 'Search in Google'}>
+                <FcGoogle className='h-5 w-5' />
+              </a>
+            </Button>
           </div>
         </CardContent>
       </Card>

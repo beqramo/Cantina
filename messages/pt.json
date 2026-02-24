@@ -43,7 +43,8 @@
     "cancel": "Cancelar",
     "upload": "Carregar",
     "dishNameCopied": "Nome do prato copiado!",
-    "copyToClipboard": "Copiar para a área de transferência"
+    "copyToClipboard": "Copiar para a área de transferência",
+    "searchInGoogle": "Pesquisar no Google"
   },
   "TopDishes": {
     "title": "Pratos Top",
