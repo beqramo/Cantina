@@ -33,11 +33,15 @@ export function ThankYouCard() {
   useEffect(() => {
     const syncApprovals = () => {
       const items = getResolvedApprovals();
-      setApprovedItems(items as ApprovedItem[]);
       if (items.length > 0) {
+        setApprovedItems(items as ApprovedItem[]);
         setIsVisible(true);
       } else {
         setIsVisible(false);
+        // Delay clearing items to allow exit animation
+        setTimeout(() => {
+          setApprovedItems([]);
+        }, 500);
       }
     };
 
@@ -163,17 +167,17 @@ export function ThankYouCard() {
       <div
         className={cn(
           'relative overflow-hidden rounded-2xl border backdrop-blur-2xl transition-all duration-500',
-          'bg-card/95 border-border shadow-2xl shadow-black/5',
+          'bg-card/95 border-border shadow-2xl shadow-black/5 z-40',
           isVisible
             ? 'opacity-100 translate-y-0 scale-100'
-            : 'opacity-0 -translate-y-4 scale-95',
+            : 'opacity-0 -translate-y-4 scale-95 ',
         )}>
         {/* Subtle decorative glow */}
-        <div className='absolute -right-20 -top-20 w-64 h-64 bg-emerald-500/3 rounded-full blur-3xl' />
-        <div className='absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-500/3 rounded-full blur-3xl' />
+        <div className='absolute -right-20 -top-20 w-64 h-64 bg-emerald-500/3 rounded-full blur-3xl pointer-events-none' />
+        <div className='absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-500/3 rounded-full blur-3xl pointer-events-none' />
 
         {/* Main Card Content (First Item) */}
-        <div className='p-4 sm:p-5 flex items-start gap-4'>
+        <div className='relative z-10 p-4 sm:p-5 flex items-start gap-4'>
           <div className='shrink-0 w-11 h-11 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20'>
             <Sparkles className='w-5 h-5' />
           </div>
@@ -200,8 +204,11 @@ export function ThankYouCard() {
             <Button
               variant='ghost'
               size='icon'
-              className='h-8 w-8 text-muted-foreground hover:text-foreground -mr-2 -mt-2'
-              onClick={() => handleDismiss(0)}>
+              className='h-9 w-9 text-muted-foreground hover:text-foreground -mr-2 -mt-2 relative z-20'
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDismiss(0);
+              }}>
               <X className='w-4 h-4' />
               <span className='sr-only'>{t('close')}</span>
             </Button>
@@ -244,9 +251,11 @@ export function ThankYouCard() {
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='h-6 w-6 text-muted-foreground hover:text-foreground'
-                  onClick={() => handleDismiss(index + 1)} // +1 because index 0 is firstItem
-                >
+                  className='h-6 w-6 text-muted-foreground hover:text-foreground relative z-20'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDismiss(index + 1);
+                  }}>
                   <X className='w-3 h-3' />
                 </Button>
               </div>
