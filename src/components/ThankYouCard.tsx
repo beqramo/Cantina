@@ -153,10 +153,6 @@ export function ThankYouCard() {
     );
   };
 
-  const handleDismissAll = () => {
-    approvedItems.forEach((_, i) => handleDismiss(i));
-  };
-
   if (approvedItems.length === 0) return null;
 
   const firstItem = approvedItems[0];
