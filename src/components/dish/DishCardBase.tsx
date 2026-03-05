@@ -37,6 +37,7 @@ interface DishCardBaseProps {
   onImageClick?: () => void;
   onAddImageClick?: () => void;
   isPendingApproval?: boolean;
+  imageProviderNickname?: string;
 
   // Content props
   name: string;
@@ -65,6 +66,7 @@ export function DishCardBase({
   dish: providedDish,
   children,
   showDishUpload = false,
+  imageProviderNickname,
 }: DishCardBaseProps) {
   const t = useTranslations('Dish');
   const tMenu = useTranslations('Menu');
@@ -342,11 +344,11 @@ export function DishCardBase({
             )}
 
             {/* Image Provider */}
-            {displayDish?.imageProviderNickname && (
+            {(imageProviderNickname || displayDish?.imageProviderNickname) && (
               <p className='text-[11px] text-muted-foreground'>
                 {t('imageProvidedBy') || 'Image by'}{' '}
                 <span className='font-medium'>
-                  {displayDish.imageProviderNickname}
+                  {imageProviderNickname || displayDish?.imageProviderNickname}
                 </span>
               </p>
             )}

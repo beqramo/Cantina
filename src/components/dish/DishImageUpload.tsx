@@ -248,11 +248,11 @@ export function DishImageUpload({
           </div>
 
           {imagePreview && (
-            <div className='mt-2'>
+            <div className='mt-2 border rounded-md p-2 bg-muted/30 flex justify-center'>
               <img
                 src={imagePreview}
                 alt='Preview'
-                className='max-w-full rounded-md'
+                className='max-h-48 w-auto object-contain rounded-md'
               />
             </div>
           )}

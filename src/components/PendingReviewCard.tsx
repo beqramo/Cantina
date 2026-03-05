@@ -87,8 +87,16 @@ export function PendingReviewCard() {
             <p className='text-muted-foreground text-sm leading-relaxed'>
               {count === 1
                 ? latestItem.type === 'dish'
-                  ? t('singleDish', { dish: latestItem.name ?? '' })
-                  : t('singleImage', { dish: latestItem.name ?? '' })
+                  ? t('singleDish', {
+                      dish: latestItem.nickname
+                        ? `${latestItem.name ?? ''} (${latestItem.nickname})`
+                        : (latestItem.name ?? ''),
+                    })
+                  : t('singleImage', {
+                      dish: latestItem.nickname
+                        ? `${latestItem.name ?? ''} (${latestItem.nickname})`
+                        : (latestItem.name ?? ''),
+                    })
                 : t('multipleItems', { count })}
             </p>
           </div>

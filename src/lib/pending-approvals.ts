@@ -8,6 +8,7 @@ export interface PendingApprovalEntry {
   createdAt: number; // epoch ms
   lastChecked?: number; // epoch ms
   dishName?: string; // Resolved name for Thank You card
+  nickname?: string; // Nickname for UI display
 }
 
 import { STORAGE_KEYS } from './constants';

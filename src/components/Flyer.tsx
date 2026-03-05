@@ -100,18 +100,22 @@ export function Flyer({ variant }: FlyerProps) {
         </div>
 
         {/* QR Section */}
-        <div className='grow flex flex-col justify-center items-center gap-6 mt-[-20px]'>
+        <div className='grow flex flex-col justify-center items-center gap-6 mt-[-40px]'>
           <div
-            className='rounded-[24px] flex justify-center items-center p-5 bg-white'
+            className='rounded-[32px] flex justify-center items-center p-6 bg-white shadow-lg'
             style={{
-              width: '240px',
-              height: '240px',
-              border: `4px solid ${textColor}`,
+              width: '360px',
+              height: '360px',
+              border: `6px solid ${textColor}`,
             }}>
             {/* QR Code SVG */}
-            <img src='/Untitled 1.svg' alt='QR Code' />
+            <img
+              src='/qr-code.png'
+              alt='QR Code'
+              className='w-full h-full object-contain'
+            />
           </div>
-          <p className='font-bold text-[18px] uppercase tracking-[3px] opacity-90 mt-[20px]'>
+          <p className='font-bold text-[24px] uppercase tracking-[4px] opacity-90 mt-[20px]'>
             {isEnglish ? 'Scan Here' : 'Digitaliza / Scan'}
           </p>
         </div>

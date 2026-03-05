@@ -76,6 +76,7 @@ export interface MenuItem {
   dishName: string;
   imageUrl?: string;
   imagePendingApproval?: boolean;
+  imageProviderNickname?: string;
 }
 
 export interface MenuItems {

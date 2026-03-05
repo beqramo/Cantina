@@ -348,7 +348,11 @@ export function ApprovalList() {
       menu: Menu;
       mealType: MealType;
       category: DishCategory;
-      menuItem: { dishName: string; imageUrl?: string };
+      menuItem: {
+        dishName: string;
+        imageUrl?: string;
+        imageProviderNickname?: string;
+      };
     }>
   >([]);
   const [dishImages, setDishImages] = useState<
@@ -663,6 +667,12 @@ export function ApprovalList() {
                         <h3 className='font-semibold text-lg'>
                           {item.menuItem.dishName}
                         </h3>
+                        {item.menuItem.imageProviderNickname && (
+                          <p className='text-sm text-muted-foreground mt-1'>
+                            {t('uploadedBy')}:{' '}
+                            {item.menuItem.imageProviderNickname}
+                          </p>
+                        )}
                         <div className='flex gap-2 mt-2'>
                           <Badge variant='secondary'>{item.category}</Badge>
                           <Badge variant='outline'>

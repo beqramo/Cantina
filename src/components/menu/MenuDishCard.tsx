@@ -50,6 +50,7 @@ export const MenuDishCard = memo(function MenuDishCard({
           }
         }}
         isPendingApproval={menuItem.imagePendingApproval === true}
+        imageProviderNickname={menuItem.imageProviderNickname}
         name={menuItem.dishName}
         category={category}
         dishId={menuItem.dishId}

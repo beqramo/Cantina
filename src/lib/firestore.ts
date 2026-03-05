@@ -943,6 +943,7 @@ export async function updateMenuItemImage(
   mealType: MealType,
   category: DishCategory,
   imageUrl: string,
+  nickname?: string,
 ): Promise<void> {
   if (!db) throw new Error('Firebase not initialized');
 
@@ -956,11 +957,16 @@ export async function updateMenuItemImage(
 
     const data = menuDoc.data();
     const mealItems = { ...data[mealType] };
-    mealItems[category] = {
+    const updatePayload: any = {
       ...mealItems[category],
       imageUrl,
       imagePendingApproval: true,
     };
+    if (nickname) {
+      updatePayload.imageProviderNickname = nickname;
+    }
+
+    mealItems[category] = updatePayload;
 
     await updateDoc(menuRef, {
       [mealType]: mealItems,
@@ -1023,9 +1029,13 @@ export async function rejectMenuItemImage(
     const data = menuDoc.data();
     const mealItems = { ...data[mealType] };
 
-    // Remove the imageUrl by keeping only the dishName and setting imagePendingApproval to false
+    // Remove the imageUrl and imageProviderNickname by keeping only the dishName and setting imagePendingApproval to false
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { imageUrl: _imageUrl, ...restOfMenuItem } = mealItems[category];
+    const {
+      imageUrl: _imageUrl,
+      imageProviderNickname: _nickname,
+      ...restOfMenuItem
+    } = mealItems[category];
     mealItems[category] = {
       ...restOfMenuItem,
       imagePendingApproval: false,
@@ -1075,6 +1085,7 @@ export async function approveMenuItemImage(
     if (menuItem.dishId && menuItem.imageUrl) {
       await updateDish(menuItem.dishId, {
         imageUrl: menuItem.imageUrl,
+        imageProviderNickname: menuItem.imageProviderNickname || null,
       });
     }
   } catch (error) {
@@ -1393,26 +1404,30 @@ export async function getPreviousMenuDate(
 
   try {
     // Create UTC dates for consistent comparison
-    const startOfRange = new Date(Date.UTC(
-      currentDate.getUTCFullYear(),
-      currentDate.getUTCMonth(),
-      currentDate.getUTCDate() - rangeDays,
-    ));
-    const endOfRange = new Date(Date.UTC(
-      currentDate.getUTCFullYear(),
-      currentDate.getUTCMonth(),
-      currentDate.getUTCDate() - 1,
-    ));
+    const startOfRange = new Date(
+      Date.UTC(
+        currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth(),
+        currentDate.getUTCDate() - rangeDays,
+      ),
+    );
+    const endOfRange = new Date(
+      Date.UTC(
+        currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth(),
+        currentDate.getUTCDate() - 1,
+      ),
+    );
 
     const menusRef = collection(db, 'menus');
-    
+
     // Query only previous menus within range, ordered by date descending
     const q = query(
       menusRef,
       where('date', '>=', Timestamp.fromDate(startOfRange)),
       where('date', '<=', Timestamp.fromDate(endOfRange)),
       orderBy('date', 'desc'),
-      limit(1)
+      limit(1),
     );
 
     const querySnapshot = await getDocs(q);
@@ -1436,26 +1451,30 @@ export async function getNextMenuDate(
 
   try {
     // Create UTC dates for consistent comparison
-    const startOfRange = new Date(Date.UTC(
-      currentDate.getUTCFullYear(),
-      currentDate.getUTCMonth(),
-      currentDate.getUTCDate() + 1,
-    ));
-    const endOfRange = new Date(Date.UTC(
-      currentDate.getUTCFullYear(),
-      currentDate.getUTCMonth(),
-      currentDate.getUTCDate() + rangeDays,
-    ));
+    const startOfRange = new Date(
+      Date.UTC(
+        currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth(),
+        currentDate.getUTCDate() + 1,
+      ),
+    );
+    const endOfRange = new Date(
+      Date.UTC(
+        currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth(),
+        currentDate.getUTCDate() + rangeDays,
+      ),
+    );
 
     const menusRef = collection(db, 'menus');
-    
+
     // Query only next menus within range, ordered by date ascending
     const q = query(
       menusRef,
       where('date', '>=', Timestamp.fromDate(startOfRange)),
       where('date', '<=', Timestamp.fromDate(endOfRange)),
       orderBy('date', 'asc'),
-      limit(1)
+      limit(1),
     );
 
     const querySnapshot = await getDocs(q);

@@ -184,8 +184,16 @@ export function ThankYouCard() {
             </h3>
             <p className='text-muted-foreground text-sm leading-relaxed'>
               {firstItem.type === 'dish'
-                ? t('dishApproved', { dish: firstItem.dishName })
-                : t('imageApproved', { dish: firstItem.dishName })}
+                ? t('dishApproved', {
+                    dish: firstItem.nickname
+                      ? `${firstItem.dishName} (${firstItem.nickname})`
+                      : firstItem.dishName,
+                  })
+                : t('imageApproved', {
+                    dish: firstItem.nickname
+                      ? `${firstItem.dishName} (${firstItem.nickname})`
+                      : firstItem.dishName,
+                  })}
             </p>
 
             {otherItems.length > 0 && (
@@ -241,8 +249,16 @@ export function ThankYouCard() {
                 className='p-3 px-14 border-b border-green-100 dark:border-green-800/30 last:border-0 flex justify-between items-center text-sm'>
                 <span className='text-muted-foreground'>
                   {item.type === 'dish'
-                    ? t('dishApproved', { dish: item.dishName })
-                    : t('imageApproved', { dish: item.dishName })}
+                    ? t('dishApproved', {
+                        dish: item.nickname
+                          ? `${item.dishName} (${item.nickname})`
+                          : item.dishName,
+                      })
+                    : t('imageApproved', {
+                        dish: item.nickname
+                          ? `${item.dishName} (${item.nickname})`
+                          : item.dishName,
+                      })}
                 </span>
                 <Button
                   variant='ghost'

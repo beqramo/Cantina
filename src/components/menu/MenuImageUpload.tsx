@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { STORAGE_KEYS } from '@/lib/constants';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -42,7 +43,18 @@ export function MenuImageUpload({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nickname, setNickname] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  // Load saved nickname
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedNickname = localStorage.getItem(STORAGE_KEYS.NICKNAME);
+      if (savedNickname) {
+        setNickname(savedNickname);
+      }
+    }
+  }, []);
 
   // Turnstile callbacks
   const handleTurnstileVerify = useCallback((token: string) => {
@@ -136,24 +148,36 @@ export function MenuImageUpload({
         isRequest: false,
         turnstileToken: turnstileToken || undefined,
         dishName: dishNameForNotification,
+        nickname: nickname.trim(),
       });
 
       // Update menu item
-      await updateMenuItemImage(menu.id, mealType, category, imageUrl);
+      await updateMenuItemImage(
+        menu.id,
+        mealType,
+        category,
+        imageUrl,
+        nickname.trim() || undefined,
+      );
+
+      // Save nickname to localStorage if provided
+      if (nickname.trim()) {
+        localStorage.setItem(STORAGE_KEYS.NICKNAME, nickname.trim());
+      }
 
       // Save to pending approvals so we can notify later when approved
       const dishId = menu?.[mealType]?.[category]?.dishId;
       if (dishId) {
         try {
-          const { addPendingApproval } = await import(
-            '@/lib/pending-approvals'
-          );
+          const { addPendingApproval } =
+            await import('@/lib/pending-approvals');
           addPendingApproval({
             id: dishId,
             type: 'image',
             name: dishNameForNotification,
             imageUrl,
             createdAt: Date.now(),
+            nickname: nickname.trim() || undefined,
           });
         } catch (e) {
           console.error('Failed to save pending approval for menu image', e);
@@ -235,12 +259,29 @@ export function MenuImageUpload({
             </p>
           </div>
 
+          <div>
+            <label className='text-sm font-medium mb-2 block'>
+              {t('nickname') || 'Nickname'} ({t('optional') || 'Optional'})
+            </label>
+            <Input
+              type='text'
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder={t('nicknamePlaceholder') || 'Your nickname'}
+              disabled={loading}
+            />
+            <p className='text-xs text-muted-foreground mt-1'>
+              {t('nicknameDescription') ||
+                'If provided, your nickname will be shown when the image is approved.'}
+            </p>
+          </div>
+
           {imagePreview && (
-            <div className='mt-2'>
+            <div className='mt-2 border rounded-md p-2 bg-muted/30 flex justify-center'>
               <img
                 src={imagePreview}
                 alt='Preview'
-                className='max-w-full rounded-md'
+                className='max-h-48 w-auto object-contain rounded-md'
               />
             </div>
           )}
