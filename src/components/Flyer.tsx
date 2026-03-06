@@ -34,16 +34,6 @@ export function Flyer({ variant }: FlyerProps) {
         backgroundColor: bgColor,
         color: textColor,
       }}>
-      {/* Background Patterns - Subtle grayscale */}
-      <div
-        className='absolute inset-0 pointer-events-none z-0 opacity-5'
-        style={{
-          backgroundImage: `linear-gradient(${textColor} 1px, transparent 1px),
-                           linear-gradient(90deg, ${textColor} 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-        }}
-      />
-
       {/* Decoration Circle - Subtle grayscale */}
       <div
         className='absolute -top-[100px] -right-[100px] w-[500px] h-[500px] rounded-full z-0 pointer-events-none opacity-5'
@@ -102,7 +92,7 @@ export function Flyer({ variant }: FlyerProps) {
         {/* QR Section */}
         <div className='grow flex flex-col justify-center items-center gap-6 mt-[-40px]'>
           <div
-            className='rounded-[32px] flex justify-center items-center p-6 bg-white shadow-lg'
+            className='rounded-[32px] flex justify-center items-center p-6 bg-white shadow-lg print:shadow-none print:bg-transparent'
             style={{
               width: '360px',
               height: '360px',
