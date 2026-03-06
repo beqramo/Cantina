@@ -25,6 +25,7 @@ This workflow logs into the IPB online system, extracts canteen menus from the w
 1. After login, navigate to the **weekly canteen calendar**.
 2. Select the week that matches the **day and time shown in the user's screenshot**.
 3. Do **not** rely on the screenshot contents for the menu; always use the live HTML calendar data.
+4. one thing that you should do is first verify which existing menu is last in the admin dashboard here: https://cantina-ipb.vercel.app/admin/menu and upload the dishes after that latest menu, in other word next week menu, by pressing arrow on the righ side on the online ipb menu website. we do not want menus that are already in the dashboad. if the existing menu is empty that means that you can upload whatever it is visible, that week.
 
 ---
 
@@ -32,8 +33,7 @@ This workflow logs into the IPB online system, extracts canteen menus from the w
 
 **IMPORTANT:** Dish names in the calendar view are often truncated with "…" (three dots). To get the **full, complete names**:
 
-1. For each meal event (lunch or dinner) that you need to extract:
-
+1. For each meal event (lunch or dinner) that you need to extract (if the dish name has "..."):
    - **Click on the meal event** in the calendar
    - Click the **"Reservar Senha"** button that appears
    - A popup will display showing the **full dish names** without truncation
@@ -122,7 +122,6 @@ Rules:
 ## Step 8 – Confirm upload and summarize
 
 1. Confirm that the request **completed successfully**:
-
    - Look for a clear **success message**, or
    - Check that there is **no error response**.
 
