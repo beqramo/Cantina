@@ -54,26 +54,26 @@ async function compressImage(
   }
 
   // Create watermark SVG
-  // Size based on common mobile/web resolution (approx 4-5% of width)
+  // Size based on common mobile/web resolution
   const watermarkWidth = Math.max(
-    100,
-    Math.floor((metadata.width || MAX_WIDTH) * 0.15),
+    180,
+    Math.floor((metadata.width || MAX_WIDTH) * 0.25),
   );
-  const watermarkHeight = Math.floor(watermarkWidth * 0.25);
+  const watermarkHeight = Math.floor(watermarkWidth * 0.3);
 
   const watermarkSvg = `
-    <svg width="${watermarkWidth}" height="${watermarkHeight}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${watermarkWidth}" height="${watermarkHeight}">
       <style>
         .text {
           fill: rgba(255, 255, 255, 0.5);
           font-family: sans-serif;
           font-weight: bold;
-          font-size: ${Math.floor(watermarkHeight * 0.7)}px;
+          font-size: ${Math.floor(watermarkHeight * 0.8)}px;
         }
       </style>
       <text x="10" y="${Math.floor(
         watermarkHeight * 0.8,
-      )}" class="text">cantina-ipb</text>
+      )}" class="text">Cantina-ipb</text>
     </svg>
   `;
 
