@@ -68,11 +68,11 @@ async function compressImage(
           fill: rgba(255, 255, 255, 0.5);
           font-family: sans-serif;
           font-weight: bold;
-          font-size: ${Math.floor(watermarkHeight * 0.8)}px;
+          font-size: ${Math.floor(watermarkHeight * 0.9)}px;
         }
       </style>
       <text x="10" y="${Math.floor(
-        watermarkHeight * 0.8,
+        watermarkHeight * 0.9,
       )}" class="text">Cantina-ipb</text>
     </svg>
   `;
