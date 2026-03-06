@@ -66,7 +66,7 @@ export function Flyer({ variant }: FlyerProps) {
                 Know what you are eating today?
               </h1>
               <p className='text-[28px] opacity-80 font-medium'>
-                Daily menu and suggestions.
+                Daily menu with photos.
               </p>
             </>
           ) : isBilingual ? (
@@ -84,7 +84,7 @@ export function Flyer({ variant }: FlyerProps) {
                 style={{ backgroundColor: textColor, opacity: 0.3 }}
               />
               <p className='text-[28px] opacity-80 font-medium'>
-                Ementa Completa • Full Menu
+                Ementa Completa com Fotos • Full Menu with Photos
               </p>
             </>
           ) : (
@@ -93,7 +93,7 @@ export function Flyer({ variant }: FlyerProps) {
                 Sabe o que vais comer hoje?
               </h1>
               <p className='text-[28px] opacity-80 font-medium'>
-                Ementa do dia e sugestões.
+                Ementa do dia com fotos.
               </p>
             </>
           )}
