@@ -52,7 +52,7 @@ export const ImageUploadEmail: React.FC<ImageUploadEmailProps> = ({
 
           <Section style={buttonContainer}>
             <Button
-              href='https://cantina-ipb.web.app/admin/dashboard'
+              href='https://cantina-ipb.vercel.app/admin/dashboard'
               style={dashboardButton}>
               Review in Dashboard
             </Button>
