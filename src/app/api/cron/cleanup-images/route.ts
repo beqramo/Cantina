@@ -19,10 +19,10 @@ export async function GET(request: Request) {
       process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     );
 
-    // 2. Calculate Cutoff Time (24 hours ago)
+    // 2. Calculate Cutoff Time (4 weeks ago)
     const now = Date.now();
-    const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
-    const cutoffDate = new Date(now - TWENTY_FOUR_HOURS_MS);
+    const FOUR_WEEKS_MS = 4 * 7 * 24 * 60 * 60 * 1000;
+    const cutoffDate = new Date(now - FOUR_WEEKS_MS);
 
     // 3. Query "Expired" Temporary Uploads
     // These are uploads that were logged but never "claimed" (deleted) by a dish request
