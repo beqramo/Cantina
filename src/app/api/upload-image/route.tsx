@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 import { sendEmail } from '@/lib/email';
 import { ImageUploadEmail } from '@/components/emails/ImageUploadEmail';
-import { adminStorage, adminDb } from '@/lib/firebase-admin';
+import { adminStorage } from '@/lib/firebase-admin';
 import {
   uploadRateLimiter,
   getClientIP,
@@ -379,22 +379,6 @@ export async function POST(request: NextRequest) {
 
     // Get the public URL
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
-
-    // TRACKING: Log to temporary_uploads
-    // This allows the cleanup cron to find orphaned images efficiently without scanning all buckets
-    try {
-      const { Timestamp } = require('firebase-admin/firestore');
-      await adminDb.collection('temporary_uploads').add({
-        url: publicUrl,
-        path: filename,
-        bucket: bucket.name,
-        createdAt: Timestamp.now(),
-        ip: clientIP, // Optional: for debugging
-      });
-    } catch (err) {
-      console.error('[Image Upload] Failed to track temporary upload:', err);
-      // Non-blocking error, we still return success but this image might be missed by specific cleanup logic
-    }
 
     const dishName = formData.get('dishName') as string | null;
     const nickname = formData.get('nickname') as string | null;
