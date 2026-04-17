@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { WelcomePopup } from '@/components/WelcomePopup';
 import { locales } from '@/i18n';
 import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
+import { AuthProvider } from '@/lib/auth';
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -37,11 +38,13 @@ export default async function LocaleLayout({
         defaultTheme='system'
         enableSystem
         disableTransitionOnChange>
-        <AnalyticsProvider>
-          <Header />
-          {children}
-          <WelcomePopup />
-        </AnalyticsProvider>
+        <AuthProvider>
+          <AnalyticsProvider>
+            <Header />
+            {children}
+            <WelcomePopup />
+          </AnalyticsProvider>
+        </AuthProvider>
       </ThemeProvider>
     </NextIntlClientProvider>
   );

@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { AdminLogin } from '@/components/admin/AdminLogin';
 import { useLocale } from 'next-intl';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export default function AdminLoginPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, authError } = useAuth();
   const router = useRouter();
   const locale = useLocale();
 
-  // Helper to build locale-aware admin path
   const getAdminPath = (path: string) => {
     return locale === 'en' ? path : `/${locale}${path}`;
   };
@@ -30,5 +31,18 @@ export default function AdminLoginPage() {
     );
   }
 
-  return <AdminLogin />;
+  return (
+    <div className='space-y-4'>
+      {authError && (
+        <div className='container mx-auto max-w-md px-4 pt-6'>
+          <Alert variant='destructive'>
+            <AlertCircle className='h-4 w-4' />
+            <AlertTitle>Session</AlertTitle>
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        </div>
+      )}
+      <AdminLogin />
+    </div>
+  );
 }

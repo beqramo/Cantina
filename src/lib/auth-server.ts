@@ -10,27 +10,13 @@ import { locales } from '@/i18n';
 export async function verifyAuthToken(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
-    const tokenCookie = cookieStore.get('firebase-auth-token');
-    const token = tokenCookie?.value;
-
-    console.log('[Auth Server] Verifying auth token:', {
-      cookieExists: !!tokenCookie,
-      tokenExists: !!token,
-      tokenLength: token?.length || 0,
-      allCookies: Array.from(cookieStore.getAll()).map((c) => c.name),
-    });
+    const token = cookieStore.get('firebase-auth-token')?.value;
 
     if (!token) {
-      console.log('[Auth Server] No token found in cookies');
       return null;
     }
 
-    // Verify the token using Firebase Admin SDK
     const decodedToken = await adminAuth.verifyIdToken(token);
-    console.log('[Auth Server] Token verified successfully:', {
-      userId: decodedToken.uid,
-      email: decodedToken.email,
-    });
     return decodedToken.uid;
   } catch (error) {
     console.error('[Auth Server] Error verifying auth token:', error);
@@ -55,21 +41,12 @@ function getLocaleFromPath(pathname: string): string {
  * Redirects to login if not authenticated (with locale awareness)
  */
 export async function requireAuth(): Promise<string> {
-  console.log('[Auth Server] requireAuth called');
   const userId = await verifyAuthToken();
 
   if (!userId) {
-    // Get locale from headers to redirect with correct locale
     const headersList = await headers();
-    const pathname = headersList.get('x-pathname') || '';
     const referer = headersList.get('referer') || '';
 
-    console.log('[Auth Server] No authenticated user - preparing redirect:', {
-      pathname,
-      referer,
-    });
-
-    // Try to extract locale from referer or pathname
     let locale = 'en';
     if (referer) {
       try {
@@ -82,10 +59,8 @@ export async function requireAuth(): Promise<string> {
 
     const loginPath =
       locale === 'en' ? '/admin/login' : `/${locale}/admin/login`;
-    console.log('[Auth Server] Redirecting to login:', { loginPath, locale });
     redirect(loginPath);
   }
 
-  console.log('[Auth Server] User authenticated:', { userId });
   return userId;
 }
