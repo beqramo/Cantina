@@ -63,6 +63,7 @@ export function DishCard({ dish, showPendingBadge = false }: DishCardProps) {
         dish={dish}
         showDishUpload={true}
         onAddImageClick={handleAddImageClick}
+        onAddMoreImageClick={handleAddImageClick}
       />
       <DishImageUpload
         dish={dish}

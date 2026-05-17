@@ -78,8 +78,8 @@ export function WelcomePopup() {
           </div>
 
           {/* Background shapes */}
-          <div className='absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl' />
-          <div className='absolute -bottom-10 -right-10 w-40 h-40 bg-amber-500/20 rounded-full blur-2xl' />
+          <div className='absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none' />
+          <div className='absolute -bottom-10 -right-10 w-40 h-40 bg-amber-500/20 rounded-full blur-2xl pointer-events-none' />
 
           <div className='relative z-10 p-4 bg-white/20 backdrop-blur-md rounded-3xl border border-white/30 shadow-xl animate-in zoom-in duration-500'>
             <UtensilsCrossed className='h-10 w-10 text-white' />

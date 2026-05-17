@@ -72,8 +72,8 @@ export function PendingReviewCard() {
             : 'opacity-0 -translate-y-4 scale-95',
         )}>
         {/* Subtle decorative glow */}
-        <div className='absolute -right-20 -top-20 w-64 h-64 bg-amber-500/3 rounded-full blur-3xl' />
-        <div className='absolute -left-20 -bottom-20 w-64 h-64 bg-amber-500/3 rounded-full blur-3xl' />
+        <div className='absolute -right-20 -top-20 w-64 h-64 bg-amber-500/3 rounded-full blur-3xl pointer-events-none' />
+        <div className='absolute -left-20 -bottom-20 w-64 h-64 bg-amber-500/3 rounded-full blur-3xl pointer-events-none' />
 
         <div className='p-4 sm:p-5 flex items-start gap-4'>
           <div className='shrink-0 w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/20'>

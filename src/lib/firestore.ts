@@ -50,11 +50,26 @@ function firestoreDataToDish(docId: string, data: DocumentData): Dish {
   const images = data.images || (data.imageUrl ? [data.imageUrl] : []);
   const primaryImageUrl = images[0] || data.imageUrl || '';
 
+  // Backfill legacy `imageProviderNickname` (single string for the primary image)
+  // into the new per-URL `imageNicknames` map. This is a read-side migration
+  // so older docs that pre-date the map still expose nicknames correctly.
+  const storedNicknames: Record<string, string> = data.imageNicknames || {};
+  const mergedNicknames: Record<string, string> = { ...storedNicknames };
+  if (
+    primaryImageUrl &&
+    data.imageProviderNickname &&
+    !mergedNicknames[primaryImageUrl]
+  ) {
+    mergedNicknames[primaryImageUrl] = data.imageProviderNickname;
+  }
+
   return {
     id: docId,
     name: data.name,
     imageUrl: primaryImageUrl,
     images: images.length > 0 ? images : undefined,
+    imageNicknames:
+      Object.keys(mergedNicknames).length > 0 ? mergedNicknames : undefined,
     category: data.category,
     tags: data.tags || [],
     status: (data.status || 'approved') as DishStatus, // Default to 'approved' for backward compatibility
@@ -359,10 +374,39 @@ export async function getDishById(dishId: string): Promise<Dish | null> {
       return null;
     }
 
-    return firestoreDataToDish(dishDoc.id, dishDoc.data());
+    const data = dishDoc.data();
+    // Fire-and-forget persistent migration: if the doc still has the legacy
+    // single `imageProviderNickname` but no entry for the primary image in
+    // `imageNicknames`, write the merged map back. This runs at most once per
+    // dish — after migration the condition is false on subsequent reads.
+    void maybeMigrateImageNicknames(dishRef, data);
+    return firestoreDataToDish(dishDoc.id, data);
   } catch (error) {
     console.error('Error getting dish by ID:', error);
     return null;
+  }
+}
+
+// Migrates the legacy `imageProviderNickname` into `imageNicknames` on the doc
+// if the per-URL map doesn't yet have an entry for the primary image.
+async function maybeMigrateImageNicknames(
+  dishRef: ReturnType<typeof doc>,
+  data: DocumentData,
+): Promise<void> {
+  try {
+    const images = data.images || (data.imageUrl ? [data.imageUrl] : []);
+    const primaryUrl = images[0] || data.imageUrl;
+    const legacyNickname = data.imageProviderNickname;
+    if (!primaryUrl || !legacyNickname) return;
+    const existing: Record<string, string> = data.imageNicknames || {};
+    if (existing[primaryUrl]) return;
+    const updated: Record<string, string> = {
+      ...existing,
+      [primaryUrl]: legacyNickname,
+    };
+    await updateDoc(dishRef, { imageNicknames: updated });
+  } catch (err) {
+    console.warn('Failed to migrate imageNicknames for dish:', err);
   }
 }
 
@@ -1335,9 +1379,31 @@ export async function approvePendingDishImage(
       ? existingImages
       : [imageUrl, ...existingImages.filter((img: string) => img !== imageUrl)];
 
+    // Track the uploader nickname per-image (for multi-image dishes).
+    // Backfill the legacy single `imageProviderNickname` for the existing primary
+    // image before we overwrite it — otherwise the original uploader is lost when
+    // a new image becomes the primary.
+    const existingNicknames: Record<string, string> =
+      data.imageNicknames || {};
+    const updatedNicknames: Record<string, string> = { ...existingNicknames };
+    const existingPrimaryUrl = existingImages[0] || data.imageUrl;
+    if (
+      existingPrimaryUrl &&
+      data.imageProviderNickname &&
+      !updatedNicknames[existingPrimaryUrl]
+    ) {
+      updatedNicknames[existingPrimaryUrl] = data.imageProviderNickname;
+    }
+    if (nickname) {
+      updatedNicknames[imageUrl] = nickname;
+    } else {
+      delete updatedNicknames[imageUrl];
+    }
+
     await updateDoc(dishRef, {
       imageUrl, // Primary image (backward compatibility)
       images: updatedImages, // Update images array
+      imageNicknames: updatedNicknames,
       imageProviderNickname: nickname || null,
       pendingImages: updatedPendingImages,
       updatedAt: Timestamp.now(),

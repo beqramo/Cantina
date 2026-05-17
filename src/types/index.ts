@@ -32,12 +32,13 @@ export interface Dish {
   name: string;
   imageUrl: string; // Primary image (backward compatibility, should be images[0])
   images?: string[]; // Array of image URLs (first one is primary)
+  imageNicknames?: Record<string, string>; // Per-approved-image uploader nickname, keyed by imageUrl
   category?: DishCategory;
   tags: DishTag[];
   status: DishStatus; // Approval status for dish requests
   requestedBy?: string; // localStorage ID of user who requested
   nickname?: string; // User's nickname who requested
-  imageProviderNickname?: string; // Nickname of user who provided the image
+  imageProviderNickname?: string; // Nickname of user who provided the latest approved image (legacy/primary fallback)
   pendingImages?: PendingDishImage[]; // Array of pending images from users
   thumbsUp: number;
   thumbsDown: number;

@@ -22,9 +22,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslations } from 'next-intl';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { Turnstile } from '@/components/ui/Turnstile';
+import { addPendingApproval } from '@/lib/pending-approvals';
+import { invalidateCache } from '@/hooks/useSWRFirebase';
+import { CACHE_KEYS } from '@/lib/cache-keys';
 
 interface DishImageUploadProps {
-  dish: Dish;
+  dish: Pick<Dish, 'id' | 'name'>;
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
@@ -155,6 +158,21 @@ export function DishImageUpload({
       if (nickname.trim()) {
         localStorage.setItem(STORAGE_KEYS.NICKNAME, nickname.trim());
       }
+
+      // Record the pending approval so the "we got your image" banner appears
+      // and we can notify the user once an admin reviews it.
+      addPendingApproval({
+        id: dish.id,
+        type: 'image',
+        name: dish.name,
+        imageUrl,
+        createdAt: Date.now(),
+        nickname: nickname.trim() || undefined,
+      });
+
+      // Force the dish to refetch so the new pending image shows up in the
+      // card carousel with its "Pending" badge.
+      invalidateCache(CACHE_KEYS.DISH_BY_ID(dish.id));
 
       // Log upload success
       if (analytics) {

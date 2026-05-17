@@ -83,7 +83,7 @@ function PendingDishRequestCard({
                       (prev - 1 + dishImages.length) % dishImages.length,
                   );
                 }}
-                className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
+                className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10 cursor-pointer'>
                 <ChevronLeft className='h-5 w-5 text-white' />
               </button>
               <button
@@ -93,7 +93,7 @@ function PendingDishRequestCard({
                     (prev) => (prev + 1) % dishImages.length,
                   );
                 }}
-                className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10'>
+                className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full p-1.5 transition-colors z-10 cursor-pointer'>
                 <ChevronRight className='h-5 w-5 text-white' />
               </button>
 
@@ -187,9 +187,12 @@ function DishImageApprovalCard({
   onOpenImageViewer: (dishId: string, imageIndex: number) => void;
 }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentViewerIdx, setCurrentViewerIdx] = useState<number | null>(null);
   const t = useTranslations('Admin');
   const tMenu = useTranslations('Menu');
   const hasMultipleImages = item.pendingImages.length > 1;
+  const approvedImages = item.dish.images || [];
+  const hasApprovedImages = approvedImages.length > 0;
 
   // Reset index when images array changes (after approve/reject)
   useEffect(() => {
@@ -287,6 +290,62 @@ function DishImageApprovalCard({
           </>
         )}
       </div>
+
+      {/* Current (approved) images strip — for admin comparison */}
+      {hasApprovedImages && (
+        <div className='border-t bg-muted/30'>
+          <div className='px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground'>
+            {t('currentImages') || 'Current images'} ({approvedImages.length})
+          </div>
+          <div className='flex gap-2 overflow-x-auto px-3 pb-3'>
+            {approvedImages.map((url, idx) => (
+              <button
+                key={url}
+                type='button'
+                onClick={() => setCurrentViewerIdx(idx)}
+                className='relative shrink-0 w-16 h-16 rounded-md overflow-hidden bg-muted ring-1 ring-border hover:ring-primary transition cursor-pointer'
+                aria-label={`View current image ${idx + 1}`}>
+                <Image
+                  src={url}
+                  alt={`${item.dish.name} current image ${idx + 1}`}
+                  fill
+                  sizes='64px'
+                  className='object-cover'
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasApprovedImages && currentViewerIdx !== null && (
+        <ImageViewer
+          imageUrl={approvedImages[currentViewerIdx] || ''}
+          alt={`${item.dish.name} current image ${currentViewerIdx + 1}`}
+          isOpen={currentViewerIdx !== null}
+          onClose={() => setCurrentViewerIdx(null)}
+          onPrevious={
+            approvedImages.length > 1
+              ? () =>
+                  setCurrentViewerIdx(
+                    (prev) =>
+                      ((prev ?? 0) - 1 + approvedImages.length) %
+                      approvedImages.length,
+                  )
+              : undefined
+          }
+          onNext={
+            approvedImages.length > 1
+              ? () =>
+                  setCurrentViewerIdx(
+                    (prev) => ((prev ?? 0) + 1) % approvedImages.length,
+                  )
+              : undefined
+          }
+          showNavigation={approvedImages.length > 1}
+        />
+      )}
+
       <CardContent className='p-4 flex flex-col flex-1'>
         <div className='flex-1 space-y-2 mb-4'>
           <div className='flex items-start justify-between gap-2'>

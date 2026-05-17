@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useRef, useState, ReactNode } from 'react';
 import Image from 'next/image';
 import { analytics } from '@/lib/firebase-client';
 import { logEvent } from 'firebase/analytics';
@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
+  Plus,
 } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { Dish, DishCategory } from '@/types';
@@ -36,6 +37,7 @@ interface DishCardBaseProps {
   imageAlt: string;
   onImageClick?: () => void;
   onAddImageClick?: () => void;
+  onAddMoreImageClick?: () => void;
   isPendingApproval?: boolean;
   imageProviderNickname?: string;
 
@@ -59,6 +61,7 @@ export function DishCardBase({
   imageAlt,
   onImageClick,
   onAddImageClick,
+  onAddMoreImageClick,
   isPendingApproval = false,
   name,
   category,
@@ -88,21 +91,40 @@ export function DishCardBase({
   // Use provided dish or fetched dish
   const displayDish = providedDish || fetchedDish;
 
-  // Get all images for the dish (from images array or fallback to imageUrl)
-  const dishImages = displayDish?.images || (imageUrl ? [imageUrl] : []);
-  const hasMultipleImages = dishImages.length > 1;
+  // Build unified image list: approved images first, then pending (dish-level) images
+  const approvedImageUrls: string[] =
+    displayDish?.images || (imageUrl ? [imageUrl] : []);
+  // The Firestore converter backfills the legacy `imageProviderNickname` into
+  // `imageNicknames` for the primary image, so this lookup is sufficient.
+  // Fall back to the `imageProviderNickname` prop (passed by MenuDishCard for
+  // the menu-item image, which doesn't go through the dish converter).
+  const approvedCardImages = approvedImageUrls.map((url, idx) => ({
+    imageUrl: url,
+    nickname:
+      displayDish?.imageNicknames?.[url] ||
+      (idx === 0 ? imageProviderNickname : undefined),
+    pending: false,
+  }));
+  const pendingCardImages = (displayDish?.pendingImages || []).map((p) => ({
+    imageUrl: p.imageUrl,
+    nickname: p.nickname,
+    pending: true,
+  }));
+  const allCardImages = [...approvedCardImages, ...pendingCardImages];
+  const dishImages = allCardImages.map((i) => i.imageUrl);
+  const hasMultipleImages = allCardImages.length > 1;
   // Ensure currentImageIndex is within bounds (clamp to valid range)
-  // This handles cases where the dish changes or images array changes
   const safeImageIndex =
-    dishImages.length > 0
-      ? Math.max(0, Math.min(currentImageIndex, dishImages.length - 1))
+    allCardImages.length > 0
+      ? Math.max(0, Math.min(currentImageIndex, allCardImages.length - 1))
       : 0;
-  const currentImageUrl = dishImages[safeImageIndex] || imageUrl || '';
+  const currentCardImage = allCardImages[safeImageIndex];
+  const currentImageUrl = currentCardImage?.imageUrl || imageUrl || '';
 
-  // Check if image exists (regardless of approval status)
-  const hasImageUrl = !!currentImageUrl;
-  // Only show image if it exists AND is approved
-  const hasImage = hasImageUrl && !isPendingApproval;
+  // Show carousel if we have any image (approved or dish-level pending).
+  // `isPendingApproval` is a menu-item-level flag — only applies when there are no images at all.
+  const hasImage = allCardImages.length > 0;
+  const showMenuPendingPlaceholder = !hasImage && isPendingApproval;
 
   const handleImageClick = () => {
     if (hasImage) {
@@ -128,6 +150,30 @@ export function DishCardBase({
         ? (prev + 1) % dishImages.length
         : (prev - 1 + dishImages.length) % dishImages.length,
     );
+  };
+
+  // Custom swipe gesture for the card carousel (mobile-friendly nav)
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleCardTouchStart = (e: React.TouchEvent) => {
+    if (!hasMultipleImages || e.touches.length !== 1) return;
+    swipeStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  };
+
+  const handleCardTouchEnd = (e: React.TouchEvent) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start || !hasMultipleImages) return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      navigateCarousel(dx < 0 ? 'next' : 'prev');
+    }
   };
 
   // Category styling configuration - muted, professional colors
@@ -172,6 +218,8 @@ export function DishCardBase({
         <div
           className='relative aspect-[4/3] w-full cursor-pointer group bg-muted'
           onClick={handleImageClick}
+          onTouchStart={handleCardTouchStart}
+          onTouchEnd={handleCardTouchEnd}
           role='button'
           tabIndex={0}
           onKeyDown={(e) => {
@@ -199,14 +247,40 @@ export function DishCardBase({
                 sizes='(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw'
                 quality={90}
               />
-              {/* Overlay on hover */}
-              <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center'>
+              {/* Overlay on hover (purely visual — parent handles the click) */}
+              <div className='pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center'>
                 <div className='opacity-0 group-hover:opacity-100 transition-opacity'>
                   <div className='bg-black/60 backdrop-blur-sm rounded-full p-2'>
                     <Maximize2 className='h-5 w-5 text-white' />
                   </div>
                 </div>
               </div>
+
+              {/* Add-more image pill (only when image already exists) */}
+              {onAddMoreImageClick && (
+                <button
+                  type='button'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddMoreImageClick();
+                  }}
+                  className='absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full px-2.5 py-1 text-xs text-white transition-all opacity-90 hover:opacity-100 cursor-pointer'
+                  aria-label={tMenu('addAnotherImage') || 'Add another image'}
+                  title={tMenu('addAnotherImage') || 'Add another image'}>
+                  <Plus className='h-3.5 w-3.5' />
+                  <span>{tMenu('addImage') || 'Add image'}</span>
+                </button>
+              )}
+
+              {/* Per-image pending badge (top-right) */}
+              {currentCardImage?.pending && (
+                <div className='absolute top-2 right-2 z-10'>
+                  <Badge className='bg-amber-500 text-white text-xs'>
+                    <Clock className='h-3 w-3 mr-1' />
+                    {tMenu('pendingApproval') || 'Pending'}
+                  </Badge>
+                </div>
+              )}
 
               {/* Carousel Navigation */}
               {hasMultipleImages && (
@@ -216,7 +290,8 @@ export function DishCardBase({
                       e.stopPropagation();
                       navigateCarousel('prev');
                     }}
-                    className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-1.5 transition-all z-10 opacity-70 hover:opacity-100'>
+                    className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-1.5 transition-all z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer'
+                    aria-label='Previous image'>
                     <ChevronLeft className='h-4 w-4 text-white' />
                   </button>
                   <button
@@ -224,49 +299,22 @@ export function DishCardBase({
                       e.stopPropagation();
                       navigateCarousel('next');
                     }}
-                    className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-1.5 transition-all z-10 opacity-70 hover:opacity-100'>
+                    className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-1.5 transition-all z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer'
+                    aria-label='Next image'>
                     <ChevronRight className='h-4 w-4 text-white' />
                   </button>
 
-                  {/* Image Indicators */}
-                  <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10'>
-                    {dishImages.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCurrentImageIndex(idx);
-                        }}
-                        className={`h-1.5 rounded-full transition-all ${
-                          idx === safeImageIndex
-                            ? 'w-4 bg-white'
-                            : 'w-1.5 bg-white/50 hover:bg-white/75'
-                        }`}
-                        aria-label={`Go to image ${idx + 1}`}
-                      />
-                    ))}
-                  </div>
-
                   {/* Image Counter */}
                   <div className='absolute top-2 left-2 bg-black/50 backdrop-blur-sm rounded-md px-2 py-0.5 text-xs text-white z-10'>
-                    {safeImageIndex + 1}/{dishImages.length}
+                    {safeImageIndex + 1}/{allCardImages.length}
                   </div>
                 </>
-              )}
-
-              {isPendingApproval && (
-                <div className='absolute top-2 right-2 z-10'>
-                  <Badge className='bg-amber-500 text-white text-xs'>
-                    <Clock className='h-3 w-3 mr-1' />
-                    {tMenu('pendingApproval') || 'Pending'}
-                  </Badge>
-                </div>
               )}
             </>
           ) : (
             <div className='absolute inset-0 flex items-center justify-center group-hover:bg-muted/80 transition-colors'>
               <div className='text-center p-4 relative w-full h-full flex flex-col items-center justify-center'>
-                {isPendingApproval && (
+                {showMenuPendingPlaceholder && (
                   <div className='absolute top-2 right-2 z-10'>
                     <Badge className='bg-amber-500 text-white text-xs'>
                       <Clock className='h-3 w-3 mr-1' />
@@ -275,19 +323,20 @@ export function DishCardBase({
                   </div>
                 )}
                 <Camera className='h-10 w-10 text-muted-foreground/50 mb-2 group-hover:text-muted-foreground transition-colors' />
-                {(onAddImageClick || showDishUpload) && !isPendingApproval && (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddImageClick?.();
-                    }}
-                    variant='outline'
-                    size='sm'
-                    className='text-xs h-7'>
-                    {tMenu('addImage') || 'Add Image'}
-                  </Button>
-                )}
-                {isPendingApproval && (
+                {(onAddImageClick || showDishUpload) &&
+                  !showMenuPendingPlaceholder && (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddImageClick?.();
+                      }}
+                      variant='outline'
+                      size='sm'
+                      className='text-xs h-7'>
+                      {tMenu('addImage') || 'Add Image'}
+                    </Button>
+                  )}
+                {showMenuPendingPlaceholder && (
                   <p className='text-xs text-muted-foreground'>
                     {tMenu('imagePendingReview')}
                   </p>
@@ -343,13 +392,18 @@ export function DishCardBase({
               </div>
             )}
 
-            {/* Image Provider */}
-            {(imageProviderNickname || displayDish?.imageProviderNickname) && (
+            {/* Image Provider (per-image, including pending) */}
+            {currentCardImage?.nickname && (
               <p className='text-[11px] text-muted-foreground'>
                 {t('imageProvidedBy') || 'Image by'}{' '}
                 <span className='font-medium'>
-                  {imageProviderNickname || displayDish?.imageProviderNickname}
+                  {currentCardImage.nickname}
                 </span>
+                {currentCardImage.pending && (
+                  <span className='ml-1 text-amber-600'>
+                    · {tMenu('pendingApproval') || 'Pending'}
+                  </span>
+                )}
               </p>
             )}
             {children}

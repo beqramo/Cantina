@@ -32,6 +32,35 @@ const ALLOWED_TYPES = [
 const ALLOWED_FOLDERS = ['dish-images', 'request-images'];
 
 /**
+ * Render a "Cantina-ipb" watermark using sharp's native text input (Pango-based).
+ * More reliable than SVG <text> which depends on librsvg + fontconfig resolving
+ * a generic family — on Vercel/Linux that often falls back to tofu boxes.
+ * Returns null if text rendering is unavailable in the environment.
+ */
+async function renderWatermark(targetWidth: number): Promise<Buffer | null> {
+  try {
+    // Width determines text rendered size — Pango auto-sizes to fit.
+    const buf = await sharp({
+      text: {
+        text: '<span foreground="#ffffffcc" weight="bold">Cantina-ipb</span>',
+        rgba: true,
+        width: targetWidth,
+        align: 'left',
+      },
+    })
+      .png()
+      .toBuffer();
+    return buf;
+  } catch (err) {
+    console.warn(
+      '[Image Compression] Watermark text rendering unavailable, skipping watermark:',
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+}
+
+/**
  * Compress image using sharp with iterative quality reduction
  * Adds a "cantina-ipb" watermark to the bottom-left corner
  * Ensures output is under MAX_OUTPUT_SIZE
@@ -53,38 +82,23 @@ async function compressImage(
     });
   }
 
-  // Create watermark SVG
-  // Size based on common mobile/web resolution
+  // Build a watermark sized roughly to ~25% of the final image width
   const watermarkWidth = Math.max(
     180,
     Math.floor((metadata.width || MAX_WIDTH) * 0.25),
   );
-  const watermarkHeight = Math.floor(watermarkWidth * 0.3);
+  const watermarkBuffer = await renderWatermark(watermarkWidth);
 
-  const watermarkSvg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${watermarkWidth}" height="${watermarkHeight}">
-      <style>
-        .text {
-          fill: rgba(255, 255, 255, 0.5);
-          font-family: sans-serif;
-          font-weight: bold;
-          font-size: ${Math.floor(watermarkHeight * 0.9)}px;
-        }
-      </style>
-      <text x="10" y="${Math.floor(
-        watermarkHeight * 0.9,
-      )}" class="text">Cantina-ipb</text>
-    </svg>
-  `;
-
-  // Apply watermark - do this before compression
-  sharpInstance = sharpInstance.composite([
-    {
-      input: Buffer.from(watermarkSvg),
-      gravity: 'southwest',
-      blend: 'over',
-    },
-  ]);
+  // Apply watermark - do this before compression. If rendering fails, skip silently.
+  if (watermarkBuffer) {
+    sharpInstance = sharpInstance.composite([
+      {
+        input: watermarkBuffer,
+        gravity: 'southwest',
+        blend: 'over',
+      },
+    ]);
+  }
 
   // Output format - prefer webp for best compression
   const outputMimeType = 'image/webp';
@@ -125,14 +139,17 @@ async function compressImage(
       fit: 'inside',
     });
 
-    // Re-apply watermark on smaller image
-    sharpInstance = sharpInstance.composite([
-      {
-        input: Buffer.from(watermarkSvg),
-        gravity: 'southwest',
-        blend: 'over',
-      },
-    ]);
+    // Re-apply watermark on smaller image (rerender at the smaller width)
+    const smallerWatermark = await renderWatermark(200);
+    if (smallerWatermark) {
+      sharpInstance = sharpInstance.composite([
+        {
+          input: smallerWatermark,
+          gravity: 'southwest',
+          blend: 'over',
+        },
+      ]);
+    }
 
     compressedBuffer = await sharpInstance
       .webp({
@@ -154,18 +171,21 @@ async function compressImage(
   }
 
   // Final attempt with very aggressive settings
-  compressedBuffer = await sharp(buffer)
-    .resize(600, undefined, {
-      withoutEnlargement: true,
-      fit: 'inside',
-    })
-    .composite([
+  const finalWatermark = await renderWatermark(160);
+  let finalInstance = sharp(buffer).resize(600, undefined, {
+    withoutEnlargement: true,
+    fit: 'inside',
+  });
+  if (finalWatermark) {
+    finalInstance = finalInstance.composite([
       {
-        input: Buffer.from(watermarkSvg),
+        input: finalWatermark,
         gravity: 'southwest',
         blend: 'over',
       },
-    ])
+    ]);
+  }
+  compressedBuffer = await finalInstance
     .webp({
       quality: 40,
       effort: 6,

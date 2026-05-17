@@ -16,10 +16,29 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react';
-import useSWR, { SWRConfiguration } from 'swr';
+import useSWR, { SWRConfiguration, mutate as globalMutate } from 'swr';
 import { CACHE_TTL } from '@/lib/cache-keys';
 
 const STORAGE_PREFIX = 'cantina_swr_';
+
+/**
+ * Invalidate a cached key across both layers (in-memory registry + localStorage)
+ * and trigger SWR revalidation. Use this after a write operation to force the
+ * next read to see fresh data — e.g. after uploading a pending dish image.
+ */
+export function invalidateCache(cacheKey: string | null | undefined): void {
+  if (!cacheKey) return;
+  fetchRegistry.delete(cacheKey);
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(STORAGE_PREFIX + cacheKey);
+    } catch {
+      // ignore storage errors
+    }
+  }
+  // Tell SWR to refetch any subscribers using this key
+  void globalMutate(cacheKey);
+}
 
 /**
  * Helper to save data to localStorage with a timestamp

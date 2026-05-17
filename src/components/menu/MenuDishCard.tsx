@@ -4,6 +4,7 @@ import { useState, memo } from 'react';
 import { MenuItem, DishCategory } from '@/types';
 import { Menu, MealType } from '@/types';
 import { DishCardBase } from '@/components/dish/DishCardBase';
+import { DishImageUpload } from '@/components/dish/DishImageUpload';
 import { MenuImageUpload } from './MenuImageUpload';
 import { analytics } from '@/lib/firebase-client';
 import { logEvent } from 'firebase/analytics';
@@ -24,6 +25,7 @@ export const MenuDishCard = memo(function MenuDishCard({
   onImageUploaded,
 }: MenuDishCardProps) {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isDishUploadOpen, setIsDishUploadOpen] = useState(false);
 
   const handleUploadSuccess = () => {
     onImageUploaded?.();
@@ -33,12 +35,17 @@ export const MenuDishCard = memo(function MenuDishCard({
     setIsUploadDialogOpen(true);
   };
 
+  const canAddMoreToDish = !!menuItem.dishId;
+
   return (
     <>
       <DishCardBase
         imageUrl={menuItem.imageUrl}
         imageAlt={menuItem.dishName}
         onAddImageClick={handleAddImageClick}
+        onAddMoreImageClick={
+          canAddMoreToDish ? () => setIsDishUploadOpen(true) : undefined
+        }
         onImageClick={() => {
           if (analytics) {
             logEvent(analytics, 'select_content', {
@@ -64,6 +71,15 @@ export const MenuDishCard = memo(function MenuDishCard({
         onClose={() => setIsUploadDialogOpen(false)}
         onSuccess={handleUploadSuccess}
       />
+
+      {canAddMoreToDish && (
+        <DishImageUpload
+          dish={{ id: menuItem.dishId!, name: menuItem.dishName }}
+          isOpen={isDishUploadOpen}
+          onClose={() => setIsDishUploadOpen(false)}
+          onSuccess={handleUploadSuccess}
+        />
+      )}
     </>
   );
 });

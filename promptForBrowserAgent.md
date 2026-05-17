@@ -25,7 +25,7 @@ This workflow logs into the IPB online system, extracts canteen menus from the w
 1. After login, navigate to the **weekly canteen calendar**.
 2. Select the week that matches the **day and time shown in the user's screenshot**.
 3. Do **not** rely on the screenshot contents for the menu; always use the live HTML calendar data.
-4. one thing that you should do is first verify which existing menu is last in the admin dashboard here: https://cantina-ipb.vercel.app/admin/menu and upload the dishes after that latest menu, in other word next week menu, by pressing arrow on the righ side on the online ipb menu website. we do not want menus that are already in the dashboad. if the existing menu is empty that means that you can upload whatever it is visible, that week.
+4. one thing that you should do is first verify which existing menu is last in the admin dashboard here: [https://cantina-ipb.vercel.app/admin/menu](https://cantina-ipb.vercel.app/admin/menu) and upload the dishes after that latest menu, in other word next week menu, by pressing arrow on the righ side on the online ipb menu website. we do not want menus that are already in the dashboad. if the existing menu is empty that means that you can upload whatever it is visible, that week.
 
 ---
 

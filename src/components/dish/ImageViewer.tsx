@@ -157,6 +157,9 @@ export function ImageViewer({
     initialPosition: { x: number; y: number };
   } | null>(null);
 
+  // Single-finger swipe-to-navigate (only active when not zoomed)
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     // Prevent browser zoom when handling touch events
     if (e.touches.length > 1) {
@@ -165,6 +168,7 @@ export function ImageViewer({
 
     if (e.touches.length === 2) {
       setIsPinching(true);
+      swipeStartRef.current = null;
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const distance = Math.hypot(
@@ -187,6 +191,15 @@ export function ImageViewer({
         x: e.touches[0].clientX - position.x,
         y: e.touches[0].clientY - position.y,
       });
+    } else if (
+      e.touches.length === 1 &&
+      scale === 1 &&
+      (onPrevious || onNext)
+    ) {
+      swipeStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
     }
   };
 
@@ -243,7 +256,25 @@ export function ImageViewer({
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // Detect single-finger horizontal swipe when not zoomed
+    const swipeStart = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (swipeStart && scale === 1) {
+      const touch = e.changedTouches[0];
+      if (touch) {
+        const dx = touch.clientX - swipeStart.x;
+        const dy = touch.clientY - swipeStart.y;
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          if (dx < 0 && onNext) {
+            onNext();
+          } else if (dx > 0 && onPrevious) {
+            onPrevious();
+          }
+        }
+      }
+    }
+
     touchStartRef.current = null;
     setIsDragging(false);
     setIsPinching(false);

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { loginAdmin } from '@/lib/auth';
 import { mapFirebaseAuthError } from '@/lib/firebase-auth-errors';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Card,
@@ -29,6 +29,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function AdminLogin() {
   const t = useTranslations('Navigation');
   const tCommon = useTranslations('Common');
+  const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,9 +47,11 @@ export function AdminLogin() {
 
     try {
       await loginAdmin(data.email, data.password);
+      const dashboardPath =
+        locale === 'en' ? '/admin/dashboard' : `/${locale}/admin/dashboard`;
+      window.location.assign(dashboardPath);
     } catch (err) {
       setError(mapFirebaseAuthError(err));
-    } finally {
       setLoading(false);
     }
   };

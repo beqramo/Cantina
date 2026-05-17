@@ -76,7 +76,8 @@
     "requestedBy": "Requested by",
     "uploadedBy": "Uploaded by",
     "imagesPending": "images pending",
-    "noImage": "No image"
+    "noImage": "No image",
+    "currentImages": "Current images"
   },
   "About": {
     "title": "About Cantina IPB",
@@ -172,6 +173,7 @@
     "noMenuAvailable": "No menu available for today",
     "noMenuDescription": "The daily menu hasn't been added yet. Try searching for the dish you're looking for!",
     "addImage": "Upload Image",
+    "addAnotherImage": "Add another image",
     "pendingApproval": "Pending Approval",
     "imagePendingReview": "Image pending review",
     "uploadImage": "Upload Image",
