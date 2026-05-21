@@ -94,6 +94,21 @@ export function DailyMenu() {
     checkApprovalsWithMenu(menu);
   }, [selectedDate, menu?.id, menu]); // Added menu to deps to ensure re-check on refresh
 
+  // When an admin approves/rejects anything, force-refresh the menu so the
+  // pending badge updates immediately rather than waiting for the SWR TTL.
+  useEffect(() => {
+    const handleApprovalUpdate = () => {
+      mutate();
+    };
+    window.addEventListener('cantina:approval-updated', handleApprovalUpdate);
+    return () => {
+      window.removeEventListener(
+        'cantina:approval-updated',
+        handleApprovalUpdate,
+      );
+    };
+  }, [mutate]);
+
   // Lazy navigation handlers - fetch only when clicked
   const handlePrevious = useCallback(async () => {
     if (isLoadingDate) return;

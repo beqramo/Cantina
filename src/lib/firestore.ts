@@ -1125,12 +1125,51 @@ export async function approveMenuItemImage(
       updatedAt: Timestamp.now(),
     });
 
-    // If menu item has a dishId, also update the dish record
+    // If menu item has a dishId, also update the dish record.
+    // The dish-side fields are the source of truth for the multi-image
+    // carousel (`images[]` + `imageNicknames`). Without merging the
+    // newly-approved menu image here, dishes that already have approved
+    // images would silently drop it from the gallery.
     if (menuItem.dishId && menuItem.imageUrl) {
-      await updateDish(menuItem.dishId, {
-        imageUrl: menuItem.imageUrl,
-        imageProviderNickname: menuItem.imageProviderNickname || null,
-      });
+      const dishRef = doc(db, 'dishes', menuItem.dishId);
+      const dishDoc = await getDoc(dishRef);
+      if (dishDoc.exists()) {
+        const dishData = dishDoc.data();
+        const existingImages: string[] =
+          dishData.images || (dishData.imageUrl ? [dishData.imageUrl] : []);
+        const updatedImages = existingImages.includes(menuItem.imageUrl)
+          ? existingImages
+          : [...existingImages, menuItem.imageUrl];
+
+        const existingNicknames: Record<string, string> =
+          dishData.imageNicknames || {};
+        const updatedNicknames: Record<string, string> = {
+          ...existingNicknames,
+        };
+        // Backfill legacy primary nickname before potentially overwriting.
+        const existingPrimary = existingImages[0] || dishData.imageUrl;
+        if (
+          existingPrimary &&
+          dishData.imageProviderNickname &&
+          !updatedNicknames[existingPrimary]
+        ) {
+          updatedNicknames[existingPrimary] = dishData.imageProviderNickname;
+        }
+        if (menuItem.imageProviderNickname) {
+          updatedNicknames[menuItem.imageUrl] = menuItem.imageProviderNickname;
+        }
+
+        await updateDoc(dishRef, {
+          imageUrl: existingImages[0] || menuItem.imageUrl,
+          images: updatedImages,
+          imageNicknames: updatedNicknames,
+          imageProviderNickname:
+            dishData.imageProviderNickname ||
+            menuItem.imageProviderNickname ||
+            null,
+          updatedAt: Timestamp.now(),
+        });
+      }
     }
   } catch (error) {
     console.error('Error approving menu item image:', error);

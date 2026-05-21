@@ -49,19 +49,29 @@ export function ThankYouCard() {
       if (e.key?.includes('resolved_approvals')) syncApprovals();
     };
 
+    // When admin approves/rejects in another tab (or the same tab), bypass the
+    // 60s throttle and re-check immediately so the user's "Pending review"
+    // banner transitions to "Approved" without waiting.
+    const handleApprovalUpdate = () => checkApprovals(true);
+
     syncApprovals();
     checkApprovals();
 
     window.addEventListener(RESOLVED_UPDATE_EVENT, syncApprovals);
     window.addEventListener('storage', handleStorage);
+    window.addEventListener('cantina:approval-updated', handleApprovalUpdate);
 
     return () => {
       window.removeEventListener(RESOLVED_UPDATE_EVENT, syncApprovals);
       window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(
+        'cantina:approval-updated',
+        handleApprovalUpdate,
+      );
     };
   }, []);
 
-  const checkApprovals = async () => {
+  const checkApprovals = async (force = false) => {
     const pending = getPendingApprovals();
     if (pending.length === 0) return;
 
@@ -70,8 +80,10 @@ export function ThankYouCard() {
     // Process checks
     await Promise.all(
       pending.map(async (entry) => {
-        // Skip if checked recently (within 60s)
+        // Skip if checked recently (within 60s), unless caller forced a
+        // re-check (e.g. an admin approval just happened).
         if (
+          !force &&
           entry.lastChecked &&
           Date.now() - entry.lastChecked < CHECK_THROTTLE_MS
         ) {

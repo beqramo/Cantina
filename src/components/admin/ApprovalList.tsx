@@ -24,6 +24,8 @@ import Image from 'next/image';
 import { formatMenuDate } from '@/lib/time';
 import { ImageViewer } from '@/components/dish/ImageViewer';
 import { DishImagesGallery } from '@/components/admin/DishImagesGallery';
+import { invalidateCache } from '@/hooks/useSWRFirebase';
+import { CACHE_KEYS } from '@/lib/cache-keys';
 
 // Component for pending dish request card with carousel
 function PendingDishRequestCard({
@@ -465,9 +467,24 @@ export function ApprovalList() {
     }
   };
 
+  // Fired after an admin action so listeners (ThankYouCard, DailyMenu) can
+  // refresh their state without waiting for the 60s polling throttle.
+  const broadcastApprovalUpdate = () => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('cantina:approval-updated'));
+  };
+
+  const invalidateDishCaches = (dishId?: string) => {
+    if (dishId) invalidateCache(CACHE_KEYS.DISH_BY_ID(dishId));
+    invalidateCache(CACHE_KEYS.DISHES_ALL);
+    invalidateCache(CACHE_KEYS.DISH_REQUESTS_PENDING);
+  };
+
   const handleApprove = async (id: string) => {
     try {
       await approveDishRequest(id);
+      invalidateDishCaches(id);
+      broadcastApprovalUpdate();
       loadRequests();
     } catch (error) {
       console.error('Error approving request:', error);
@@ -478,6 +495,8 @@ export function ApprovalList() {
     if (confirm('Are you sure you want to reject this request?')) {
       try {
         await rejectDishRequest(id);
+        invalidateDishCaches(id);
+        broadcastApprovalUpdate();
         loadRequests();
       } catch (error) {
         console.error('Error rejecting request:', error);
@@ -492,6 +511,17 @@ export function ApprovalList() {
   ) => {
     try {
       await approveMenuItemImage(menuId, mealType, category);
+      // The menu doc key is ad-hoc (`menu_by_date_<epoch>`), and we don't have
+      // the date here. Invalidate by dishId so the DishCardBase carousel
+      // refetches; that drives the visible badge.
+      const dishId = menuImages.find(
+        (m) =>
+          m.menu.id === menuId &&
+          m.mealType === mealType &&
+          m.category === category,
+      )?.menu?.[mealType]?.[category]?.dishId;
+      invalidateDishCaches(dishId);
+      broadcastApprovalUpdate();
       loadMenuImages();
     } catch (error) {
       console.error('Error approving menu image:', error);
@@ -506,6 +536,14 @@ export function ApprovalList() {
     if (confirm('Are you sure you want to reject this image?')) {
       try {
         await rejectMenuItemImage(menuId, mealType, category);
+        const dishId = menuImages.find(
+          (m) =>
+            m.menu.id === menuId &&
+            m.mealType === mealType &&
+            m.category === category,
+        )?.menu?.[mealType]?.[category]?.dishId;
+        invalidateDishCaches(dishId);
+        broadcastApprovalUpdate();
         loadMenuImages();
       } catch (error) {
         console.error('Error rejecting menu image:', error);
@@ -520,6 +558,8 @@ export function ApprovalList() {
   ) => {
     try {
       await approvePendingDishImage(dishId, imageUrl, nickname);
+      invalidateDishCaches(dishId);
+      broadcastApprovalUpdate();
       loadDishImages();
       setSelectedImageIndex(null);
     } catch (error) {
@@ -579,6 +619,8 @@ export function ApprovalList() {
     if (confirm('Are you sure you want to reject this image?')) {
       try {
         await rejectPendingDishImage(dishId, imageUrl);
+        invalidateDishCaches(dishId);
+        broadcastApprovalUpdate();
         loadDishImages();
       } catch (error) {
         console.error('Error rejecting dish image:', error);
