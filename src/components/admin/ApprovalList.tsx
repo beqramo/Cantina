@@ -23,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import { formatMenuDate } from '@/lib/time';
 import { ImageViewer } from '@/components/dish/ImageViewer';
+import { DishImagesGallery } from '@/components/admin/DishImagesGallery';
 
 // Component for pending dish request card with carousel
 function PendingDishRequestCard({
@@ -180,14 +181,15 @@ function DishImageApprovalCard({
   onApprove,
   onReject,
   onOpenImageViewer,
+  onApprovedImageDeleted,
 }: {
   item: { dish: Dish; pendingImages: PendingDishImage[] };
   onApprove: (dishId: string, imageUrl: string, nickname?: string) => void;
   onReject: (dishId: string, imageUrl: string) => void;
   onOpenImageViewer: (dishId: string, imageIndex: number) => void;
+  onApprovedImageDeleted: () => void;
 }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [currentViewerIdx, setCurrentViewerIdx] = useState<number | null>(null);
   const t = useTranslations('Admin');
   const tMenu = useTranslations('Menu');
   const hasMultipleImages = item.pendingImages.length > 1;
@@ -291,58 +293,16 @@ function DishImageApprovalCard({
         )}
       </div>
 
-      {/* Current (approved) images strip — for admin comparison */}
+      {/* Current (approved) images strip — for admin comparison.
+          Admin can delete individual images here; the per-image nickname goes with it. */}
       {hasApprovedImages && (
-        <div className='border-t bg-muted/30'>
-          <div className='px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground'>
-            {t('currentImages') || 'Current images'} ({approvedImages.length})
-          </div>
-          <div className='flex gap-2 overflow-x-auto px-3 pb-3'>
-            {approvedImages.map((url, idx) => (
-              <button
-                key={url}
-                type='button'
-                onClick={() => setCurrentViewerIdx(idx)}
-                className='relative shrink-0 w-16 h-16 rounded-md overflow-hidden bg-muted ring-1 ring-border hover:ring-primary transition cursor-pointer'
-                aria-label={`View current image ${idx + 1}`}>
-                <Image
-                  src={url}
-                  alt={`${item.dish.name} current image ${idx + 1}`}
-                  fill
-                  sizes='64px'
-                  className='object-cover'
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {hasApprovedImages && currentViewerIdx !== null && (
-        <ImageViewer
-          imageUrl={approvedImages[currentViewerIdx] || ''}
-          alt={`${item.dish.name} current image ${currentViewerIdx + 1}`}
-          isOpen={currentViewerIdx !== null}
-          onClose={() => setCurrentViewerIdx(null)}
-          onPrevious={
-            approvedImages.length > 1
-              ? () =>
-                  setCurrentViewerIdx(
-                    (prev) =>
-                      ((prev ?? 0) - 1 + approvedImages.length) %
-                      approvedImages.length,
-                  )
-              : undefined
-          }
-          onNext={
-            approvedImages.length > 1
-              ? () =>
-                  setCurrentViewerIdx(
-                    (prev) => ((prev ?? 0) + 1) % approvedImages.length,
-                  )
-              : undefined
-          }
-          showNavigation={approvedImages.length > 1}
+        <DishImagesGallery
+          dishId={item.dish.id}
+          dishName={item.dish.name}
+          images={approvedImages}
+          imageNicknames={item.dish.imageNicknames}
+          variant='strip'
+          onDeleted={onApprovedImageDeleted}
         />
       )}
 
@@ -801,6 +761,7 @@ export function ApprovalList() {
                 onApprove={handleApproveDishImage}
                 onReject={handleRejectDishImage}
                 onOpenImageViewer={openImageViewer}
+                onApprovedImageDeleted={loadDishImages}
               />
             ))}
           </div>

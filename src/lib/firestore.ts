@@ -1443,9 +1443,84 @@ export async function rejectPendingDishImage(
       pendingImages: updatedPendingImages,
       updatedAt: Timestamp.now(),
     });
+
+    // Best-effort: also delete the underlying file from Cloud Storage.
+    deleteImageFromStorage(imageUrl).catch(() => {});
   } catch (error) {
     console.error('Error rejecting pending dish image:', error);
     throw error;
+  }
+}
+
+/**
+ * Delete an approved dish image. Removes it from `images`, drops its
+ * per-image nickname, and promotes a new primary if the deleted one was
+ * primary. Also fires a best-effort Cloud Storage cleanup.
+ */
+export async function deleteApprovedDishImage(
+  dishId: string,
+  imageUrl: string,
+): Promise<void> {
+  if (!db) throw new Error('Firebase not initialized');
+
+  try {
+    const dishRef = doc(db, 'dishes', dishId);
+    const dishDoc = await getDoc(dishRef);
+
+    if (!dishDoc.exists()) {
+      throw new Error('Dish not found');
+    }
+
+    const data = dishDoc.data();
+    const existingImages: string[] =
+      data.images || (data.imageUrl ? [data.imageUrl] : []);
+    const updatedImages = existingImages.filter((url) => url !== imageUrl);
+
+    const existingNicknames: Record<string, string> =
+      data.imageNicknames || {};
+    const updatedNicknames: Record<string, string> = { ...existingNicknames };
+    delete updatedNicknames[imageUrl];
+
+    const wasPrimary = data.imageUrl === imageUrl || existingImages[0] === imageUrl;
+    const newPrimary = updatedImages[0] || '';
+
+    const updates: Record<string, unknown> = {
+      images: updatedImages,
+      imageNicknames: updatedNicknames,
+      updatedAt: Timestamp.now(),
+    };
+    if (wasPrimary) {
+      updates.imageUrl = newPrimary;
+      updates.imageProviderNickname = newPrimary
+        ? updatedNicknames[newPrimary] || null
+        : null;
+    }
+
+    await updateDoc(dishRef, updates);
+
+    // Best-effort: also delete the underlying file from Cloud Storage.
+    deleteImageFromStorage(imageUrl).catch(() => {});
+  } catch (error) {
+    console.error('Error deleting approved dish image:', error);
+    throw error;
+  }
+}
+
+/**
+ * Best-effort call to the admin delete-image endpoint. The endpoint relies
+ * on the `firebase-auth-token` cookie set during admin login, so no Bearer
+ * header is required. Failures here don't block the Firestore write.
+ */
+async function deleteImageFromStorage(imageUrl: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    await fetch('/api/admin/delete-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl }),
+    });
+  } catch (error) {
+    console.warn('Failed to delete image file from storage:', error);
   }
 }
 

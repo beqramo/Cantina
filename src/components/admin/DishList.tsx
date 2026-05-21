@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { deleteDish, getDishesPaginated, searchDishes } from '@/lib/firestore';
 import { Dish } from '@/types';
-import { DishCard } from '@/components/dish/DishCard';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,19 +12,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { DishForm } from './DishForm';
-import { ImageViewer } from '@/components/dish/ImageViewer';
+import { DishImagesGallery } from '@/components/admin/DishImagesGallery';
 import { useTranslations } from 'next-intl';
 import {
   Trash2,
   Edit,
   Plus,
-  Maximize2,
   Search,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -43,10 +40,6 @@ export function DishList() {
   const PAGE_SIZE = 12;
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [viewingImage, setViewingImage] = useState<{
-    url: string;
-    alt: string;
-  } | null>(null);
   const t = useTranslations('Admin');
   const tCommon = useTranslations('Common');
   const tSearch = useTranslations('Search');
@@ -171,55 +164,21 @@ export function DishList() {
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-        {dishes.map((dish: Dish) => (
+        {dishes.map((dish: Dish) => {
+          const dishImages =
+            dish.images || (dish.imageUrl ? [dish.imageUrl] : []);
+          const currentCursor =
+            pageStack.length > 0 ? pageStack[pageStack.length - 1] : null;
+          return (
           <Card key={dish.id} className='overflow-hidden'>
-            <div
-              className={`relative aspect-video w-full ${
-                dish.imageUrl ? 'cursor-pointer group' : ''
-              }`}
-              onClick={() => {
-                if (dish.imageUrl) {
-                  setViewingImage({ url: dish.imageUrl, alt: dish.name });
-                }
-              }}
-              role={dish.imageUrl ? 'button' : undefined}
-              tabIndex={dish.imageUrl ? 0 : undefined}
-              onKeyDown={(e) => {
-                if (dish.imageUrl && (e.key === 'Enter' || e.key === ' ')) {
-                  e.preventDefault();
-                  setViewingImage({ url: dish.imageUrl, alt: dish.name });
-                }
-              }}
-              aria-label={
-                dish.imageUrl
-                  ? `View full size image of ${dish.name}`
-                  : undefined
-              }>
-              {dish.imageUrl ? (
-                <>
-                  <Image
-                    src={dish.imageUrl}
-                    alt={dish.name}
-                    fill
-                    className='object-cover transition-opacity group-hover:opacity-90'
-                    sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
-                  />
-                  <div className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors'>
-                    <div className='opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity'>
-                      <div className='bg-black/60 backdrop-blur-sm rounded-full p-2'>
-                        <Maximize2 className='h-6 w-6 md:h-8 md:w-8 text-white' />
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className='absolute inset-0 bg-muted flex items-center justify-center'>
-                  <p className='text-muted-foreground text-sm'>
-                    {t('noImage')}
-                  </p>
-                </div>
-              )}
-            </div>
+            <DishImagesGallery
+              dishId={dish.id}
+              dishName={dish.name}
+              images={dishImages}
+              imageNicknames={dish.imageNicknames}
+              variant='carousel'
+              onDeleted={() => loadDishes(currentCursor)}
+            />
             <CardContent className='p-4'>
               <div className='flex items-start justify-between gap-2 mb-2'>
                 <div className='flex-1'>
@@ -274,7 +233,8 @@ export function DishList() {
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
       {!debouncedSearch.trim() && (
         <div className='flex items-center justify-center gap-4 mt-8'>
@@ -296,14 +256,6 @@ export function DishList() {
             <ChevronRight className='h-4 w-4 ml-2' />
           </Button>
         </div>
-      )}
-      {viewingImage && (
-        <ImageViewer
-          imageUrl={viewingImage.url}
-          alt={viewingImage.alt}
-          isOpen={!!viewingImage}
-          onClose={() => setViewingImage(null)}
-        />
       )}
     </div>
   );

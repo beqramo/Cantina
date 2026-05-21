@@ -77,7 +77,10 @@
     "uploadedBy": "Carregado por",
     "imagesPending": "imagens pendentes",
     "noImage": "Sem imagem",
-    "currentImages": "Imagens atuais"
+    "currentImages": "Imagens atuais",
+    "deleteImage": "Eliminar imagem",
+    "confirmDeleteImage": "Eliminar esta imagem? A alcunha do utilizador associada a esta imagem também será removida.",
+    "noImagesYet": "Ainda sem imagens"
   },
   "About": {
     "title": "Sobre Cantina IPB",

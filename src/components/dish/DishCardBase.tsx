@@ -94,6 +94,12 @@ export function DishCardBase({
   // Build unified image list: approved images first, then pending (dish-level) images
   const approvedImageUrls: string[] =
     displayDish?.images || (imageUrl ? [imageUrl] : []);
+  // When the dish has no approved images and we're falling back to the menu
+  // item's `imageUrl`, the `isPendingApproval` prop tells us whether that
+  // image is still awaiting admin review. Mark it so the per-image pending
+  // badge renders on the very first upload.
+  const fallbackImageIsPending =
+    !displayDish?.images && !!imageUrl && isPendingApproval;
   // The Firestore converter backfills the legacy `imageProviderNickname` into
   // `imageNicknames` for the primary image, so this lookup is sufficient.
   // Fall back to the `imageProviderNickname` prop (passed by MenuDishCard for
@@ -103,7 +109,7 @@ export function DishCardBase({
     nickname:
       displayDish?.imageNicknames?.[url] ||
       (idx === 0 ? imageProviderNickname : undefined),
-    pending: false,
+    pending: idx === 0 && fallbackImageIsPending,
   }));
   const pendingCardImages = (displayDish?.pendingImages || []).map((p) => ({
     imageUrl: p.imageUrl,

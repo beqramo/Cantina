@@ -77,7 +77,10 @@
     "uploadedBy": "Uploaded by",
     "imagesPending": "images pending",
     "noImage": "No image",
-    "currentImages": "Current images"
+    "currentImages": "Current images",
+    "deleteImage": "Delete image",
+    "confirmDeleteImage": "Delete this image? The uploader's nickname for this image will also be removed.",
+    "noImagesYet": "No images yet"
   },
   "About": {
     "title": "About Cantina IPB",
